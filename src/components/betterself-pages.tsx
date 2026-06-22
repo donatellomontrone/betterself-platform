@@ -71,24 +71,6 @@ const howItWorksSteps = [
   },
 ];
 
-const membershipTiers = [
-  {
-    name: "Essential",
-    text: "For patients who want structured access to doctor-led care.",
-    benefits: ["Annual skin/aesthetic consultation", "Priority booking", "Member-only updates"],
-  },
-  {
-    name: "Private",
-    text: "For ongoing aesthetic care with a personalized annual plan.",
-    benefits: ["Discounted home visit fees", "Annual treatment plan", "Follow-up support"],
-  },
-  {
-    name: "Concierge",
-    text: "For clients who want priority home visit access and closer planning.",
-    benefits: ["Priority home visit access", "Family add-on", "Direct doctor messaging"],
-  },
-];
-
 const faqs = [
   [
     "Is BetterSelf a clinic?",
@@ -161,7 +143,7 @@ export function HomePage() {
       <WhyBetterSelfSection />
       <DoctorProfileSection />
       <SafetySectionCompact />
-      <MembershipSectionCompact />
+      <PricingSectionCompact />
       <FinalCta />
     </PageShell>
   );
@@ -461,36 +443,6 @@ export function SafetyPage() {
           ))}
         </div>
       </section>
-    </PageShell>
-  );
-}
-
-export function MembershipPage() {
-  return (
-    <PageShell>
-      <PageHero
-        eyebrow="BetterSelf Private Plan"
-        title="Ongoing aesthetic care with priority access and a personalized plan."
-        text="Membership is positioned as private medical concierge access, not a gym-style subscription."
-      />
-      <section className="px-5 pb-14 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
-          {membershipTiers.map((tier) => (
-            <article key={tier.name} className="card p-6">
-              <p className="eyebrow">{tier.name}</p>
-              <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">{tier.name} Plan</h2>
-              <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">{tier.text}</p>
-              <div className="mt-5">
-                <SafetyChecklist items={tier.benefits} />
-              </div>
-              <Link className="btn btn-primary mt-6 w-full justify-center" href="/booking">
-                Join the Private Plan
-              </Link>
-            </article>
-          ))}
-        </div>
-      </section>
-      <DiscountsSection />
     </PageShell>
   );
 }
@@ -830,28 +782,27 @@ function SafetySectionCompact() {
   );
 }
 
-function MembershipSectionCompact() {
+function PricingSectionCompact() {
   return (
     <section className="bg-white px-5 py-14 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-center">
         <SectionHeading
-          eyebrow="BetterSelf Private Plan"
-          title="For ongoing aesthetic care with priority access."
-          text="The private plan is for patients who want a personalized yearly plan, priority booking, follow-up support, and member benefits."
+          eyebrow="Per-treatment pricing"
+          title="No memberships. Each booking is priced by treatment."
+          text="Patients choose a treatment, review the published starting price or unit rate, complete medical intake, and pay for that specific service when the booking is confirmed."
         />
         <div className="card p-6">
           <SafetyChecklist
             items={[
-              "Priority booking",
-              "Annual aesthetic plan",
-              "Discounted home visit fee",
-              "Follow-up support",
-              "Birthday treatment credit",
-              "Family add-on option",
+              "No monthly or annual membership",
+              "Prices are per treatment, unit, area, or piece where noted",
+              "Home visit fee and payment timing are shown before checkout",
+              "Doctor assessment is required before final confirmation",
+              "Eligible employee and referral discounts can still apply",
             ]}
           />
-          <Link className="btn btn-primary mt-6" href="/membership">
-            Join the Private Plan
+          <Link className="btn btn-primary mt-6" href="/treatments">
+            View Service Rates
           </Link>
         </div>
       </div>
@@ -883,9 +834,9 @@ function DiscountsSection() {
     <section className="border-t border-[#E6DFD5] bg-[#FAF8F4] px-5 py-14 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
-          eyebrow="Member and referral benefits"
+          eyebrow="Employee and referral benefits"
           title="Discounts are presented quietly and clinically."
-          text="The platform can support employee tiers and referral benefits without making the core brand feel promo-heavy."
+          text="The platform can support office, Regenezys employee, medical team, and referral discounts without making the core brand feel promo-heavy."
         />
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {discountTiers.map((group) => (

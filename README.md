@@ -19,7 +19,6 @@ Public website:
 - `/treatments/[id]`
 - `/how-it-works`
 - `/safety`
-- `/membership`
 - `/about`
 - `/faq`
 - `/contact`
@@ -86,7 +85,7 @@ The file also includes employee discount tiers and referral promo structures.
 - Internal doctor-patient chat structure with emergency disclaimer and attachment placeholder
 - Doctor/admin dashboard preview for appointments, intake review, patient messaging, payment status, and notes
 - Safety & Protocol page
-- BetterSelf Private Plan membership page
+- Per-treatment pricing structure with employee and referral discounts
 - PayMongo Hosted Checkout-ready API route
 - PayMongo webhook stub for confirmed payment fulfillment
 

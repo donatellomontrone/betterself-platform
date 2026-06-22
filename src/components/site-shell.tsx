@@ -18,7 +18,6 @@ export const primaryNav = [
   { href: "/treatments", label: "Treatments" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/safety", label: "Safety" },
-  { href: "/membership", label: "Membership" },
   { href: "/about", label: "About" },
 ];
 
