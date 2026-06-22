@@ -30,14 +30,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const hasClerkPublishableKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  const content = hasClerkPublishableKey ? (
+    <ClerkProvider>{children}</ClerkProvider>
+  ) : (
+    children
+  );
+
   return (
     <html
       lang="en"
       className={`${manrope.variable} ${cormorant.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <ClerkProvider>{children}</ClerkProvider>
-      </body>
+      <body className="min-h-full flex flex-col">{content}</body>
     </html>
   );
 }
