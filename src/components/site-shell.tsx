@@ -36,10 +36,10 @@ export function Header() {
           <Image
             src="/betterself-logo.jpg"
             alt="BetterSelf Home Aesthetics"
-            width={48}
-            height={48}
+            width={56}
+            height={56}
             priority
-            className="h-12 w-12 rounded-full border border-[#E6DFD5] object-cover"
+            className="h-14 w-14 rounded-full border border-[#E6DFD5] object-cover"
           />
           <div>
             <p className="font-serif text-2xl leading-none text-[#1F1F1F]">
