@@ -18,7 +18,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { formatPeso, getTreatmentById, treatments } from "@/lib/treatments";
 import { Notice, StatusBadge } from "@/components/site-shell";
 
-const appointmentTypes = ["Home visit", "Online consultation", "Follow-up review"];
+const appointmentTypes = ["Home treatment visit", "Online doctor review", "Follow-up review"];
 const locations = ["BGC", "Makati", "Rockwell", "Alabang", "Ortigas", "Other Metro Manila area"];
 const slots = ["Tomorrow 10:00 AM", "Thu 3:00 PM", "Fri 6:30 PM", "Sat 11:00 AM"];
 const paymentModes = ["Deposit payment", "Full payment", "Pay after doctor approval"];
@@ -114,7 +114,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         </div>
 
         {step === 0 ? (
-          <BookingStep title="Select treatment" text="Start with a treatment interest. The final plan is still subject to doctor assessment.">
+          <BookingStep title="Select treatment to book" text="Choose the treatment you want to book directly. The doctor still reviews suitability before confirming or performing it.">
             <div className="grid gap-3 md:grid-cols-2">
               {treatments.map((treatment) => (
                 <button
@@ -142,7 +142,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         ) : null}
 
         {step === 1 ? (
-          <BookingStep title="Appointment type and location" text="Home visits are available in selected Metro Manila areas, subject to doctor availability.">
+          <BookingStep title="Appointment type and location" text="Home treatment visits are available in selected Metro Manila areas, subject to doctor availability.">
             <ChoiceGrid items={appointmentTypes} value={appointmentType} onChange={setAppointmentType} />
             <div className="mt-6">
               <p className="text-sm font-semibold text-[#1F1F1F]">Preferred location</p>
@@ -183,7 +183,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         ) : null}
 
         {step === 4 ? (
-          <BookingStep title="Review booking and payment" text="Confirm the booking request. The doctor may need to approve the treatment before the home visit is fully confirmed.">
+          <BookingStep title="Review treatment booking and payment" text="Confirm the treatment booking request. The doctor may need to approve or adjust the treatment before the home visit is fully confirmed.">
             <div className="grid gap-4">
               {paymentModes.map((mode) => (
                 <button
@@ -272,7 +272,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           </div>
         </section>
         <Notice title="Booking disclaimer">
-          Your booking may require doctor approval before treatment is confirmed.
+          Your treatment booking may require doctor approval before the home visit is confirmed.
           Suitability, treatment plan, and expected outcomes depend on individual
           medical assessment.
         </Notice>
@@ -515,7 +515,7 @@ export function ConfirmationSummary() {
     <section className="card p-7">
       <p className="eyebrow">Confirmation page structure</p>
       <h2 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
-        Appointment request received
+        Treatment booking request received
       </h2>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {[

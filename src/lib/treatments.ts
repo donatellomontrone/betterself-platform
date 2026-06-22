@@ -83,7 +83,7 @@ export const treatments: Treatment[] = [
     name: "Neurotoxin (Face)",
     category: "Toxin-Based",
     description:
-      "A doctor-led consultation and treatment plan that may help soften the appearance of expression lines after assessment.",
+      "A doctor-led facial neurotoxin treatment that may help soften the appearance of expression lines after assessment.",
     duration: "30-45 min",
     price: 450,
     priceLabel: "₱450/unit",
@@ -124,7 +124,7 @@ export const treatments: Treatment[] = [
     name: "Jawtox",
     category: "Toxin-Based",
     description:
-      "A doctor-assessed facial slimming or jaw tension consultation using neurotoxin when medically appropriate.",
+      "A doctor-assessed facial slimming or jaw tension treatment using neurotoxin when medically appropriate.",
     duration: "45 min",
     price: 20000,
     priceLabel: "₱20,000",
@@ -144,7 +144,7 @@ export const treatments: Treatment[] = [
     name: "Sweatox",
     category: "Toxin-Based",
     description:
-      "A doctor-led consultation for excessive sweating concerns, with treatment offered only when suitable.",
+      "A doctor-led treatment option for excessive sweating concerns, offered only when suitable.",
     duration: "45-60 min",
     price: 15000,
     priceLabel: "₱15,000",
@@ -171,7 +171,7 @@ export const treatments: Treatment[] = [
     doctor: "BetterSelf Medical Doctor",
     concerns: ["Dryness", "Dullness", "Skin quality"],
     mayHelpWith: ["Hydration support", "Glow", "Skin texture"],
-    suitableFor: ["Patients seeking skin quality support after consultation"],
+    suitableFor: ["Patients seeking skin quality support after doctor review"],
     avoidIf: defaultAvoidIf,
     whatToExpect: skinExpect,
     beforecare: defaultBeforecare,
@@ -447,7 +447,7 @@ export const treatments: Treatment[] = [
     name: "Body Mesolipo",
     category: "Others",
     description:
-      "A consultation-led body mesolipo appointment for selected areas, subject to doctor suitability review.",
+      "A doctor-led body mesolipo treatment appointment for selected areas, subject to suitability review.",
     duration: "60 min",
     price: 15000,
     priceLabel: "₱15,000/area",
@@ -551,7 +551,7 @@ export const treatments: Treatment[] = [
     name: "Underarm Whitening (Injectable)",
     category: "Others",
     description:
-      "A medically guided underarm brightening consultation and treatment plan when suitable.",
+      "A medically guided underarm brightening treatment plan when suitable.",
     duration: "45 min",
     price: 15000,
     priceLabel: "₱15,000",
@@ -571,7 +571,7 @@ export const treatments: Treatment[] = [
     name: "Intimate Area Whitening (Injectable)",
     category: "Others",
     description:
-      "A discreet doctor-led consultation for selected intimate-area brightening concerns, subject to suitability review.",
+      "A discreet doctor-led treatment request for selected intimate-area brightening concerns, subject to suitability review.",
     duration: "45 min",
     price: 15000,
     priceLabel: "₱15,000",

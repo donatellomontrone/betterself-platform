@@ -51,7 +51,7 @@ const safetyItems = [
 const howItWorksSteps = [
   {
     title: "Choose your treatment",
-    text: "Browse doctor-led aesthetic treatments and select the option that fits your concern.",
+    text: "Browse doctor-led aesthetic treatments and book the option you want directly.",
     icon: Sparkles,
   },
   {
@@ -82,7 +82,7 @@ const faqs = [
   ],
   [
     "Can I book Botox at home?",
-    "A consultation and medical assessment are required before any injectable treatment. Suitability depends on your health profile and doctor review.",
+    "Yes. You can book the treatment request directly online. Medical intake and doctor assessment are still required before the doctor confirms and performs any injectable treatment.",
   ],
   [
     "Is home treatment safe?",
@@ -123,7 +123,7 @@ export function HomePage() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link className="btn btn-primary" href="/booking">
-                Book a Private Consultation
+                Book a Treatment
               </Link>
               <Link className="btn btn-secondary" href="/treatments">
                 Explore Treatments
@@ -172,8 +172,8 @@ export function TreatmentsPage() {
                 <div className="mb-5 flex items-end justify-between gap-4">
                   <SectionHeading eyebrow="Service category" title={category} />
                   <p className="hidden max-w-sm text-sm leading-6 text-[#6F6F6F] md:block">
-                    Book as a medical aesthetic consultation, not a simple
-                    e-commerce purchase.
+                    Book the treatment request directly. The doctor still
+                    reviews suitability before confirming or performing care.
                   </p>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -217,8 +217,8 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
             </div>
             <Notice title="Treatment disclaimer">
               Suitability, treatment plan, and expected outcomes depend on
-              individual medical assessment. Results vary per patient. A
-              consultation is required before treatment.
+              individual medical assessment. Results vary per patient. Medical
+              intake and doctor confirmation are required before treatment.
             </Notice>
           </article>
           <aside className="lg:sticky lg:top-28 lg:self-start">
@@ -235,7 +235,7 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
               </div>
               <div className="mt-5 grid gap-2">
                 <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}`}>
-                  Book Consultation
+                  Book Treatment
                 </Link>
                 <Link className="btn btn-secondary justify-center" href="/messages">
                   Ask Doctor
@@ -254,8 +254,8 @@ export function BookingPage({ treatmentId }: { treatmentId?: string }) {
     <PageShell>
       <PageHero
         eyebrow="Book appointment"
-        title="A calm booking flow for private medical aesthetic care."
-        text="Select a treatment interest, appointment type, Metro Manila location, schedule, medical intake, and payment option."
+        title="Book your treatment directly for private medical aesthetic care."
+        text="Select the treatment, appointment type, Metro Manila location, schedule, medical intake, and payment option. The doctor confirms suitability before performing care."
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -481,8 +481,8 @@ export function AboutPage() {
               </p>
               <p>
                 Led by a licensed medical doctor, BetterSelf offers selected
-                aesthetic treatments through a careful process of consultation,
-                medical intake, treatment planning, and aftercare.
+                aesthetic treatments through a careful process of booking,
+                medical intake, doctor review, treatment planning, and aftercare.
               </p>
               <p>
                 The goal is not to change how patients look. The goal is to help
@@ -491,7 +491,7 @@ export function AboutPage() {
               </p>
             </div>
             <Link className="btn btn-primary mt-8" href="/booking">
-              Book a Private Consultation
+              Book Treatment
             </Link>
           </div>
         </div>
@@ -592,14 +592,14 @@ export function ContactPage() {
           <div>
             <Badge>Contact</Badge>
             <h1 className="mt-5 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
-              Begin with a private consultation.
+              Book a treatment or ask the doctor.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-[#6F6F6F]">
-              Start with a doctor-led assessment and receive a treatment plan
-              built around your goals, medical profile, and lifestyle.
+              Choose the treatment you want, complete medical intake, and keep
+              the doctor involved before and after your home appointment.
             </p>
             <Link className="btn btn-primary mt-8" href="/booking">
-              Book Your Consultation
+              Book Treatment
             </Link>
           </div>
           <section className="card p-6">
@@ -649,8 +649,8 @@ function HowItWorksSection() {
       <div className="mx-auto max-w-7xl">
         <SectionHeading
           eyebrow="How BetterSelf works"
-          title="A structured, doctor-led path from consultation to aftercare."
-          text="The journey is intentionally calm: treatment interest, intake, scheduling, medical review, payment, home visit, and follow-up."
+          title="A structured, doctor-led path from booking to aftercare."
+          text="The journey is intentionally calm: treatment selection, intake, scheduling, medical review, payment, home visit, and follow-up."
         />
         <div className="mt-8 grid gap-4 md:grid-cols-4">
           {howItWorksSteps.map((step, index) => (
@@ -679,7 +679,7 @@ function FeaturedTreatmentsSection() {
           <SectionHeading
             eyebrow="Popular treatments"
             title="Selected treatments, medically reviewed."
-            text="Each card leads with consultation language because treatment suitability is confirmed by the doctor."
+            text="Patients can book the treatment directly, with doctor review before final confirmation."
           />
           <ArrowLink href="/treatments">View all treatments</ArrowLink>
         </div>
@@ -754,7 +754,7 @@ function DoctorProfileSection() {
             text="BetterSelf is led by a licensed medical doctor with experience in aesthetic care and patient-centered treatment planning. Every appointment begins with medical screening and clear aftercare guidance."
           />
           <Link className="btn btn-primary mt-8" href="/booking">
-            Book a Consultation
+            Book Treatment
           </Link>
         </div>
       </div>
@@ -797,7 +797,7 @@ function PricingSectionCompact() {
               "No monthly or annual membership",
               "Prices are per treatment, unit, area, or piece where noted",
               "Home visit fee and payment timing are shown before checkout",
-              "Doctor assessment is required before final confirmation",
+              "Doctor assessment is required before final treatment confirmation",
               "Eligible employee and referral discounts can still apply",
             ]}
           />
@@ -815,14 +815,14 @@ function FinalCta() {
     <section className="px-5 py-16 lg:px-8">
       <div className="mx-auto max-w-4xl text-center">
         <h2 className="font-serif text-5xl leading-tight text-[#1F1F1F]">
-          Begin with a private consultation.
+          Book the treatment you want at home.
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#6F6F6F]">
-          Start with a doctor-led assessment and receive a treatment plan built
-          around your goals, medical profile, and lifestyle.
+          Select a service, complete intake, and let the doctor confirm the plan
+          before your private home appointment.
         </p>
         <Link className="btn btn-primary mt-8" href="/booking">
-          Book Your Consultation
+          Book Treatment
         </Link>
       </div>
     </section>

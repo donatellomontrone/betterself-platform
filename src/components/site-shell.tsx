@@ -75,7 +75,7 @@ export function Header() {
             Login
           </Link>
           <Link className="btn btn-primary" href="/booking">
-            Book Consultation
+            Book Treatment
           </Link>
         </div>
         <Link className="btn btn-primary hidden sm:inline-flex md:hidden" href="/booking">
@@ -165,7 +165,7 @@ export function MobileBottomCta() {
         className="flex h-12 items-center justify-center rounded-lg bg-[#1F1F1F] px-4 text-sm font-semibold text-white shadow-lg"
         href="/booking"
       >
-        Book Consultation
+        Book Treatment
       </Link>
     </div>
   );
@@ -279,7 +279,7 @@ export function TreatmentCard({ treatment }: { treatment: Treatment }) {
             View Treatment
           </Link>
           <Link className="btn btn-primary flex-1" href={`/booking?treatment=${treatment.id}`}>
-            Book Consultation
+            Book Treatment
           </Link>
         </div>
       </div>
@@ -321,7 +321,7 @@ export function BookingPreviewCard() {
         <div>
           <p className="eyebrow">Private appointment</p>
           <h3 className="mt-2 font-serif text-3xl text-[#1F1F1F]">
-            Consultation preview
+            Treatment booking preview
           </h3>
         </div>
         <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#DDE8E8] text-[#4F5B55]">
@@ -330,8 +330,8 @@ export function BookingPreviewCard() {
       </div>
       <div className="mt-5 grid gap-3">
         {[
-          ["Treatment", "Doctor-led assessment"],
-          ["Appointment type", "Home visit or online consultation"],
+          ["Requested treatment", "Home treatment request"],
+          ["Appointment type", "Home treatment visit or online doctor review"],
           ["Location", "BGC, Makati, Rockwell, Alabang, Ortigas"],
           ["Status", "Pending doctor review"],
         ].map(([label, value]) => (
