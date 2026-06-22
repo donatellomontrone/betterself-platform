@@ -555,9 +555,9 @@ export function LoginPage({ status }: { status?: string }) {
               </Link>
             </div>
             <Notice title="Protected portal">
-              The dashboard, booking flow, messages, and admin preview are
-              protected routes. Clerk redirects signed-out visitors to sign in
-              before they can enter those areas.
+              The dashboard, messages, and admin preview are protected routes.
+              Booking stays open so patients can request treatment directly,
+              then create or use an account for ongoing care.
             </Notice>
           </section>
           <LoginRegisterPreview />

@@ -4,7 +4,6 @@ import { hasValidClerkServerKeys } from "@/lib/clerk-env";
 
 const isProtectedRoute = createRouteMatcher([
   "/admin(.*)",
-  "/booking(.*)",
   "/dashboard(.*)",
   "/messages(.*)",
 ]);
