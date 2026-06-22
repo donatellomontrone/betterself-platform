@@ -1,8 +1,9 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
+import { hasValidClerkPublishableKey } from "@/lib/clerk-env";
 
 export default function SignUpPage() {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+  if (!hasValidClerkPublishableKey()) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 py-10">
         <section className="max-w-md rounded-lg border border-[#E6DFD5] bg-white p-6 text-center">

@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import { hasValidClerkServerKeys } from "@/lib/clerk-env";
 
 const isProtectedRoute = createRouteMatcher([
   "/admin(.*)",
@@ -8,10 +9,6 @@ const isProtectedRoute = createRouteMatcher([
   "/messages(.*)",
 ]);
 
-const hasClerkKeys = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
-);
-
 const clerkProxy = clerkMiddleware(async (auth, request) => {
   if (isProtectedRoute(request)) {
     await auth.protect();
@@ -19,7 +16,7 @@ const clerkProxy = clerkMiddleware(async (auth, request) => {
 });
 
 export default function proxy(request: NextRequest, event: NextFetchEvent) {
-  if (!hasClerkKeys) {
+  if (!hasValidClerkServerKeys()) {
     if (isProtectedRoute(request)) {
       return NextResponse.redirect(new URL("/login?status=clerk-missing", request.url));
     }

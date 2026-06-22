@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Cormorant_Garamond, Geist_Mono, Manrope } from "next/font/google";
+import { hasValidClerkPublishableKey } from "@/lib/clerk-env";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -30,8 +31,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const hasClerkPublishableKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-  const content = hasClerkPublishableKey ? (
+  const content = hasValidClerkPublishableKey() ? (
     <ClerkProvider>{children}</ClerkProvider>
   ) : (
     children
