@@ -4,8 +4,11 @@ import { getTreatmentById } from "@/lib/treatments";
 
 type CheckoutRequest = {
   treatmentId?: string;
-  slot?: string;
   appointmentType?: string;
+  location?: string;
+  paymentMode?: string;
+  calendlyEventUri?: string;
+  calendlyInviteeUri?: string;
   customer?: {
     name?: string;
     email?: string;
@@ -16,6 +19,10 @@ type CheckoutRequest = {
 
 const paymentMethods = ["card", "gcash", "qrph"];
 const homeVisitFee = 1500;
+
+function asMetadataValue(value: string | undefined, fallback = "not_provided") {
+  return value?.trim() || fallback;
+}
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as CheckoutRequest;
@@ -31,6 +38,7 @@ export async function POST(request: NextRequest) {
   const referenceNumber = `BS-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
   const secretKey = process.env.PAYMONGO_SECRET_KEY;
+  const customerAddress = body.customer?.address;
 
   if (!secretKey) {
     const checkoutUrl = `/checkout-preview?reference=${referenceNumber}&treatment=${treatment.id}`;
@@ -84,14 +92,20 @@ export async function POST(request: NextRequest) {
             email: body.customer?.email,
             phone: body.customer?.phone,
             address: {
-              line1: body.customer?.address,
+              line1: customerAddress,
+              city: body.location ?? "Metro Manila",
               country: "PH",
+              state: "Metro Manila",
             },
           },
           metadata: {
             treatment_id: treatment.id,
-            visit_slot: body.slot ?? "not_selected",
-            appointment_type: body.appointmentType ?? "home_visit",
+            treatment_name: treatment.name,
+            appointment_type: asMetadataValue(body.appointmentType, "home_visit"),
+            appointment_location: asMetadataValue(body.location, "metro_manila"),
+            payment_mode: asMetadataValue(body.paymentMode, "paymongo_checkout"),
+            calendly_event_uri: asMetadataValue(body.calendlyEventUri),
+            calendly_invitee_uri: asMetadataValue(body.calendlyInviteeUri),
             care_model: "home_visit",
           },
         },

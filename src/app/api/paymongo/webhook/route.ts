@@ -43,15 +43,26 @@ export async function POST(request: NextRequest) {
         reference_number?: string;
         status?: string;
       };
+      data?: {
+        id?: string;
+        type?: string;
+        attributes?: {
+          reference_number?: string;
+          status?: string;
+          metadata?: Record<string, string>;
+        };
+      };
     };
   };
 
   if (event.data?.type === "checkout_session.payment.paid") {
+    const checkoutSession = event.data.data ?? event.data;
+
     // TODO: Mark the referenced booking paid in the database and queue doctor dispatch.
     return NextResponse.json({
       received: true,
       action: "booking_payment_confirmed",
-      referenceNumber: event.data.attributes?.reference_number,
+      referenceNumber: checkoutSession.attributes?.reference_number,
     });
   }
 

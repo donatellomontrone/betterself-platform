@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,16 +13,17 @@ import {
   Paperclip,
   Send,
   ShieldCheck,
+  SquareArrowOutUpRight,
   UserRound,
 } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { formatPeso, getTreatmentById, treatments } from "@/lib/treatments";
 import { Notice, StatusBadge } from "@/components/site-shell";
 
-const appointmentTypes = ["Home treatment visit", "Online doctor review", "Follow-up review"];
+const appointmentTypes = ["Home treatment visit", "Online doctor review"];
 const locations = ["BGC", "Makati", "Rockwell", "Alabang", "Ortigas", "Other Metro Manila area"];
-const slots = ["Tomorrow 10:00 AM", "Thu 3:00 PM", "Fri 6:30 PM", "Sat 11:00 AM"];
-const paymentModes = ["Deposit payment", "Full payment", "Pay after doctor approval"];
+const paymentModes = ["PayMongo hosted checkout"];
+const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
 
 const intakeQuestions = [
   "Are you pregnant or breastfeeding?",
@@ -37,6 +39,41 @@ type BookingFlowProps = {
   initialTreatmentId?: string;
 };
 
+type CustomerDetails = {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  emergencyContact: string;
+};
+
+type CalendlyPayload = {
+  event?: {
+    uri?: string;
+  };
+  invitee?: {
+    uri?: string;
+  };
+};
+
+type CalendlyWidgetOptions = {
+  url: string;
+  parentElement: HTMLElement;
+  prefill?: {
+    name?: string;
+    email?: string;
+    customAnswers?: Record<string, string>;
+  };
+};
+
+declare global {
+  interface Window {
+    Calendly?: {
+      initInlineWidget: (options: CalendlyWidgetOptions) => void;
+    };
+  }
+}
+
 export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   const [step, setStep] = useState(0);
   const [treatmentId, setTreatmentId] = useState(
@@ -46,8 +83,17 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   );
   const [appointmentType, setAppointmentType] = useState(appointmentTypes[0]);
   const [location, setLocation] = useState(locations[0]);
-  const [slot, setSlot] = useState(slots[0]);
-  const [paymentMode, setPaymentMode] = useState(paymentModes[0]);
+  const [customer, setCustomer] = useState<CustomerDetails>({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    emergencyContact: "",
+  });
+  const [calendlyEventUri, setCalendlyEventUri] = useState("");
+  const [calendlyInviteeUri, setCalendlyInviteeUri] = useState("");
+  const [scheduleConfirmed, setScheduleConfirmed] = useState(false);
+  const paymentMode = paymentModes[0];
   const [checkoutState, setCheckoutState] = useState<"idle" | "loading" | "error">("idle");
   const [checkoutNote, setCheckoutNote] = useState("");
 
@@ -58,10 +104,44 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
 
   const total = selectedTreatment.price + 1500;
   const progress = ((step + 1) / 5) * 100;
+  const scheduleStatus = scheduleConfirmed ? "Calendly appointment selected" : "Not scheduled yet";
+
+  function updateCustomer(field: keyof CustomerDetails, value: string) {
+    setCustomer((current) => ({ ...current, [field]: value }));
+  }
+
+  function isCustomerReady() {
+    return Boolean(customer.name.trim() && customer.email.trim() && customer.phone.trim());
+  }
+
+  function handleNextStep() {
+    setCheckoutNote("");
+
+    if (step === 2 && !isCustomerReady()) {
+      setCheckoutState("error");
+      setCheckoutNote("Please add name, email, and phone before scheduling.");
+      return;
+    }
+
+    setCheckoutState("idle");
+    setStep((current) => Math.min(4, current + 1));
+  }
 
   async function startCheckout() {
     setCheckoutState("loading");
     setCheckoutNote("");
+
+    if (!isCustomerReady()) {
+      setCheckoutState("error");
+      setCheckoutNote("Please add name, email, and phone before payment.");
+      return;
+    }
+
+    if (calendlyUrl && !scheduleConfirmed) {
+      setCheckoutState("error");
+      setCheckoutNote("Please choose a Calendly appointment before payment.");
+      return;
+    }
 
     try {
       const response = await fetch("/api/checkout", {
@@ -69,13 +149,18 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           treatmentId: selectedTreatment.id,
-          slot,
           appointmentType,
+          location,
+          paymentMode,
+          calendlyEventUri,
+          calendlyInviteeUri,
           customer: {
-            name: "Mia Santos",
-            email: "mia@example.com",
-            phone: "+639171234567",
-            address: `${location}, Metro Manila`,
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+            address: customer.address
+              ? `${customer.address}, ${location}, Metro Manila`
+              : `${location}, Metro Manila`,
           },
         }),
       });
@@ -152,20 +237,45 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         ) : null}
 
         {step === 2 ? (
-          <BookingStep title="Choose date and time" text="The doctor may propose a different slot if the selected treatment requires more time or preparation.">
-            <ChoiceGrid items={slots} value={slot} onChange={setSlot} />
-          </BookingStep>
-        ) : null}
-
-        {step === 3 ? (
-          <BookingStep title="Medical intake" text="The first version shows the structure of the step-by-step intake form. This must be completed before confirmation.">
+          <BookingStep title="Patient details and medical intake" text="These details pre-fill Calendly and PayMongo. The doctor still reviews the medical answers before confirming treatment.">
             <div className="grid gap-4 md:grid-cols-2">
-              {["Full name", "Date of birth", "Phone number", "Emergency contact"].map((label) => (
-                <label key={label} className="grid gap-2 text-sm font-semibold text-[#1F1F1F]">
-                  {label}
-                  <input className="field" placeholder={label} />
-                </label>
-              ))}
+              <TextField
+                label="Full name"
+                value={customer.name}
+                onChange={(value) => updateCustomer("name", value)}
+                placeholder="Patient full name"
+                required
+              />
+              <TextField
+                label="Email"
+                type="email"
+                value={customer.email}
+                onChange={(value) => updateCustomer("email", value)}
+                placeholder="patient@example.com"
+                required
+              />
+              <TextField
+                label="Phone number"
+                value={customer.phone}
+                onChange={(value) => updateCustomer("phone", value)}
+                placeholder="+63..."
+                required
+              />
+              <TextField
+                label="Emergency contact"
+                value={customer.emergencyContact}
+                onChange={(value) => updateCustomer("emergencyContact", value)}
+                placeholder="Name and phone"
+              />
+              <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F] md:col-span-2">
+                Home address
+                <textarea
+                  className="field min-h-24"
+                  placeholder="Building, street, unit number, access notes"
+                  value={customer.address}
+                  onChange={(event) => updateCustomer("address", event.target.value)}
+                />
+              </label>
             </div>
             <div className="mt-6 grid gap-3">
               {intakeQuestions.map((question) => (
@@ -182,22 +292,30 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           </BookingStep>
         ) : null}
 
+        {step === 3 ? (
+          <BookingStep title="Choose date and time in Calendly" text="Calendly handles the doctor's real availability. After the slot is selected, the patient continues to PayMongo payment.">
+            <CalendlyScheduler
+              customer={customer}
+              location={location}
+              treatmentName={selectedTreatment.name}
+              onScheduled={(payload) => {
+                setCalendlyEventUri(payload.event?.uri ?? "");
+                setCalendlyInviteeUri(payload.invitee?.uri ?? "");
+                setScheduleConfirmed(true);
+              }}
+            />
+          </BookingStep>
+        ) : null}
+
         {step === 4 ? (
           <BookingStep title="Review treatment booking and payment" text="Confirm the treatment booking request. The doctor may need to approve or adjust the treatment before the home visit is fully confirmed.">
-            <div className="grid gap-4">
-              {paymentModes.map((mode) => (
-                <button
-                  key={mode}
-                  className={`rounded-lg border p-4 text-left text-sm font-semibold ${
-                    paymentMode === mode
-                      ? "border-[#1F1F1F] bg-[#FAF8F4]"
-                      : "border-[#E6DFD5] bg-white"
-                  }`}
-                  onClick={() => setPaymentMode(mode)}
-                >
-                  {mode}
-                </button>
-              ))}
+            <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4">
+              <p className="text-sm font-semibold text-[#1F1F1F]">Payment by PayMongo</p>
+              <p className="mt-2 text-sm leading-6 text-[#6F6F6F]">
+                After the Calendly slot is selected, BetterSelf creates a secure PayMongo
+                checkout for this treatment and home visit fee. PayMongo handles cards,
+                GCash, and QR Ph on the hosted payment page.
+              </p>
             </div>
             <div className="mt-6 rounded-lg border border-[#E6DFD5] p-4">
               <p className="text-sm font-semibold text-[#1F1F1F]">Consent required</p>
@@ -239,7 +357,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           {step < 4 ? (
             <button
               className="btn btn-primary"
-              onClick={() => setStep((current) => Math.min(4, current + 1))}
+              onClick={handleNextStep}
             >
               Next
               <ArrowRight className="h-4 w-4" />
@@ -259,7 +377,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
             <SummaryRow label="Home visit fee" value={formatPeso(1500)} />
             <SummaryRow label="Appointment" value={appointmentType} />
             <SummaryRow label="Location" value={location} />
-            <SummaryRow label="Time" value={slot} />
+            <SummaryRow label="Calendar" value={scheduleStatus} />
             <SummaryRow label="Payment" value={paymentMode} />
           </div>
           <div className="mt-5 rounded-lg bg-[#FAF8F4] p-4">
@@ -281,6 +399,108 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   );
 }
 
+function CalendlyScheduler({
+  customer,
+  location,
+  treatmentName,
+  onScheduled,
+}: {
+  customer: CustomerDetails;
+  location: string;
+  treatmentName: string;
+  onScheduled: (payload: CalendlyPayload) => void;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scriptReady, setScriptReady] = useState(false);
+  const [manualConfirmation, setManualConfirmation] = useState(false);
+
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      if (event.origin !== "https://calendly.com") {
+        return;
+      }
+
+      const data = event.data as { event?: string; payload?: CalendlyPayload };
+
+      if (data.event === "calendly.event_scheduled") {
+        onScheduled(data.payload ?? {});
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [onScheduled]);
+
+  useEffect(() => {
+    if (!calendlyUrl || !scriptReady || !containerRef.current || !window.Calendly) {
+      return;
+    }
+
+    containerRef.current.innerHTML = "";
+    window.Calendly.initInlineWidget({
+      url: calendlyUrl,
+      parentElement: containerRef.current,
+      prefill: {
+        name: customer.name,
+        email: customer.email,
+        customAnswers: {
+          a1: treatmentName,
+          a2: location,
+          a3: customer.phone,
+          a4: customer.address,
+        },
+      },
+    });
+  }, [customer.address, customer.email, customer.name, customer.phone, location, scriptReady, treatmentName]);
+
+  if (!calendlyUrl) {
+    return (
+      <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
+        <p className="text-sm font-semibold text-[#1F1F1F]">Calendly is ready to connect</p>
+        <p className="mt-2 text-sm leading-6 text-[#6F6F6F]">
+          Add <span className="font-semibold text-[#1F1F1F]">NEXT_PUBLIC_CALENDLY_URL</span> in
+          Vercel with the BetterSelf event link. The calendar will appear here after redeploy.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className="flex flex-col gap-3 rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[#1F1F1F]">BetterSelf Calendly</p>
+          <p className="mt-1 text-sm text-[#6F6F6F]">
+            If the embedded calendar is blocked, open Calendly in a new tab.
+          </p>
+        </div>
+        <a className="btn btn-secondary" href={calendlyUrl} rel="noreferrer" target="_blank">
+          <SquareArrowOutUpRight className="h-4 w-4" />
+          Open Calendly
+        </a>
+      </div>
+      <Script
+        src="https://assets.calendly.com/assets/external/widget.js"
+        strategy="lazyOnload"
+        onLoad={() => setScriptReady(true)}
+        onReady={() => setScriptReady(true)}
+      />
+      <div ref={containerRef} className="min-h-[720px] overflow-hidden rounded-lg border border-[#E6DFD5] bg-white" />
+      <button
+        className={`rounded-lg border p-4 text-left text-sm font-semibold ${
+          manualConfirmation ? "border-[#1F1F1F] bg-[#FAF8F4]" : "border-[#E6DFD5] bg-white"
+        }`}
+        onClick={() => {
+          setManualConfirmation(true);
+          onScheduled({});
+        }}
+      >
+        I scheduled in Calendly and want to continue to payment
+      </button>
+    </div>
+  );
+}
+
 function BookingStep({
   title,
   text,
@@ -296,6 +516,36 @@ function BookingStep({
       <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6F6F6F]">{text}</p>
       <div className="mt-6">{children}</div>
     </div>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F]">
+      {label}
+      <input
+        className="field"
+        placeholder={placeholder}
+        required={required}
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
   );
 }
 
@@ -519,7 +769,7 @@ export function ConfirmationSummary() {
       </h2>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {[
-          [CalendarDays, "Date and time", "Tomorrow, 10:00 AM"],
+          [CalendarDays, "Date and time", "Selected in Calendly"],
           [MessageCircle, "Doctor", "BetterSelf Medical Doctor"],
           [MapPin, "Address", "BGC, Taguig, Metro Manila"],
           [Check, "Preparation", "Complete intake and avoid active skin irritation."],

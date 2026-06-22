@@ -1,10 +1,11 @@
-# Stack Setup: GitHub, Vercel, Clerk, Neon
+# Stack Setup: GitHub, Vercel, Clerk, Calendly, Neon
 
 BetterSelf is prepared for this stack:
 
 - GitHub: source control, pull requests, CI
 - Vercel: Next.js hosting and environment variables
 - Clerk: patient and doctor authentication
+- Calendly: doctor availability and appointment scheduling
 - Neon: Postgres database for bookings, intake, messages, payments, and aftercare
 - PayMongo: hosted checkout and payment webhooks
 
@@ -34,12 +35,37 @@ Protected routes:
 
 ```text
 /admin
-/booking
 /dashboard
 /messages
 ```
 
-## 2. Neon
+`/booking` is public so a patient can choose a treatment, fill intake, schedule
+in Calendly, and pay before creating an account.
+
+## 2. Calendly
+
+Create a Calendly event type for the BetterSelf home-treatment appointment.
+Recommended event setup:
+
+- Event name: `BetterSelf Home Treatment`
+- Location: custom question or phone/WhatsApp confirmation
+- Invitee questions:
+  - Treatment requested
+  - Metro Manila area
+  - Phone number
+  - Home address or access notes
+
+Add this environment variable locally and on Vercel:
+
+```bash
+NEXT_PUBLIC_CALENDLY_URL=https://calendly.com/<account>/<event-type>
+```
+
+The booking page embeds Calendly with `Calendly.initInlineWidget`, pre-fills
+name and email, and passes the treatment/location details into Calendly custom
+answers.
+
+## 3. Neon
 
 Create a Neon Postgres store from the Vercel Marketplace, then run:
 
@@ -73,7 +99,7 @@ src/lib/db/client.ts
 It uses lazy initialization so `next build` does not crash before Vercel injects
 the database environment variable.
 
-## 3. GitHub
+## 4. GitHub
 
 The project includes CI at:
 
@@ -97,7 +123,7 @@ git remote add origin git@github.com:<owner>/<repo>.git
 git push -u origin main
 ```
 
-## 4. Vercel
+## 5. Vercel
 
 Create a Vercel project from the GitHub repository.
 
@@ -106,6 +132,7 @@ Production:
 
 ```bash
 NEXT_PUBLIC_SITE_URL=
+NEXT_PUBLIC_CALENDLY_URL=
 DATABASE_URL=
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
@@ -118,8 +145,10 @@ PAYMONGO_WEBHOOK_SECRET=
 ```
 
 Set `NEXT_PUBLIC_SITE_URL` to the Vercel domain for preview/production.
+Set `NEXT_PUBLIC_CALENDLY_URL` to the public Calendly event URL and redeploy
+after changing it.
 
-## 5. PayMongo
+## 6. PayMongo
 
 Register this webhook URL after the Vercel deployment exists:
 
@@ -128,3 +157,12 @@ https://your-domain.com/api/paymongo/webhook
 ```
 
 Use the verified webhook as the source of truth for payment fulfillment.
+
+The current checkout route creates PayMongo Hosted Checkout sessions at:
+
+```text
+https://api.paymongo.com/v2/checkout_sessions
+```
+
+The checkout metadata includes treatment ID/name, appointment type, location,
+payment mode, and Calendly event/invitee references.

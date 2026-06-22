@@ -1,6 +1,6 @@
 # BetterSelf Home Aesthetics
 
-Premium website and patient platform prototype for BetterSelf, a doctor-led private medical aesthetic concierge service in Metro Manila. The project is now prepared for GitHub, Vercel, Clerk, Neon, and PayMongo.
+Premium website and patient platform prototype for BetterSelf, a doctor-led private medical aesthetic concierge service in Metro Manila. The project is now prepared for GitHub, Vercel, Clerk, Calendly, Neon, and PayMongo.
 
 ## Positioning
 
@@ -80,7 +80,7 @@ The file also includes employee discount tiers and referral promo structures.
 - Doctor-led homepage and public service positioning
 - Full treatment catalog with detail pages
 - Medical-safe treatment copy and disclaimers
-- Booking flow with treatment, appointment type, location, time, intake, review, and payment
+- Booking flow with treatment, appointment type, location, patient details, medical intake, Calendly scheduling, review, and PayMongo payment
 - Patient dashboard with bookings, treatment plan, messages, aftercare, and payment status
 - Internal doctor-patient chat structure with emergency disclaimer and attachment placeholder
 - Doctor/admin dashboard preview for appointments, intake review, patient messaging, payment status, and notes
@@ -104,6 +104,7 @@ Copy `.env.example` to `.env.local` and fill in:
 
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_CALENDLY_URL=https://calendly.com/your-calendly-user/betterself-home-treatment
 DATABASE_URL=postgres://...
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
@@ -115,7 +116,9 @@ PAYMONGO_SECRET_KEY=sk_test_...
 PAYMONGO_WEBHOOK_SECRET=...
 ```
 
-If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo checkout page. If present, `/api/checkout` creates a PayMongo Hosted Checkout session server-side.
+If `NEXT_PUBLIC_CALENDLY_URL` is missing, the booking page shows a Calendly setup notice. If present, the booking page embeds Calendly and pre-fills name, email, treatment, location, phone, and address.
+
+If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo checkout page. If present, `/api/checkout` creates a PayMongo Hosted Checkout session server-side after the Calendly step.
 
 ## Production next steps
 
@@ -126,4 +129,5 @@ If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo check
 - Replace placeholder doctor credentials and imagery.
 - Connect booking statuses to doctor review actions.
 - Fulfill bookings only from verified PayMongo webhooks, not browser redirects.
+- Add the real BetterSelf Calendly event link to Vercel as `NEXT_PUBLIC_CALENDLY_URL` and redeploy.
 - Add privacy policy, terms, consent forms, and medical disclaimer pages with legal review.
