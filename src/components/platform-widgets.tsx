@@ -240,7 +240,14 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           </p>
         </div>
         <div className="mb-6">
-          <div className="h-2 overflow-hidden rounded-full bg-[#F1ECE4]">
+          <div
+            className="h-2 overflow-hidden rounded-full bg-[#F1ECE4]"
+            role="progressbar"
+            aria-valuenow={step + 1}
+            aria-valuemin={1}
+            aria-valuemax={5}
+            aria-label={`Booking step ${step + 1} of 5: ${stepLabels[step]}`}
+          >
             <div
               className="h-full rounded-full bg-[#3F5249] transition-all"
               style={{ width: `${progress}%` }}

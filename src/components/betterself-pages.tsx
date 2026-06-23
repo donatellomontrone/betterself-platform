@@ -10,12 +10,10 @@ import {
 } from "lucide-react";
 import {
   categories,
-  discountTiers,
   featuredTreatmentIds,
   getFeaturedTreatments,
   getTreatmentById,
   getTreatmentsByCategory,
-  referralPromos,
   Treatment,
   treatments,
 } from "@/lib/treatments";
@@ -36,7 +34,8 @@ import {
   DoctorChat,
   LoginRegisterPreview,
 } from "@/components/platform-widgets";
-import type { PatientBookingView } from "@/lib/db/queries";
+import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
+import { updateBookingStatusAction } from "@/app/admin/actions";
 
 const bookingStatusLabels: Record<string, string> = {
   pending_doctor_review: "Pending doctor review",
@@ -268,7 +267,6 @@ export function TreatmentsPage() {
           </div>
         </div>
       </section>
-      <DiscountsSection />
     </PageShell>
   );
 }
@@ -527,11 +525,39 @@ export function MessagesPage() {
   );
 }
 
-export function AdminPage() {
-  const appointments = [
-    ["Mia Santos", "Mesoheal Korean Skin Booster", "BGC", "Tomorrow 10:00 AM", "Pending review", "Deposit pending"],
-    ["Ana Cruz", "Neurotoxin (Face)", "Makati", "Thu 3:00 PM", "Needs more information", "Unpaid"],
-    ["Carla Tan", "3-in-1 Scar Treatment", "Ortigas", "Fri 6:30 PM", "Confirmed", "Paid"],
+export function AdminPage({
+  authorized = false,
+  bookings = [],
+}: {
+  authorized?: boolean;
+  bookings?: AdminBookingView[];
+}) {
+  if (!authorized) {
+    return (
+      <PageShell>
+        <section className="px-5 py-16 lg:px-8">
+          <div className="mx-auto max-w-2xl card p-8 text-center">
+            <p className="eyebrow">Doctor / Admin</p>
+            <h1 className="mt-3 font-serif text-4xl text-[#1F1F1F]">Admin access only</h1>
+            <p className="mt-3 text-sm leading-6 text-[#595550]">
+              This dashboard is for BetterSelf medical staff. Add your email address
+              to the <span className="font-semibold">ADMIN_EMAILS</span> environment
+              variable to access it.
+            </p>
+            <Link className="btn btn-primary mt-6 justify-center" href="/">
+              Back to site
+            </Link>
+          </div>
+        </section>
+      </PageShell>
+    );
+  }
+
+  const stats: [string, number][] = [
+    ["Total bookings", bookings.length],
+    ["Awaiting review", bookings.filter((b) => b.status === "pending_doctor_review").length],
+    ["Confirmed", bookings.filter((b) => b.status === "confirmed").length],
+    ["Paid", bookings.filter((b) => b.payment_status === "paid").length],
   ];
 
   return (
@@ -539,47 +565,75 @@ export function AdminPage() {
       <section className="px-5 py-10 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-7xl">
           <SectionHeading
-            eyebrow="Doctor/Admin dashboard"
-            title="Manage appointments, patients, intake, messages, and aftercare."
-            text="This preview shows the operational structure the doctor needs before the database and authentication layer are connected."
+            eyebrow="Doctor / Admin dashboard"
+            title="Manage real patient bookings."
+            text="Live bookings from the database. Review each request, then update its status."
           />
           <div className="mt-8 grid gap-4 md:grid-cols-4">
-            {[
-              ["Today's appointments", "3"],
-              ["Medical intake reviews", "2"],
-              ["Messages needing reply", "4"],
-              ["Payments pending", "2"],
-            ].map(([label, value]) => (
+            {stats.map(([label, value]) => (
               <div key={label} className="card p-5">
                 <p className="text-sm text-[#595550]">{label}</p>
                 <p className="mt-3 font-serif text-4xl text-[#1F1F1F]">{value}</p>
               </div>
             ))}
           </div>
-          <div className="mt-8 grid gap-5">
-            {appointments.map(([patient, treatment, location, time, intake, payment]) => (
-              <article key={`${patient}-${time}`} className="card p-5">
-                <div className="grid gap-4 lg:grid-cols-[1fr_1fr_0.8fr_auto] lg:items-center">
-                  <div>
-                    <p className="font-serif text-2xl text-[#1F1F1F]">{patient}</p>
-                    <p className="mt-1 text-sm text-[#595550]">{treatment}</p>
+          {bookings.length === 0 ? (
+            <p className="card mt-8 p-6 text-sm text-[#595550]">No bookings yet.</p>
+          ) : (
+            <div className="mt-8 grid gap-4">
+              {bookings.map((b) => (
+                <article key={b.id} className="card p-5">
+                  <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr_auto] lg:items-center">
+                    <div>
+                      <p className="font-serif text-2xl text-[#1F1F1F]">{b.patient_name}</p>
+                      <p className="mt-1 text-sm text-[#595550]">{b.patient_email}</p>
+                      <p className="mt-1 text-sm text-[#4D4D4D]">
+                        {b.treatment_name} · {b.appointment_type}
+                      </p>
+                      <p className="text-sm text-[#595550]">
+                        {b.location} · booked {formatBookingDate(b.created_at)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <StatusBadge tone={bookingStatusTone(b.status)}>
+                        {formatBookingStatus(b.status)}
+                      </StatusBadge>
+                      <StatusBadge tone={paymentStatusTone(b.payment_status)}>
+                        {formatPaymentStatus(b.payment_status)}
+                      </StatusBadge>
+                      {b.intake_review_status ? (
+                        <StatusBadge tone="neutral">Intake: {b.intake_review_status}</StatusBadge>
+                      ) : null}
+                      {b.amount != null ? (
+                        <StatusBadge tone="neutral">{formatPeso(b.amount)}</StatusBadge>
+                      ) : null}
+                    </div>
+                    <form
+                      action={updateBookingStatusAction}
+                      className="flex flex-wrap items-center gap-2"
+                    >
+                      <input type="hidden" name="bookingId" value={b.id} />
+                      <select
+                        name="status"
+                        defaultValue={b.status}
+                        className="field h-10 max-w-[13rem]"
+                        aria-label={`Status for ${b.patient_name}`}
+                      >
+                        <option value="pending_doctor_review">Pending doctor review</option>
+                        <option value="needs_more_information">Needs more information</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                      <button className="btn btn-primary h-10" type="submit">
+                        Update
+                      </button>
+                    </form>
                   </div>
-                  <div className="text-sm text-[#4D4D4D]">
-                    <p>{location}</p>
-                    <p>{time}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <StatusBadge>{intake}</StatusBadge>
-                    <StatusBadge>{payment}</StatusBadge>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button className="btn btn-secondary">View Patient</button>
-                    <button className="btn btn-primary">Message</button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </PageShell>
@@ -992,43 +1046,6 @@ function FinalCta() {
         <Link className="btn btn-primary mt-8" href="/booking">
           Book Treatment
         </Link>
-      </div>
-    </section>
-  );
-}
-
-function DiscountsSection() {
-  return (
-    <section className="border-t border-[#E6DFD5] bg-[#FAF8F4] px-5 py-14 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <SectionHeading
-          eyebrow="Employee and referral benefits"
-          title="Discounts are presented quietly and clinically."
-          text="The platform can support office, Regenezys employee, medical team, and referral discounts without making the core brand feel promo-heavy."
-        />
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {discountTiers.map((group) => (
-            <article key={group.category} className="card p-5">
-              <h3 className="font-serif text-2xl text-[#1F1F1F]">{group.category}</h3>
-              <div className="mt-4 grid gap-3">
-                {group.tiers.map((tier) => (
-                  <div key={tier.name} className="flex justify-between gap-4 text-sm">
-                    <span className="text-[#595550]">{tier.name}</span>
-                    <span className="font-semibold text-[#1F1F1F]">{tier.discount}</span>
-                  </div>
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {referralPromos.map((promo) => (
-            <article key={promo.title} className="card p-5">
-              <h3 className="font-serif text-2xl text-[#1F1F1F]">{promo.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-[#595550]">{promo.detail}</p>
-            </article>
-          ))}
-        </div>
       </div>
     </section>
   );

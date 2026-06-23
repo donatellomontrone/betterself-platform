@@ -169,6 +169,60 @@ export async function getPatientBookings(patientId: string): Promise<PatientBook
   return rows;
 }
 
+export type AdminBookingView = {
+  id: string;
+  patient_name: string;
+  patient_email: string;
+  treatment_name: string;
+  appointment_type: string;
+  location: string;
+  status: BookingStatus;
+  payment_status: PaymentStatus;
+  amount: number | null;
+  intake_review_status: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+/** All bookings across patients, newest first — for the doctor/admin dashboard. */
+export async function getAllBookings(): Promise<AdminBookingView[]> {
+  const sql = getSql();
+  const rows = (await sql`
+    select
+      b.id,
+      u.full_name as patient_name,
+      u.email as patient_email,
+      t.name as treatment_name,
+      b.appointment_type,
+      b.location,
+      b.status,
+      b.payment_status,
+      (
+        select p.amount from public.payments p
+        where p.booking_id = b.id order by p.created_at desc limit 1
+      ) as amount,
+      (
+        select mi.doctor_review_status from public.medical_intakes mi
+        where mi.booking_id = b.id order by mi.created_at desc limit 1
+      ) as intake_review_status,
+      b.notes,
+      b.created_at
+    from public.bookings b
+    join public.user_profiles u on u.id = b.patient_id
+    join public.treatments t on t.id = b.treatment_id
+    order by b.created_at desc
+  `) as unknown as AdminBookingView[];
+  return rows;
+}
+
+/** Update a booking's review status (admin/doctor action). */
+export async function updateBookingStatus(bookingId: string, status: BookingStatus) {
+  const sql = getSql();
+  await sql`
+    update public.bookings set status = ${status}, updated_at = now() where id = ${bookingId}
+  `;
+}
+
 /**
  * Mark a booking + its payment as paid, identified by the checkout reference number.
  * Called from the PayMongo webhook. Returns the number of payment rows updated.
