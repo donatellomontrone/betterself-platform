@@ -13,6 +13,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { Treatment } from "@/lib/treatments";
+import { HeaderAuthControls } from "@/components/header-auth";
 
 export const primaryNav = [
   { href: "/treatments", label: "Treatments" },
@@ -65,15 +66,11 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <Link className="rounded-lg px-3 py-2 text-sm font-semibold text-[#4D4D4D]" href="/login">
-              Login
-            </Link>
+            <HeaderAuthControls variant="mobile" />
           </div>
         </details>
         <div className="hidden items-center gap-3 md:flex">
-          <Link className="btn btn-secondary" href="/login">
-            Login
-          </Link>
+          <HeaderAuthControls />
           <Link className="btn btn-primary" href="/booking">
             Book Treatment
           </Link>
