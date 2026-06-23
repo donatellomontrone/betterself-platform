@@ -106,6 +106,8 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   const total = selectedTreatment.price + 1500;
   const progress = ((step + 1) / 5) * 100;
   const scheduleStatus = scheduleConfirmed ? "Calendly appointment selected" : "Not scheduled yet";
+  // A home address is only relevant for in-person home visits, not online reviews.
+  const requiresAddress = appointmentType === "Home treatment visit";
 
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }));
@@ -118,7 +120,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   function handleNextStep() {
     setCheckoutNote("");
 
-    if (step === 1 && !(location.trim() && locationValid)) {
+    if (step === 1 && requiresAddress && !(location.trim() && locationValid)) {
       setCheckoutState("error");
       setCheckoutNote("Please enter your address in Metro Manila to continue.");
       return;
@@ -144,7 +146,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
       return;
     }
 
-    if (!(location.trim() && locationValid)) {
+    if (requiresAddress && !(location.trim() && locationValid)) {
       setCheckoutState("error");
       setCheckoutNote("Please enter your address in Metro Manila before payment.");
       return;
@@ -163,7 +165,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         body: JSON.stringify({
           treatmentId: selectedTreatment.id,
           appointmentType,
-          location,
+          location: requiresAddress ? location : "Online doctor review",
           paymentMode,
           calendlyEventUri,
           calendlyInviteeUri,
@@ -171,7 +173,11 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
             name: customer.name,
             email: customer.email,
             phone: customer.phone,
-            address: customer.address ? `${location} (${customer.address})` : location,
+            address: requiresAddress
+              ? customer.address
+                ? `${location} (${customer.address})`
+                : location
+              : "Online consultation",
           },
         }),
       });
@@ -240,19 +246,26 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         {step === 1 ? (
           <BookingStep title="Appointment type and location" text="Home treatment visits are available in selected Metro Manila areas, subject to doctor availability.">
             <ChoiceGrid items={appointmentTypes} value={appointmentType} onChange={setAppointmentType} />
-            <div className="mt-6">
-              <p className="text-sm font-semibold text-[#1F1F1F]">Your address</p>
-              <p className="mt-1 text-xs text-[#7A746E]">
-                Start typing and select your address. Home visits are available in Metro Manila only.
+            {requiresAddress ? (
+              <div className="mt-6">
+                <p className="text-sm font-semibold text-[#1F1F1F]">Your address</p>
+                <p className="mt-1 text-xs text-[#7A746E]">
+                  Start typing and select your address. Home visits are available in Metro Manila only.
+                </p>
+                <AddressAutocomplete
+                  value={location}
+                  onChange={(address, isValid) => {
+                    setLocation(address);
+                    setLocationValid(isValid);
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="mt-6 text-sm text-[#6F6F6F]">
+                No home address needed for an online doctor review — you&apos;ll meet the doctor
+                remotely.
               </p>
-              <AddressAutocomplete
-                value={location}
-                onChange={(address, isValid) => {
-                  setLocation(address);
-                  setLocationValid(isValid);
-                }}
-              />
-            </div>
+            )}
           </BookingStep>
         ) : null}
 
