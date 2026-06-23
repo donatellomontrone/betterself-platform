@@ -46,7 +46,7 @@ export function Header() {
             <p className="font-serif text-2xl leading-none text-[#1F1F1F]">
               BetterSelf
             </p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-[#7A746E]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-[#5C574F]">
               Home Aesthetics
             </p>
           </div>
@@ -58,26 +58,26 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <details className="relative md:hidden">
-          <summary className="btn btn-secondary list-none">Menu</summary>
-          <div className="absolute right-0 top-12 z-40 grid w-56 gap-2 rounded-lg border border-[#E6DFD5] bg-white p-3 shadow-xl">
+        <details className="relative lg:hidden">
+          <summary className="btn btn-secondary list-none cursor-pointer">Menu</summary>
+          <div className="absolute right-0 top-12 z-40 grid w-60 gap-2 rounded-lg border border-[#E6DFD5] bg-white p-3 shadow-xl">
             {primaryNav.map((item) => (
               <Link key={item.href} className="rounded-lg px-3 py-2 text-sm font-semibold text-[#4D4D4D]" href={item.href}>
                 {item.label}
               </Link>
             ))}
             <HeaderAuthControls variant="mobile" />
+            <Link className="btn btn-primary mt-1 justify-center" href="/booking">
+              Book Treatment
+            </Link>
           </div>
         </details>
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <HeaderAuthControls />
           <Link className="btn btn-primary" href="/booking">
             Book Treatment
           </Link>
         </div>
-        <Link className="btn btn-primary hidden sm:inline-flex md:hidden" href="/booking">
-          Book
-        </Link>
       </div>
     </header>
   );
@@ -89,7 +89,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-10 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr] lg:px-8">
         <div>
           <p className="font-serif text-3xl text-[#1F1F1F]">BetterSelf</p>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-[#6F6F6F]">
+          <p className="mt-3 max-w-sm text-sm leading-6 text-[#595550]">
             Doctor-led aesthetic services. Private home appointments in selected
             Metro Manila areas, subject to medical suitability and availability.
           </p>
@@ -118,10 +118,10 @@ export function Footer() {
           ]}
         />
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7A746E]">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#5C574F]">
             WhatsApp support
           </p>
-          <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">
+          <p className="mt-3 text-sm leading-6 text-[#595550]">
             WhatsApp support coming soon. For now, the internal doctor-patient
             messaging structure is prepared inside the platform.
           </p>
@@ -141,7 +141,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7A746E]">
+      <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#5C574F]">
         {title}
       </p>
       <div className="mt-4 grid gap-3 text-sm text-[#4D4D4D]">
@@ -195,7 +195,7 @@ export function SectionHeading({
       <h2 className="mt-3 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">
         {title}
       </h2>
-      {text ? <p className="mt-4 text-base leading-7 text-[#6F6F6F]">{text}</p> : null}
+      {text ? <p className="mt-4 text-base leading-7 text-[#595550]">{text}</p> : null}
     </div>
   );
 }
@@ -244,28 +244,28 @@ export function TreatmentCard({ treatment }: { treatment: Treatment }) {
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>{treatment.category}</Badge>
-          <span className="rounded-full bg-[#F1ECE4] px-3 py-1 text-xs font-semibold text-[#6F6F6F]">
+          <span className="rounded-full bg-[#F1ECE4] px-3 py-1 text-xs font-semibold text-[#595550]">
             Doctor assessment required
           </span>
         </div>
         <h3 className="mt-5 font-serif text-3xl leading-tight text-[#1F1F1F]">
           {treatment.name}
         </h3>
-        <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">{treatment.description}</p>
+        <p className="mt-3 text-sm leading-6 text-[#595550]">{treatment.description}</p>
         {treatment.detailNote ? (
-          <p className="mt-2 text-sm italic text-[#7A746E]">{treatment.detailNote}</p>
+          <p className="mt-2 text-sm italic text-[#5C574F]">{treatment.detailNote}</p>
         ) : null}
       </div>
       <div className="mt-6">
         <div className="grid grid-cols-2 gap-3 rounded-lg bg-[#FAF8F4] p-4 text-sm">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7A746E]">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
               Duration
             </p>
             <p className="mt-1 font-semibold text-[#1F1F1F]">{treatment.duration}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7A746E]">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
               From
             </p>
             <p className="mt-1 font-semibold text-[#1F1F1F]">{treatment.priceLabel}</p>
@@ -302,7 +302,7 @@ export function DoctorLedStrip() {
             </span>
             <div>
               <p className="font-semibold text-[#1F1F1F]">{title}</p>
-              <p className="mt-1 text-sm leading-5 text-[#6F6F6F]">{text}</p>
+              <p className="mt-1 text-sm leading-5 text-[#595550]">{text}</p>
             </div>
           </div>
         ))}
@@ -333,7 +333,7 @@ export function BookingPreviewCard() {
           ["Status", "Pending doctor review"],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-[#E6DFD5] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7A746E]">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
               {label}
             </p>
             <p className="mt-1 text-sm font-semibold text-[#1F1F1F]">{value}</p>

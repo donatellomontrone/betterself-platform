@@ -1,5 +1,5 @@
 import { getSql } from "./client";
-import type { BookingStatus, PatientProfile, PaymentStatus } from "./types";
+import type { BookingStatus, Json, PatientProfile, PaymentStatus } from "./types";
 
 /**
  * Data-access layer for the BetterSelf patient flow.
@@ -102,6 +102,25 @@ export async function createPayment(input: CreatePaymentInput) {
     values
       (${input.bookingId}, ${input.patientId}, ${input.amount}, 'PHP', ${input.paymentType},
        'pending', ${input.transactionReference}, ${input.paymongoCheckoutId ?? null})
+  `;
+}
+
+export type CreateMedicalIntakeInput = {
+  patientId: string;
+  bookingId: string;
+  answers: Json;
+  consentConfirmed: boolean;
+};
+
+/** Persist the patient's screening answers + consent for a booking. */
+export async function createMedicalIntake(input: CreateMedicalIntakeInput) {
+  const sql = getSql();
+  await sql`
+    insert into public.medical_intakes
+      (patient_id, booking_id, answers, consent_confirmed, doctor_review_status)
+    values
+      (${input.patientId}, ${input.bookingId}, ${JSON.stringify(input.answers)}::jsonb,
+       ${input.consentConfirmed}, 'submitted')
   `;
 }
 

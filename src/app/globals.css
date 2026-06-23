@@ -3,11 +3,19 @@
 :root {
   --background: #faf8f4;
   --foreground: #1f1f1f;
+  /* Confident premium accent (deep sage) used for focus, links, active states. */
+  --accent: #3f5249;
+  --accent-strong: #2f3d36;
+  --accent-weak: #e9efea;
+  /* Readable muted text (darkened from the old washed-out greys). */
+  --muted: #4a4641;
+  --muted-soft: #5c574f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
   --font-sans: "Manrope", "Manrope Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --font-serif: "Cormorant Garamond", Georgia, Cambria, "Times New Roman", Times, serif;
@@ -30,6 +38,13 @@ input {
 
 a {
   text-underline-offset: 4px;
+}
+
+/* Visible keyboard focus everywhere (was missing — WCAG 2.4.7). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .btn {
@@ -59,30 +74,45 @@ a {
 }
 
 .btn-primary {
-  background: #1f1f1f;
+  background: var(--accent);
   color: #ffffff;
+  box-shadow: 0 1px 2px rgb(47 61 54 / 0.18), 0 8px 20px rgb(47 61 54 / 0.16);
 }
 
 .btn-primary:hover {
-  background: #2a2a2a;
+  background: var(--accent-strong);
+  box-shadow: 0 2px 4px rgb(47 61 54 / 0.2), 0 12px 26px rgb(47 61 54 / 0.22);
 }
 
 .btn-secondary {
-  border: 1px solid #e6dfd5;
+  border: 1px solid #ded5c8;
   background: #ffffff;
   color: #1f1f1f;
 }
 
 .btn-secondary:hover {
-  border-color: #a8b8a1;
-  background: #faf8f4;
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: #ffffff;
+}
+
+/* A quiet third button for de-emphasised actions (CTA hierarchy). */
+.btn-ghost {
+  background: transparent;
+  color: var(--accent-strong);
+}
+
+.btn-ghost:hover {
+  background: var(--accent-weak);
 }
 
 .card {
-  border: 1px solid #e6dfd5;
-  border-radius: 0.5rem;
+  border: 1px solid #ece4d8;
+  border-radius: 0.875rem;
   background: #ffffff;
-  box-shadow: 0 16px 48px rgb(31 31 31 / 0.06);
+  box-shadow:
+    0 1px 2px rgb(31 31 31 / 0.04),
+    0 18px 40px rgb(31 31 31 / 0.07);
 }
 
 .field {
@@ -96,8 +126,8 @@ a {
 }
 
 .field:focus {
-  border-color: #a8b8a1;
-  box-shadow: 0 0 0 3px rgb(168 184 161 / 0.22);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(63 82 73 / 0.18);
 }
 
 .eyebrow {
@@ -105,5 +135,10 @@ a {
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #7a746e;
+  color: var(--accent-strong);
+}
+
+/* Serif display headings: tighter tracking reads more premium. */
+.font-serif {
+  letter-spacing: -0.01em;
 }

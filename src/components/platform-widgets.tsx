@@ -35,6 +35,15 @@ const intakeQuestions = [
   "Have you had any adverse reaction before?",
 ];
 
+const consentItems = [
+  "I confirm the information provided is accurate.",
+  "I understand that treatment is subject to doctor assessment.",
+  "I understand that results vary per patient.",
+  "I agree to receive appointment-related messages.",
+];
+
+const stepLabels = ["Treatment", "Appointment", "Your details", "Schedule", "Payment"];
+
 type BookingFlowProps = {
   initialTreatmentId?: string;
 };
@@ -97,17 +106,21 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   const paymentMode = paymentModes[0];
   const [checkoutState, setCheckoutState] = useState<"idle" | "loading" | "error">("idle");
   const [checkoutNote, setCheckoutNote] = useState("");
+  const [intake, setIntake] = useState(() => intakeQuestions.map(() => false));
+  const [consents, setConsents] = useState(() => consentItems.map(() => false));
 
   const selectedTreatment = useMemo(
     () => getTreatmentById(treatmentId) ?? treatments[0],
     [treatmentId],
   );
 
-  const total = selectedTreatment.price + 1500;
   const progress = ((step + 1) / 5) * 100;
   const scheduleStatus = scheduleConfirmed ? "Calendly appointment selected" : "Not scheduled yet";
-  // A home address is only relevant for in-person home visits, not online reviews.
+  // A home address (and the home-visit fee) only apply to in-person home visits.
   const requiresAddress = appointmentType === "Home treatment visit";
+  const homeVisitFee = requiresAddress ? 1500 : 0;
+  const total = selectedTreatment.price + homeVisitFee;
+  const allConsented = consents.every(Boolean);
 
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }));
@@ -158,6 +171,12 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
       return;
     }
 
+    if (!allConsented) {
+      setCheckoutState("error");
+      setCheckoutNote("Please tick all the consent boxes before continuing to payment.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -169,6 +188,8 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           paymentMode,
           calendlyEventUri,
           calendlyInviteeUri,
+          intake: intakeQuestions.filter((_, index) => intake[index]),
+          consentConfirmed: allConsented,
           customer: {
             name: customer.name,
             email: customer.email,
@@ -203,16 +224,32 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section className="card p-5 md:p-7">
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-lg bg-[#FAF8F4] px-4 py-3 lg:hidden">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5C574F]">
+              Estimated total
+            </p>
+            <p className="font-serif text-2xl text-[#1F1F1F]">{formatPeso(total)}</p>
+          </div>
+          <p className="max-w-[55%] text-right text-xs text-[#595550]">
+            {selectedTreatment.name}
+          </p>
+        </div>
         <div className="mb-6">
           <div className="h-2 overflow-hidden rounded-full bg-[#F1ECE4]">
             <div
-              className="h-full rounded-full bg-[#A8B8A1] transition-all"
+              className="h-full rounded-full bg-[#3F5249] transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#7A746E]">
-            Step {step + 1} of 5
-          </p>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#5C574F]">
+            <span>
+              Step {step + 1} of 5 · {stepLabels[step]}
+            </span>
+            <span className="font-medium normal-case tracking-normal text-[#8A847B]">
+              No charge until the last step
+            </span>
+          </div>
         </div>
 
         {step === 0 ? (
@@ -228,7 +265,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
                   }`}
                   onClick={() => setTreatmentId(treatment.id)}
                 >
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7A746E]">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#5C574F]">
                     {treatment.category}
                   </p>
                   <p className="mt-2 font-serif text-2xl text-[#1F1F1F]">
@@ -249,7 +286,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
             {requiresAddress ? (
               <div className="mt-6">
                 <p className="text-sm font-semibold text-[#1F1F1F]">Your address</p>
-                <p className="mt-1 text-xs text-[#7A746E]">
+                <p className="mt-1 text-xs text-[#5C574F]">
                   Start typing and select your address. Home visits are available in Metro Manila only.
                 </p>
                 <AddressAutocomplete
@@ -261,7 +298,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
                 />
               </div>
             ) : (
-              <p className="mt-6 text-sm text-[#6F6F6F]">
+              <p className="mt-6 text-sm text-[#595550]">
                 No home address needed for an online doctor review — you&apos;ll meet the doctor
                 remotely.
               </p>
@@ -313,14 +350,23 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
               ) : null}
             </div>
             <div className="mt-6 grid gap-3">
-              {intakeQuestions.map((question) => (
+              {intakeQuestions.map((question, index) => (
                 <label key={question} className="flex items-start gap-3 rounded-lg border border-[#E6DFD5] bg-white p-4 text-sm text-[#4D4D4D]">
-                  <input className="mt-1" type="checkbox" />
+                  <input
+                    className="mt-1"
+                    type="checkbox"
+                    checked={intake[index]}
+                    onChange={(event) =>
+                      setIntake((current) =>
+                        current.map((value, i) => (i === index ? event.target.checked : value)),
+                      )
+                    }
+                  />
                   <span>{question}</span>
                 </label>
               ))}
             </div>
-            <label className="mt-4 flex items-center gap-3 rounded-lg border border-dashed border-[#C8B89F] bg-[#FAF8F4] p-4 text-sm text-[#6F6F6F]">
+            <label className="mt-4 flex items-center gap-3 rounded-lg border border-dashed border-[#C8B89F] bg-[#FAF8F4] p-4 text-sm text-[#595550]">
               <Paperclip className="h-4 w-4" />
               Optional photo upload structure
             </label>
@@ -345,24 +391,30 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         {step === 4 ? (
           <BookingStep title="Review treatment booking and payment" text="Confirm the treatment booking request. The doctor may need to approve or adjust the treatment before the home visit is fully confirmed.">
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4">
-              <p className="text-sm font-semibold text-[#1F1F1F]">Payment by PayMongo</p>
-              <p className="mt-2 text-sm leading-6 text-[#6F6F6F]">
-                After the Calendly slot is selected, BetterSelf creates a secure PayMongo
-                checkout for this treatment and home visit fee. PayMongo handles cards,
-                GCash, and QR Ph on the hosted payment page.
+              <p className="flex items-center gap-2 text-sm font-semibold text-[#1F1F1F]">
+                <ShieldCheck className="h-4 w-4 text-[#3F5249]" />
+                Secure payment via PayMongo
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#595550]">
+                You&apos;ll be redirected to PayMongo&apos;s secure hosted page to pay by
+                card, GCash, or QR Ph. If the doctor cannot proceed after review, your
+                payment is refunded.
               </p>
             </div>
             <div className="mt-6 rounded-lg border border-[#E6DFD5] p-4">
               <p className="text-sm font-semibold text-[#1F1F1F]">Consent required</p>
               <div className="mt-3 grid gap-3">
-                {[
-                  "I confirm the information provided is accurate.",
-                  "I understand that treatment is subject to doctor assessment.",
-                  "I understand that results vary per patient.",
-                  "I agree to receive appointment-related messages.",
-                ].map((item) => (
+                {consentItems.map((item, index) => (
                   <label key={item} className="flex gap-3 text-sm text-[#4D4D4D]">
-                    <input type="checkbox" />
+                    <input
+                      type="checkbox"
+                      checked={consents[index]}
+                      onChange={(event) =>
+                        setConsents((current) =>
+                          current.map((value, i) => (i === index ? event.target.checked : value)),
+                        )
+                      }
+                    />
                     <span>{item}</span>
                   </label>
                 ))}
@@ -370,13 +422,22 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
             </div>
             <button
               className="btn btn-primary mt-6 h-12 w-full justify-center"
-              disabled={checkoutState === "loading"}
+              disabled={checkoutState === "loading" || !allConsented}
               onClick={startCheckout}
             >
               <CreditCard className="h-4 w-4" />
-              {checkoutState === "loading" ? "Creating checkout..." : "Confirm Booking"}
+              {checkoutState === "loading"
+                ? "Creating secure checkout..."
+                : "Continue to secure payment"}
             </button>
-            {checkoutNote ? <p className="mt-3 text-sm text-[#8A3E35]">{checkoutNote}</p> : null}
+            <p className="mt-3 text-center text-xs text-[#5C574F]">
+              You&apos;ll review the final amount on PayMongo before paying.
+            </p>
+            {checkoutNote ? (
+              <p className="mt-3 text-sm font-medium text-[#B42318]" role="alert" aria-live="polite">
+                {checkoutNote}
+              </p>
+            ) : null}
           </BookingStep>
         ) : null}
 
@@ -409,14 +470,21 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           </h2>
           <div className="mt-5 grid gap-3 text-sm">
             <SummaryRow label="Treatment" value={selectedTreatment.priceLabel} />
-            <SummaryRow label="Home visit fee" value={formatPeso(1500)} />
+            {requiresAddress ? (
+              <SummaryRow label="Home visit fee" value={formatPeso(homeVisitFee)} />
+            ) : null}
             <SummaryRow label="Appointment" value={appointmentType} />
-            <SummaryRow label="Location" value={location} />
+            <SummaryRow
+              label="Location"
+              value={
+                requiresAddress ? location || "Add your address" : "Online doctor review"
+              }
+            />
             <SummaryRow label="Calendar" value={scheduleStatus} />
-            <SummaryRow label="Payment" value={paymentMode} />
+            <SummaryRow label="Payment" value="Card, GCash, or QR Ph" />
           </div>
           <div className="mt-5 rounded-lg bg-[#FAF8F4] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7A746E]">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
               Estimated total
             </p>
             <p className="mt-1 font-serif text-3xl text-[#1F1F1F]">
@@ -492,7 +560,7 @@ function CalendlyScheduler({
     return (
       <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
         <p className="text-sm font-semibold text-[#1F1F1F]">Calendly is ready to connect</p>
-        <p className="mt-2 text-sm leading-6 text-[#6F6F6F]">
+        <p className="mt-2 text-sm leading-6 text-[#595550]">
           Add <span className="font-semibold text-[#1F1F1F]">NEXT_PUBLIC_CALENDLY_URL</span> in
           Vercel with the BetterSelf event link. The calendar will appear here after redeploy.
         </p>
@@ -505,7 +573,7 @@ function CalendlyScheduler({
       <div className="flex flex-col gap-3 rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-[#1F1F1F]">BetterSelf Calendly</p>
-          <p className="mt-1 text-sm text-[#6F6F6F]">
+          <p className="mt-1 text-sm text-[#595550]">
             If the embedded calendar is blocked, open Calendly in a new tab.
           </p>
         </div>
@@ -548,7 +616,7 @@ function BookingStep({
   return (
     <div>
       <h1 className="font-serif text-4xl leading-tight text-[#1F1F1F]">{title}</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6F6F6F]">{text}</p>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-[#595550]">{text}</p>
       <div className="mt-6">{children}</div>
     </div>
   );
@@ -613,7 +681,7 @@ function ChoiceGrid({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-[#E6DFD5] pb-3 last:border-0 last:pb-0">
-      <span className="text-[#6F6F6F]">{label}</span>
+      <span className="text-[#595550]">{label}</span>
       <span className="text-right font-semibold text-[#1F1F1F]">{value}</span>
     </div>
   );
@@ -628,18 +696,8 @@ type ChatMessage = {
 const seedMessages: ChatMessage[] = [
   {
     sender: "system",
-    text: "Appointment thread created for Skin Booster Treatment.",
-    time: "9:10 AM",
-  },
-  {
-    sender: "doctor",
-    text: "Please upload clear photos in natural light and confirm if you have allergies or current medication.",
-    time: "9:12 AM",
-  },
-  {
-    sender: "patient",
-    text: "I have no known allergies. I will upload photos before the appointment.",
-    time: "9:18 AM",
+    text: "This is your private channel with the BetterSelf medical team. Send a message and a doctor will reply here before your appointment.",
+    time: "",
   },
 ];
 
@@ -655,8 +713,8 @@ export function DoctorChat() {
       ...current,
       { sender: "patient", text, time: "Now" },
       {
-        sender: "doctor",
-        text: "Thank you. This has been added to your intake for doctor review.",
+        sender: "system",
+        text: "Message sent. A doctor will review and reply here — you'll be notified.",
         time: "Now",
       },
     ]);
@@ -668,21 +726,12 @@ export function DoctorChat() {
       <aside className="border-b border-[#E6DFD5] bg-[#FAF8F4] p-4 lg:border-b-0 lg:border-r">
         <p className="eyebrow">Messages</p>
         <div className="mt-4 grid gap-3">
-          {["Skin Booster Treatment", "Medical Intake Review", "Aftercare Follow-up"].map(
-            (conversation, index) => (
-              <button
-                key={conversation}
-                className={`rounded-lg border p-4 text-left ${
-                  index === 0 ? "border-[#A8B8A1] bg-white" : "border-[#E6DFD5]"
-                }`}
-              >
-                <p className="font-semibold text-[#1F1F1F]">{conversation}</p>
-                <p className="mt-1 text-xs text-[#6F6F6F]">
-                  {index === 0 ? "Active appointment thread" : "Conversation preview"}
-                </p>
-              </button>
-            ),
-          )}
+          <div className="rounded-lg border border-[#A8B8A1] bg-white p-4">
+            <p className="font-semibold text-[#1F1F1F]">Your conversation</p>
+            <p className="mt-1 text-xs text-[#595550]">
+              Private channel with the BetterSelf medical team
+            </p>
+          </div>
         </div>
         <p className="mt-5 rounded-lg bg-[#EEF5F5] p-3 text-xs leading-5 text-[#566060]">
           WhatsApp support coming soon. Internal messaging is prepared first.
@@ -692,7 +741,7 @@ export function DoctorChat() {
         <div className="flex items-center justify-between border-b border-[#E6DFD5] p-5">
           <div>
             <p className="font-serif text-2xl text-[#1F1F1F]">Doctor Chat</p>
-            <p className="mt-1 text-sm text-[#6F6F6F]">Response time may vary.</p>
+            <p className="mt-1 text-sm text-[#595550]">Response time may vary.</p>
           </div>
           <StatusBadge>Linked to booking</StatusBadge>
         </div>
@@ -709,7 +758,7 @@ export function DoctorChat() {
                   ? "ml-auto bg-[#1F1F1F] text-white"
                   : message.sender === "doctor"
                     ? "bg-[#EEF5F5] text-[#1F1F1F]"
-                    : "mx-auto bg-[#F1ECE4] text-[#6F6F6F]"
+                    : "mx-auto bg-[#F1ECE4] text-[#595550]"
               }`}
             >
               <p>{message.text}</p>
@@ -719,7 +768,7 @@ export function DoctorChat() {
         </div>
         <form className="flex gap-3 border-t border-[#E6DFD5] p-4" onSubmit={sendMessage}>
           <button
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-lg border border-[#E6DFD5] text-[#6F6F6F]"
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-lg border border-[#E6DFD5] text-[#595550]"
             type="button"
             aria-label="Attach photo"
           >
@@ -749,7 +798,7 @@ export function LoginRegisterPreview() {
         <h1 className="mt-3 font-serif text-5xl leading-tight text-[#1F1F1F]">
           Sign in to manage private care.
         </h1>
-        <p className="mt-4 text-base leading-7 text-[#6F6F6F]">
+        <p className="mt-4 text-base leading-7 text-[#595550]">
           The first version prepares account access for bookings, intake forms,
           doctor messaging, treatment history, payments, and aftercare.
         </p>
@@ -811,7 +860,7 @@ export function ConfirmationSummary() {
         ].map(([Icon, label, value]) => (
           <div key={label as string} className="rounded-lg border border-[#E6DFD5] p-4">
             <Icon className="h-5 w-5 text-[#4F5B55]" />
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#7A746E]">
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
               {label as string}
             </p>
             <p className="mt-1 text-sm font-semibold text-[#1F1F1F]">{value as string}</p>

@@ -25,7 +25,6 @@ import {
   DoctorLedStrip,
   Notice,
   PageShell,
-  patientDashboardCards,
   SafetyChecklist,
   SectionHeading,
   StatusBadge,
@@ -33,7 +32,6 @@ import {
 } from "@/components/site-shell";
 import {
   BookingFlow,
-  ConfirmationSummary,
   DoctorChat,
   LoginRegisterPreview,
 } from "@/components/platform-widgets";
@@ -150,11 +148,11 @@ export function HomePage() {
       <section className="px-5 py-10 lg:px-8 lg:py-16">
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1fr_500px]">
           <div>
-            <Badge>Doctor-led aesthetic care at your doorstep</Badge>
+            <Badge>Home-visit medical aesthetics · Metro Manila</Badge>
             <h1 className="mt-6 max-w-4xl font-serif text-5xl leading-[1.03] text-[#1F1F1F] md:text-7xl">
               Doctor-led aesthetic care at your doorstep.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#6F6F6F]">
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#595550]">
               BetterSelf brings private aesthetic treatments to your home,
               guided by a licensed medical doctor and designed around safety,
               discretion, and convenience.
@@ -167,7 +165,7 @@ export function HomePage() {
                 Explore Treatments
               </Link>
             </div>
-            <p className="mt-5 text-sm leading-6 text-[#7A746E]">
+            <p className="mt-5 text-sm leading-6 text-[#5C574F]">
               Medical intake required. Doctor assessment before treatment.
               Private home appointments available.
             </p>
@@ -208,7 +206,7 @@ function HomeBrandPanel() {
           ["Home", "Private visit"],
         ].map(([title, text]) => (
           <div key={title} className="rounded-lg bg-[#FAF8F4] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7A746E]">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
               {title}
             </p>
             <p className="mt-1 text-sm font-semibold text-[#1F1F1F]">{text}</p>
@@ -241,7 +239,7 @@ export function TreatmentsPage() {
               <section key={category} id={slugify(category)}>
                 <div className="mb-5 flex items-end justify-between gap-4">
                   <SectionHeading eyebrow="Service category" title={category} />
-                  <p className="hidden max-w-sm text-sm leading-6 text-[#6F6F6F] md:block">
+                  <p className="hidden max-w-sm text-sm leading-6 text-[#595550] md:block">
                     Book the treatment request directly. The doctor still
                     reviews suitability before confirming or performing care.
                   </p>
@@ -271,11 +269,11 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
             <h1 className="mt-5 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
               {treatment.name}
             </h1>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-[#6F6F6F]">
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-[#595550]">
               {treatment.description}
             </p>
             {treatment.detailNote ? (
-              <p className="mt-3 text-sm italic text-[#7A746E]">{treatment.detailNote}</p>
+              <p className="mt-3 text-sm italic text-[#5C574F]">{treatment.detailNote}</p>
             ) : null}
             <div className="mt-8 grid gap-8">
               <DetailBlock title="What it may help with" items={treatment.mayHelpWith} />
@@ -293,12 +291,11 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
           </article>
           <aside className="lg:sticky lg:top-28 lg:self-start">
             <section className="card p-5">
-              <p className="eyebrow">Booking card</p>
-              <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
-                {treatment.name}
-              </h2>
+              <p className="eyebrow">Book this treatment</p>
+              <p className="mt-2 font-serif text-4xl text-[#1F1F1F]">
+                {treatment.priceLabel}
+              </p>
               <div className="mt-5 grid gap-3 text-sm">
-                <Summary label="Starting price" value={treatment.priceLabel} />
                 <Summary label="Duration" value={treatment.duration} />
                 <Summary label="Home visit" value="Available when suitable" />
                 <Summary label="Requirement" value="Doctor assessment required" />
@@ -330,9 +327,6 @@ export function BookingPage({ treatmentId }: { treatmentId?: string }) {
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <BookingFlow initialTreatmentId={treatmentId} />
-          <div className="mt-6">
-            <ConfirmationSummary />
-          </div>
         </div>
       </section>
     </PageShell>
@@ -347,6 +341,22 @@ export function DashboardPage({
   bookings?: PatientBookingView[];
 }) {
   const upcoming = bookings[0];
+  const hasCompleted = bookings.some((b) => b.status === "completed");
+  const stats = [
+    { label: "Total bookings", value: bookings.length },
+    {
+      label: "Awaiting doctor review",
+      value: bookings.filter((b) => b.status === "pending_doctor_review").length,
+    },
+    {
+      label: "Confirmed",
+      value: bookings.filter((b) => b.status === "confirmed").length,
+    },
+    {
+      label: "Paid",
+      value: bookings.filter((b) => b.payment_status === "paid").length,
+    },
+  ];
   return (
     <PageShell>
       <section className="px-5 py-10 lg:px-8 lg:py-14">
@@ -355,21 +365,17 @@ export function DashboardPage({
             <SectionHeading
               eyebrow="Patient dashboard"
               title={viewerName ? `Welcome back, ${viewerName}.` : "Welcome back."}
-              text="A private clinic-style portal for bookings, messages, intake, aftercare, treatment history, and payments."
+              text="Your bookings, schedule, payments, and aftercare in one private place."
             />
             <Link className="btn btn-primary" href="/booking">
               Book Appointment
             </Link>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {patientDashboardCards.map((card) => (
-              <article key={card.title} className="card p-5">
-                <card.icon className="h-5 w-5 text-[#4F5B55]" />
-                <h2 className="mt-4 font-serif text-2xl text-[#1F1F1F]">{card.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-[#6F6F6F]">{card.text}</p>
-                <div className="mt-4">
-                  <StatusBadge>{card.status}</StatusBadge>
-                </div>
+            {stats.map((stat) => (
+              <article key={stat.label} className="card p-5">
+                <p className="text-sm text-[#595550]">{stat.label}</p>
+                <p className="mt-3 font-serif text-4xl text-[#1F1F1F]">{stat.value}</p>
               </article>
             ))}
           </div>
@@ -410,7 +416,7 @@ export function DashboardPage({
                   <h2 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
                     No appointments yet
                   </h2>
-                  <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">
+                  <p className="mt-3 text-sm leading-6 text-[#595550]">
                     Once you book a treatment it will appear here, with its doctor-review
                     status, schedule, and payment.
                   </p>
@@ -424,16 +430,30 @@ export function DashboardPage({
             </section>
             <section id="aftercare" className="card bg-[#EEF5F5] p-6">
               <p className="eyebrow">Aftercare</p>
-              <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
-                Latest instructions
-              </h2>
-              <SafetyChecklist
-                items={[
-                  "Avoid intense heat and strenuous activity immediately after treatment when advised.",
-                  "Do not massage or manipulate the treated area unless instructed.",
-                  "Message the doctor if you notice unexpected symptoms.",
-                ]}
-              />
+              {hasCompleted ? (
+                <>
+                  <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
+                    Latest instructions
+                  </h2>
+                  <SafetyChecklist
+                    items={[
+                      "Avoid intense heat and strenuous activity immediately after treatment when advised.",
+                      "Do not massage or manipulate the treated area unless instructed.",
+                      "Message the doctor if you notice unexpected symptoms.",
+                    ]}
+                  />
+                </>
+              ) : (
+                <>
+                  <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
+                    Aftercare guidance
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-[#595550]">
+                    After your treatment, your doctor&apos;s personalised aftercare
+                    instructions will appear here.
+                  </p>
+                </>
+              )}
             </section>
           </div>
           {bookings.length > 0 ? (
@@ -449,7 +469,7 @@ export function DashboardPage({
                       <p className="font-serif text-2xl text-[#1F1F1F]">
                         {booking.treatment_name}
                       </p>
-                      <p className="mt-1 text-sm text-[#6F6F6F]">
+                      <p className="mt-1 text-sm text-[#595550]">
                         {booking.appointment_type} · {booking.location}
                       </p>
                     </div>
@@ -513,7 +533,7 @@ export function AdminPage() {
               ["Payments pending", "2"],
             ].map(([label, value]) => (
               <div key={label} className="card p-5">
-                <p className="text-sm text-[#6F6F6F]">{label}</p>
+                <p className="text-sm text-[#595550]">{label}</p>
                 <p className="mt-3 font-serif text-4xl text-[#1F1F1F]">{value}</p>
               </div>
             ))}
@@ -524,7 +544,7 @@ export function AdminPage() {
                 <div className="grid gap-4 lg:grid-cols-[1fr_1fr_0.8fr_auto] lg:items-center">
                   <div>
                     <p className="font-serif text-2xl text-[#1F1F1F]">{patient}</p>
-                    <p className="mt-1 text-sm text-[#6F6F6F]">{treatment}</p>
+                    <p className="mt-1 text-sm text-[#595550]">{treatment}</p>
                   </div>
                   <div className="text-sm text-[#4D4D4D]">
                     <p>{location}</p>
@@ -593,9 +613,9 @@ export function AboutPage() {
               />
             </div>
             <div className="mt-5 grid gap-3">
-              <StatusBadge>Doctor-led</StatusBadge>
-              <StatusBadge>Medical license placeholder</StatusBadge>
-              <StatusBadge>Aesthetic care specialization placeholder</StatusBadge>
+              <StatusBadge>Doctor-led care</StatusBadge>
+              <StatusBadge>Licensed medical doctor</StatusBadge>
+              <StatusBadge>Aesthetic &amp; injectable treatments</StatusBadge>
             </div>
           </div>
           <div>
@@ -603,7 +623,7 @@ export function AboutPage() {
             <h1 className="mt-5 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
               Private aesthetic care, guided by a licensed medical doctor.
             </h1>
-            <div className="mt-6 grid gap-5 text-base leading-8 text-[#6F6F6F]">
+            <div className="mt-6 grid gap-5 text-base leading-8 text-[#595550]">
               <p>
                 BetterSelf was created to make aesthetic care more private,
                 structured, and convenient without removing the medical standards
@@ -643,7 +663,7 @@ export function FaqPage() {
           {faqs.map(([question, answer]) => (
             <article key={question} className="card p-5">
               <h2 className="font-serif text-2xl text-[#1F1F1F]">{question}</h2>
-              <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">{answer}</p>
+              <p className="mt-3 text-sm leading-6 text-[#595550]">{answer}</p>
             </article>
           ))}
         </div>
@@ -662,7 +682,7 @@ export function LoginPage({ status }: { status?: string }) {
             <h1 className="mt-3 font-serif text-5xl leading-tight text-[#1F1F1F]">
               Sign in to your private BetterSelf account.
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[#6F6F6F]">
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[#595550]">
               Patient accounts now use Clerk. After you add the Clerk environment
               variables from Vercel, patients can sign in, book treatments, and
               message the doctor from the protected portal.
@@ -724,7 +744,7 @@ export function ContactPage() {
             <h1 className="mt-5 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
               Book a treatment or ask the doctor.
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-[#6F6F6F]">
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-[#595550]">
               Choose the treatment you want, complete medical intake, and keep
               the doctor involved before and after your home appointment.
             </p>
@@ -786,11 +806,11 @@ function HowItWorksSection() {
           {howItWorksSteps.map((step, index) => (
             <article key={step.title} className="card p-5">
               <step.icon className="h-5 w-5 text-[#4F5B55]" />
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#7A746E]">
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
                 0{index + 1}
               </p>
               <h3 className="mt-2 font-serif text-2xl text-[#1F1F1F]">{step.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">{step.text}</p>
+              <p className="mt-3 text-sm leading-6 text-[#595550]">{step.text}</p>
             </article>
           ))}
         </div>
@@ -849,7 +869,7 @@ function WhyBetterSelfSection() {
             <article key={title} className="card p-5">
               <Check className="h-5 w-5 text-[#4F5B55]" />
               <h3 className="mt-5 font-serif text-3xl text-[#1F1F1F]">{title}</h3>
-              <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">{text}</p>
+              <p className="mt-3 text-sm leading-6 text-[#595550]">{text}</p>
             </article>
           ))}
         </div>
@@ -947,7 +967,7 @@ function FinalCta() {
         <h2 className="font-serif text-5xl leading-tight text-[#1F1F1F]">
           Book the treatment you want at home.
         </h2>
-        <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#6F6F6F]">
+        <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#595550]">
           Select a service, complete intake, and let the doctor confirm the plan
           before your private home appointment.
         </p>
@@ -975,7 +995,7 @@ function DiscountsSection() {
               <div className="mt-4 grid gap-3">
                 {group.tiers.map((tier) => (
                   <div key={tier.name} className="flex justify-between gap-4 text-sm">
-                    <span className="text-[#6F6F6F]">{tier.name}</span>
+                    <span className="text-[#595550]">{tier.name}</span>
                     <span className="font-semibold text-[#1F1F1F]">{tier.discount}</span>
                   </div>
                 ))}
@@ -987,7 +1007,7 @@ function DiscountsSection() {
           {referralPromos.map((promo) => (
             <article key={promo.title} className="card p-5">
               <h3 className="font-serif text-2xl text-[#1F1F1F]">{promo.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-[#6F6F6F]">{promo.detail}</p>
+              <p className="mt-2 text-sm leading-6 text-[#595550]">{promo.detail}</p>
             </article>
           ))}
         </div>
@@ -1010,7 +1030,7 @@ function DetailBlock({ title, items }: { title: string; items: string[] }) {
 function Summary({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4 border-b border-[#E6DFD5] pb-3 last:border-0">
-      <span className="text-[#6F6F6F]">{label}</span>
+      <span className="text-[#595550]">{label}</span>
       <span className="text-right font-semibold text-[#1F1F1F]">{value}</span>
     </div>
   );

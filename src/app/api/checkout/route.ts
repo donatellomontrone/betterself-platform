@@ -6,6 +6,7 @@ import { hasValidClerkServerKeys } from "@/lib/clerk-env";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import {
   createBooking,
+  createMedicalIntake,
   createPayment,
   ensureUserProfile,
   upsertPatientProfile,
@@ -18,6 +19,8 @@ type CheckoutRequest = {
   paymentMode?: string;
   calendlyEventUri?: string;
   calendlyInviteeUri?: string;
+  intake?: string[];
+  consentConfirmed?: boolean;
   customer?: {
     name?: string;
     email?: string;
@@ -25,6 +28,10 @@ type CheckoutRequest = {
     address?: string;
   };
 };
+
+function isHomeVisit(appointmentType: string | undefined) {
+  return (appointmentType ?? "Home treatment visit") === "Home treatment visit";
+}
 
 const paymentMethods = ["card", "gcash", "qrph"];
 const homeVisitFee = 1500;
@@ -106,6 +113,13 @@ async function persistBooking(
       transactionReference: referenceNumber,
     });
 
+    await createMedicalIntake({
+      patientId: userId,
+      bookingId: booking.id,
+      answers: { flagged: body.intake ?? [] },
+      consentConfirmed: Boolean(body.consentConfirmed),
+    });
+
     return booking.id;
   } catch (error) {
     console.error("[checkout] failed to persist booking:", error);
@@ -128,7 +142,8 @@ export async function POST(request: NextRequest) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
   const secretKey = process.env.PAYMONGO_SECRET_KEY;
   const customerAddress = body.customer?.address;
-  const total = treatment.price + homeVisitFee;
+  const visitFee = isHomeVisit(body.appointmentType) ? homeVisitFee : 0;
+  const total = treatment.price + visitFee;
   const bookingId = await persistBooking(treatment, body, referenceNumber, total);
 
   if (!secretKey) {
@@ -155,7 +170,7 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify({
       data: {
         attributes: {
-          description: `BetterSelf home visit: ${treatment.name}`,
+          description: `BetterSelf: ${treatment.name}`,
           line_items: [
             {
               name: treatment.name,
@@ -164,14 +179,18 @@ export async function POST(request: NextRequest) {
               quantity: 1,
               description: treatment.description,
             },
-            {
-              name: "BetterSelf home visit fee",
-              amount: homeVisitFee * 100,
-              currency: "PHP",
-              quantity: 1,
-              description:
-                "Private home appointment support, subject to doctor approval and area availability.",
-            },
+            ...(visitFee > 0
+              ? [
+                  {
+                    name: "BetterSelf home visit fee",
+                    amount: visitFee * 100,
+                    currency: "PHP",
+                    quantity: 1,
+                    description:
+                      "Private home appointment support, subject to doctor approval and area availability.",
+                  },
+                ]
+              : []),
           ],
           payment_method_types: paymentMethods,
           success_url: `${origin}/booking/success?reference=${referenceNumber}`,
