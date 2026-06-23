@@ -28,6 +28,7 @@ import {
   SafetyChecklist,
   SectionHeading,
   StatusBadge,
+  type StatusTone,
   TreatmentCard,
 } from "@/components/site-shell";
 import {
@@ -58,6 +59,19 @@ function formatBookingStatus(status: string) {
 
 function formatPaymentStatus(status: string) {
   return paymentStatusLabels[status] ?? status;
+}
+
+function bookingStatusTone(status: string): StatusTone {
+  if (status === "confirmed" || status === "completed") return "positive";
+  if (status === "cancelled") return "danger";
+  if (status === "needs_more_information") return "warning";
+  return "neutral";
+}
+
+function paymentStatusTone(status: string): StatusTone {
+  if (status === "paid") return "positive";
+  if (status === "pending") return "warning";
+  return "neutral";
 }
 
 function formatPeso(amount: number | null) {
@@ -478,8 +492,12 @@ export function DashboardPage({
                       <p>{formatPeso(booking.amount)}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <StatusBadge>{formatBookingStatus(booking.status)}</StatusBadge>
-                      <StatusBadge>{formatPaymentStatus(booking.payment_status)}</StatusBadge>
+                      <StatusBadge tone={bookingStatusTone(booking.status)}>
+                        {formatBookingStatus(booking.status)}
+                      </StatusBadge>
+                      <StatusBadge tone={paymentStatusTone(booking.payment_status)}>
+                        {formatPaymentStatus(booking.payment_status)}
+                      </StatusBadge>
                     </div>
                   </article>
                 ))}

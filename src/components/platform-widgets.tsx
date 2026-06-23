@@ -108,6 +108,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   const [checkoutNote, setCheckoutNote] = useState("");
   const [intake, setIntake] = useState(() => intakeQuestions.map(() => false));
   const [consents, setConsents] = useState(() => consentItems.map(() => false));
+  const [triedDetails, setTriedDetails] = useState(false);
 
   const selectedTreatment = useMemo(
     () => getTreatmentById(treatmentId) ?? treatments[0],
@@ -121,13 +122,15 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   const homeVisitFee = requiresAddress ? 1500 : 0;
   const total = selectedTreatment.price + homeVisitFee;
   const allConsented = consents.every(Boolean);
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
+  const phoneValid = customer.phone.replace(/[^\d+]/g, "").length >= 10;
 
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }));
   }
 
   function isCustomerReady() {
-    return Boolean(customer.name.trim() && customer.email.trim() && customer.phone.trim());
+    return Boolean(customer.name.trim()) && emailValid && phoneValid;
   }
 
   function handleNextStep() {
@@ -140,8 +143,9 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
     }
 
     if (step === 2 && !isCustomerReady()) {
+      setTriedDetails(true);
       setCheckoutState("error");
-      setCheckoutNote("Please add name, email, and phone before scheduling.");
+      setCheckoutNote("Please complete your name, a valid email, and a valid phone number.");
       return;
     }
 
@@ -315,6 +319,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
                 onChange={(value) => updateCustomer("name", value)}
                 placeholder="Patient full name"
                 required
+                error={triedDetails && !customer.name.trim() ? "Required." : undefined}
               />
               <TextField
                 label="Email"
@@ -323,13 +328,15 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
                 onChange={(value) => updateCustomer("email", value)}
                 placeholder="patient@example.com"
                 required
+                error={triedDetails && !emailValid ? "Enter a valid email address." : undefined}
               />
               <TextField
                 label="Phone number"
                 value={customer.phone}
                 onChange={(value) => updateCustomer("phone", value)}
-                placeholder="+63..."
+                placeholder="+63 9XX XXX XXXX"
                 required
+                error={triedDetails && !phoneValid ? "Enter a valid phone number." : undefined}
               />
               <TextField
                 label="Emergency contact"
@@ -629,6 +636,7 @@ function TextField({
   placeholder,
   type = "text",
   required = false,
+  error,
 }: {
   label: string;
   value: string;
@@ -636,18 +644,27 @@ function TextField({
   placeholder: string;
   type?: string;
   required?: boolean;
+  error?: string;
 }) {
   return (
     <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F]">
-      {label}
+      <span>
+        {label}
+        {required ? <span className="text-[#B42318]"> *</span> : null}
+      </span>
       <input
         className="field"
+        style={error ? { borderColor: "#B42318" } : undefined}
+        aria-invalid={error ? true : undefined}
         placeholder={placeholder}
         required={required}
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
+      {error ? (
+        <span className="text-xs font-medium text-[#B42318]">{error}</span>
+      ) : null}
     </label>
   );
 }

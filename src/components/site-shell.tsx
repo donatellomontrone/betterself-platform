@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Treatment } from "@/lib/treatments";
 import { HeaderAuthControls } from "@/components/header-auth";
+import { MobileBottomCta } from "@/components/mobile-cta";
 
 export const primaryNav = [
   { href: "/treatments", label: "Treatments" },
@@ -117,18 +118,67 @@ export function Footer() {
             ["Contact", "/contact"],
           ]}
         />
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#5C574F]">
-            WhatsApp support
-          </p>
-          <p className="mt-3 text-sm leading-6 text-[#595550]">
-            WhatsApp support coming soon. For now, the internal doctor-patient
-            messaging structure is prepared inside the platform.
-          </p>
+        <FooterContact />
+      </div>
+      <div className="border-t border-[#E6DFD5]">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-5 text-xs text-[#5C574F] sm:flex-row sm:items-center sm:justify-between lg:px-8">
+          <p>© 2026 BetterSelf. Doctor-led aesthetic care, Metro Manila.</p>
+          <div className="flex flex-wrap gap-4">
+            <Link className="transition hover:text-[#1F1F1F]" href="/privacy">
+              Privacy
+            </Link>
+            <Link className="transition hover:text-[#1F1F1F]" href="/terms">
+              Terms
+            </Link>
+            <Link className="transition hover:text-[#1F1F1F]" href="/consent">
+              Consent
+            </Link>
+          </div>
         </div>
       </div>
       <MobileBottomCta />
     </footer>
+  );
+}
+
+function FooterContact() {
+  const email = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim();
+  const phone = process.env.NEXT_PUBLIC_SUPPORT_PHONE?.trim();
+  const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_URL?.trim();
+  return (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#5C574F]">
+        Contact
+      </p>
+      <div className="mt-4 grid gap-3 text-sm text-[#4D4D4D]">
+        {email ? (
+          <a className="transition hover:text-[#1F1F1F]" href={`mailto:${email}`}>
+            {email}
+          </a>
+        ) : null}
+        {phone ? (
+          <a
+            className="transition hover:text-[#1F1F1F]"
+            href={`tel:${phone.replace(/\s+/g, "")}`}
+          >
+            {phone}
+          </a>
+        ) : null}
+        {whatsapp ? (
+          <a
+            className="transition hover:text-[#1F1F1F]"
+            href={whatsapp}
+            target="_blank"
+            rel="noreferrer"
+          >
+            WhatsApp
+          </a>
+        ) : null}
+        <Link className="transition hover:text-[#1F1F1F]" href="/contact">
+          Contact page
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -155,26 +205,21 @@ function FooterColumn({
   );
 }
 
-export function MobileBottomCta() {
-  return (
-    <div className="fixed inset-x-3 bottom-3 z-40 md:hidden">
-      <Link
-        className="flex h-12 items-center justify-center rounded-lg bg-[#1F1F1F] px-4 text-sm font-semibold text-white shadow-lg"
-        href="/booking"
-      >
-        Book Treatment
-      </Link>
-    </div>
-  );
-}
-
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-[#FAF8F4] text-[#1F1F1F]">
+    <div className="flex min-h-screen flex-col bg-[#FAF8F4] text-[#1F1F1F]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow"
+      >
+        Skip to content
+      </a>
       <Header />
-      {children}
+      <main id="main-content" className="flex-1 pb-24 md:pb-0">
+        {children}
+      </main>
       <Footer />
-    </main>
+    </div>
   );
 }
 
@@ -348,9 +393,26 @@ export function BookingPreviewCard() {
   );
 }
 
-export function StatusBadge({ children }: { children: React.ReactNode }) {
+export type StatusTone = "default" | "positive" | "warning" | "danger" | "neutral";
+
+export function StatusBadge({
+  children,
+  tone = "default",
+}: {
+  children: React.ReactNode;
+  tone?: StatusTone;
+}) {
+  const tones: Record<StatusTone, string> = {
+    default: "bg-[#EEF5F5] text-[#3F5249]",
+    positive: "bg-[#E7F1E9] text-[#2F5135]",
+    warning: "bg-[#F6EEDD] text-[#7A5A1E]",
+    danger: "bg-[#F7E6E3] text-[#9B2C20]",
+    neutral: "bg-[#F1ECE4] text-[#5C574F]",
+  };
   return (
-    <span className="inline-flex rounded-full bg-[#EEF5F5] px-3 py-1 text-xs font-semibold text-[#4F5B55]">
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${tones[tone]}`}
+    >
       {children}
     </span>
   );
