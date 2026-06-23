@@ -159,10 +159,10 @@ export function HomePage() {
   return (
     <PageShell>
       <section className="px-5 py-10 lg:px-8 lg:py-16">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1fr_500px]">
-          <div>
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-4xl">
             <Badge>Home-visit medical aesthetics · Metro Manila</Badge>
-            <h1 className="mt-6 max-w-4xl font-serif text-5xl leading-[1.03] text-[#1F1F1F] md:text-7xl">
+            <h1 className="mt-6 font-serif text-5xl leading-[1.03] text-[#1F1F1F] md:text-7xl">
               Doctor-led aesthetic care at your doorstep.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[#595550]">
@@ -183,7 +183,6 @@ export function HomePage() {
               Private home appointments available.
             </p>
           </div>
-          <HomeBrandPanel />
         </div>
       </section>
       <DoctorLedStrip />
@@ -195,38 +194,6 @@ export function HomePage() {
       <PricingSectionCompact />
       <FinalCta />
     </PageShell>
-  );
-}
-
-function HomeBrandPanel() {
-  return (
-    <aside className="grid gap-4">
-      <div className="relative overflow-hidden rounded-lg border border-[#E6DFD5] bg-[#F7EBDD] shadow-sm">
-        <Image
-          src="/betterself-mark.png"
-          alt="BetterSelf Home Aesthetics brand mark"
-          width={1800}
-          height={1800}
-          priority
-          sizes="(min-width: 1024px) 500px, 90vw"
-          className="aspect-square w-full object-cover"
-        />
-      </div>
-      <div className="grid gap-3 rounded-lg border border-[#E6DFD5] bg-white p-4 sm:grid-cols-3">
-        {[
-          ["Book", "Choose treatment"],
-          ["Review", "Doctor confirms"],
-          ["Home", "Private visit"],
-        ].map(([title, text]) => (
-          <div key={title} className="rounded-lg bg-[#FAF8F4] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
-              {title}
-            </p>
-            <p className="mt-1 text-sm font-semibold text-[#1F1F1F]">{text}</p>
-          </div>
-        ))}
-      </div>
-    </aside>
   );
 }
 

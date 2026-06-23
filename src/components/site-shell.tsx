@@ -33,21 +33,21 @@ export const patientNav = [
 export function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-[#E6DFD5] bg-[#FAF8F4]/92 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link className="flex items-center gap-3" href="/" aria-label="BetterSelf home">
+      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-5 lg:px-8">
+        <Link className="flex items-center gap-4" href="/" aria-label="BetterSelf home">
           <Image
-            src="/betterself-logo.jpg"
+            src="/betterself-mark.png"
             alt="BetterSelf Home Aesthetics"
-            width={56}
-            height={56}
+            width={96}
+            height={96}
             priority
-            className="h-14 w-14 rounded-full border border-[#E6DFD5] object-cover"
+            className="h-16 w-16 rounded-full border border-[#E6DFD5] bg-[#F7EBDD] object-cover shadow-sm sm:h-20 sm:w-20"
           />
           <div>
-            <p className="font-serif text-2xl leading-none text-[#1F1F1F]">
+            <p className="font-serif text-3xl leading-none text-[#1F1F1F] sm:text-4xl">
               BetterSelf
             </p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-[#5C574F]">
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-[#5C574F] sm:text-xs">
               Home Aesthetics
             </p>
           </div>
