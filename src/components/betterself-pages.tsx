@@ -185,6 +185,7 @@ export function HomePage() {
           </div>
         </div>
       </section>
+      <HomeVisitImageBand />
       <DoctorLedStrip />
       <HowItWorksSection />
       <FeaturedTreatmentsSection />
@@ -615,6 +616,29 @@ export function SafetyPage() {
         title="Aesthetic treatments are medical procedures."
         text="BetterSelf uses a doctor-led process with screening, consent, sterile preparation, documentation, aftercare, and follow-up support."
       />
+      <section className="px-5 pb-8 lg:px-8">
+        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-lg border border-[#E6DFD5] bg-white shadow-sm lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="relative min-h-[300px] lg:min-h-[420px]">
+            <Image
+              src="/betterself-safety-kit.jpg"
+              alt="Sterile medical supplies and procedure checklist prepared for a BetterSelf treatment"
+              fill
+              sizes="(min-width: 1024px) 48vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="flex flex-col justify-center p-6 md:p-8">
+            <p className="eyebrow">Sterile setup</p>
+            <h2 className="mt-3 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">
+              The appointment is prepared like a medical procedure, not a spa add-on.
+            </h2>
+            <p className="mt-5 text-base leading-7 text-[#595550]">
+              Treatment only proceeds after intake, suitability review, consent,
+              clean setup, product verification, and aftercare instructions.
+            </p>
+          </div>
+        </div>
+      </section>
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2">
           {[
@@ -644,11 +668,11 @@ export function AboutPage() {
           <div className="card p-5">
             <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F1ECE4]">
               <Image
-                src="/betterself-logo.jpg"
-                alt="BetterSelf medical aesthetic brand"
+                src="/betterself-doctor-kit.jpg"
+                alt="BetterSelf doctor preparing a sterile home-visit aesthetic kit"
                 fill
                 sizes="(min-width: 1024px) 420px, 90vw"
-                className="object-cover"
+                className="object-cover object-center"
               />
             </div>
             <div className="mt-5 grid gap-3">
@@ -814,6 +838,25 @@ export function ContactPage() {
   );
 }
 
+function HomeVisitImageBand() {
+  return (
+    <section className="px-5 pb-8 lg:px-8">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-lg border border-[#E6DFD5] bg-white shadow-sm">
+        <div className="relative h-[250px] md:h-[360px] lg:h-[430px]">
+          <Image
+            src="/betterself-home-sterile-tray.jpg"
+            alt="Sterile treatment tray prepared inside a private home"
+            fill
+            priority
+            sizes="(min-width: 1280px) 1200px, 100vw"
+            className="object-cover object-[center_58%]"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function PageHero({
   eyebrow,
   title,
@@ -826,7 +869,15 @@ function PageHero({
   return (
     <section className="px-5 py-10 lg:px-8 lg:py-14">
       <div className="mx-auto max-w-7xl">
-        <SectionHeading eyebrow={eyebrow} title={title} text={text} />
+        <div className="max-w-4xl">
+          <p className="eyebrow">{eyebrow}</p>
+          <h1 className="mt-3 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
+            {title}
+          </h1>
+          <p className="mt-5 max-w-3xl text-base leading-7 text-[#595550]">
+            {text}
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -852,6 +903,27 @@ function HowItWorksSection() {
               <p className="mt-3 text-sm leading-6 text-[#595550]">{step.text}</p>
             </article>
           ))}
+        </div>
+        <div className="mt-6 grid overflow-hidden rounded-lg border border-[#E6DFD5] bg-white shadow-sm lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative min-h-[270px] lg:min-h-[360px]">
+            <Image
+              src="/betterself-home-visit-kit.jpg"
+              alt="BetterSelf home-visit kit prepared with appointment calendar and medical notes"
+              fill
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="flex flex-col justify-center p-6 md:p-8">
+            <p className="eyebrow">Prepared visit</p>
+            <h3 className="font-serif mt-3 text-4xl leading-tight text-[#1F1F1F]">
+              Scheduling, intake, equipment, and aftercare stay in one flow.
+            </h3>
+            <p className="mt-4 text-sm leading-6 text-[#595550]">
+              The platform supports the full appointment journey, while the
+              doctor arrives prepared for the confirmed treatment plan.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -922,13 +994,13 @@ function DoctorProfileSection() {
     <section className="bg-white px-5 py-14 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="card p-5">
-          <div className="relative aspect-square overflow-hidden rounded-lg bg-[#F1ECE4]">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#F1ECE4]">
             <Image
-              src="/betterself-logo.jpg"
-              alt="BetterSelf doctor-led aesthetic care"
+              src="/betterself-doctor-kit.jpg"
+              alt="Doctor preparing sterile equipment for a BetterSelf home treatment"
               fill
-              sizes="(min-width: 1024px) 360px, 90vw"
-              className="object-cover"
+              sizes="(min-width: 1024px) 420px, 90vw"
+              className="object-cover object-center"
             />
           </div>
           <div className="mt-5 grid gap-2">
@@ -954,17 +1026,28 @@ function DoctorProfileSection() {
 function SafetySectionCompact() {
   return (
     <section className="px-5 py-14 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr]">
+      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.9fr]">
         <SectionHeading
           eyebrow="Safety comes first"
           title="Aesthetic treatments are medical procedures."
           text="BetterSelf follows a structured process that includes medical intake, doctor assessment, consent, treatment documentation, and aftercare instructions."
         />
-        <section className="card p-6">
-          <SafetyChecklist items={safetyItems} />
-          <Link className="btn btn-secondary mt-6" href="/safety">
-            Read Our Safety Protocol
-          </Link>
+        <section className="card overflow-hidden">
+          <div className="relative h-56">
+            <Image
+              src="/betterself-safety-kit.jpg"
+              alt="Sterile medical supplies used in BetterSelf safety preparation"
+              fill
+              sizes="(min-width: 1024px) 38vw, 100vw"
+              className="object-cover object-[center_42%]"
+            />
+          </div>
+          <div className="p-6">
+            <SafetyChecklist items={safetyItems} />
+            <Link className="btn btn-secondary mt-6" href="/safety">
+              Read Our Safety Protocol
+            </Link>
+          </div>
         </section>
       </div>
     </section>
