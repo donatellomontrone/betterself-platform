@@ -91,7 +91,9 @@ async function persistBooking(
     });
 
     const notes = [
-      body.calendlyEventUri ? `Calendly event: ${body.calendlyEventUri}` : null,
+      body.calendlyEventUri
+        ? `Calendly event: ${body.calendlyEventUri}`
+        : "Schedule NOT verified in Calendly — confirm the appointment with the patient.",
       body.calendlyInviteeUri ? `Calendly invitee: ${body.calendlyInviteeUri}` : null,
     ]
       .filter(Boolean)
