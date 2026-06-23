@@ -17,9 +17,6 @@ Last updated: 2026-06-23. See `docs/HANDOFF.md` for what's already done.
    Vercel (→ demo mode works) or set the **real** PayMongo secret key + set
    `PAYMONGO_WEBHOOK_SECRET` and register the webhook
    `https://<domain>/api/paymongo/webhook`.
-4. **Confirm DB + Clerk env are set for the Production environment** in Vercel (not
-   only Preview), so persistence works on the live site.
-
 ## 🟠 P1 — Before taking real patients
 
 5. **Real contact details.** Set `NEXT_PUBLIC_SUPPORT_EMAIL`, `_PHONE`,
@@ -27,37 +24,32 @@ Last updated: 2026-06-23. See `docs/HANDOFF.md` for what's already done.
 6. **Doctor↔patient chat is not real.** `DoctorChat` is local-only (no backend, no
    doctor accounts). Build message persistence (`messages` table exists) + doctor
    accounts/roles, or switch to an honest async/WhatsApp model.
-7. **Admin/doctor dashboard is fabricated.** `AdminPage` shows invented patients and
-   dead buttons. Build a real admin (list real bookings/intakes, update status,
-   reply) behind an admin role, or remove it until ready.
-8. **Photo upload is a placeholder.** Booking step 2 shows "Optional photo upload
+7. **Photo upload is a placeholder.** Booking step 2 shows "Optional photo upload
    structure" with no real upload. Wire real uploads (e.g. Vercel Blob /
    UploadThing) into `medical_intakes.photo_uploads`, or remove the stub.
-9. **Lawyer-review the legal pages.** `/privacy`, `/terms`, `/consent` are
+8. **Lawyer-review the legal pages.** `/privacy`, `/terms`, `/consent` are
    plain-language drafts — have a PH lawyer confirm the registered entity, address,
    DPO, and retention terms.
-10. **Surface real appointment date/time.** The dashboard "latest appointment" shows
+9. **Surface real appointment date/time.** The dashboard "latest appointment" shows
     the booked-on date; capture and show the actual Calendly slot date/time
     (store it from the Calendly event), with an "Awaiting scheduling" fallback.
 
 ## 🟡 P2 — Polish / content
 
-11. **Per-treatment medical copy.** All 27 treatments share hedged descriptions and
+10. **Per-treatment medical copy.** The treatment catalog uses hedged descriptions and
     one cloned aftercare block. Rewrite each with mechanism, timeline, longevity,
     sessions, downtime, and treatment-specific aftercare. **Needs medical input.**
-12. **Home page rhythm & CTAs.** Vary repeated heading-left/card-right sections;
+11. **Home page rhythm & CTAs.** Vary repeated heading-left/card-right sections;
     reduce the many identical "Book Treatment" buttons to a clear hierarchy
     (one hero, one mid, one final).
-13. **Referral/discount section reads like MLM** and exposes internal partner names
-    (`referralPromos`/`discountTiers`). Soften the copy or move behind auth.
-14. **Treatments page**: category links look like buttons — make them pill
+12. **Treatments page**: category links look like buttons — make them pill
     filters/tabs with an active/scroll-spy state; per-category copy is boilerplate.
-15. **Responsive polish**: Calendly embed fixed at 720px (nested-scroll on phones);
+13. **Responsive polish**: Calendly embed fixed at 720px (nested-scroll on phones);
     chat list/composer cramped on mobile; add small-screen heading tiers.
-16. **A11y finishing**: promote real `<p>` titles to headings; `aria-hidden` on
-    decorative icons; `role="progressbar"` on the booking progress bar;
+14. **A11y finishing**: promote real `<p>` titles to headings; `aria-hidden` on
+    decorative icons;
     visually-hidden chat sender labels (authorship is color-only).
-17. **Safety/authenticity content**: add concrete FDA-PH product verification,
+15. **Safety/authenticity content**: add concrete FDA-PH product verification,
     cold-chain for home visits, and an adverse-event/emergency protocol.
 
 ## ⏭️ Intentionally NOT doing

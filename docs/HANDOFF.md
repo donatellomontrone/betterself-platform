@@ -90,6 +90,13 @@ Auth (Clerk dev instance) works on **localhost**. See env vars below.
   latest appointment, treatment history with **semantic status colors**, empty
   states; aftercare gated on a completed treatment.
 
+### Admin / doctor dashboard
+- `/admin` is protected by Clerk and gated by `ADMIN_EMAILS`.
+- Loads real bookings from Neon through `getAllBookings()`.
+- Supports booking status updates through `src/app/admin/actions.ts` and
+  `updateBookingStatusAction`.
+- Shows an empty state instead of fabricated patients when there are no bookings.
+
 ### Front-end overhaul (from a 7-dimension UX audit)
 - `globals.css`: sage accent on CTAs/links/focus; deeper card elevation + larger
   radius; readable eyebrows; global `:focus-visible` ring; tighter serif tracking.
@@ -100,9 +107,12 @@ Auth (Clerk dev instance) works on **localhost**. See env vars below.
 - Hero badge no longer duplicates the H1; treatment-detail card leads with price.
 - **Legal pages**: `/privacy`, `/terms`, `/consent` (`src/components/legal-pages.tsx`)
   + footer legal bar + env-driven footer Contact column.
-- A11y: header/main/footer landmarks + skip-to-content link; mobile bottom "Book"
-  bar is a client island (`mobile-cta.tsx`) that respects iOS safe-area and hides
-  on booking/messages/dashboard. Fixed the tablet (768–1023px) nav dead zone.
+- Removed the public employee-discount/referral section from the treatments page
+  so internal partner names are not exposed publicly.
+- A11y: header/main/footer landmarks + skip-to-content link; labelled booking
+  stepper with `role="progressbar"`; mobile bottom "Book" bar is a client island
+  (`mobile-cta.tsx`) that respects iOS safe-area and hides on
+  booking/messages/dashboard. Fixed the tablet (768–1023px) nav dead zone.
 
 ### Key files
 - Pages/UI: `src/components/betterself-pages.tsx`, `site-shell.tsx`,
