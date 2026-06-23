@@ -158,9 +158,19 @@ const faqs = [
 export function HomePage() {
   return (
     <PageShell>
-      <section className="px-5 py-10 lg:px-8 lg:py-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="max-w-4xl">
+      <section className="relative isolate overflow-hidden border-b border-[#E6DFD5] px-5 py-12 lg:px-8 lg:py-20">
+        <Image
+          src="/betterself-hero-home.jpg"
+          alt="BetterSelf doctor preparing a sterile home aesthetic treatment kit in a private residence"
+          fill
+          priority
+          sizes="100vw"
+          className="-z-20 object-cover object-[68%_center] md:object-center"
+        />
+        <div className="absolute inset-0 -z-10 bg-[#FAF8F4]/62 md:bg-transparent" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#FAF8F4] via-[#FAF8F4]/92 to-[#FAF8F4]/10" />
+        <div className="mx-auto flex min-h-[600px] max-w-7xl items-center">
+          <div className="max-w-3xl">
             <Badge>Home-visit medical aesthetics · Metro Manila</Badge>
             <h1 className="mt-6 font-serif text-5xl leading-[1.03] text-[#1F1F1F] md:text-7xl">
               Doctor-led aesthetic care at your doorstep.
@@ -185,7 +195,6 @@ export function HomePage() {
           </div>
         </div>
       </section>
-      <HomeVisitImageBand />
       <DoctorLedStrip />
       <HowItWorksSection />
       <FeaturedTreatmentsSection />
@@ -837,25 +846,6 @@ export function ContactPage() {
         </div>
       </section>
     </PageShell>
-  );
-}
-
-function HomeVisitImageBand() {
-  return (
-    <section className="px-5 pb-8 lg:px-8">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-lg border border-[#E6DFD5] bg-white shadow-sm">
-        <div className="relative h-[250px] md:h-[360px] lg:h-[430px]">
-          <Image
-            src="/betterself-home-sterile-tray.jpg"
-            alt="Sterile treatment tray prepared inside a private home"
-            fill
-            priority
-            sizes="(min-width: 1280px) 1200px, 100vw"
-            className="object-cover object-[center_58%]"
-          />
-        </div>
-      </div>
-    </section>
   );
 }
 
