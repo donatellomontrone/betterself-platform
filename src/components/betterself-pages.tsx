@@ -623,6 +623,7 @@ export function SafetyPage() {
               src="/betterself-safety-kit.jpg"
               alt="Sterile medical supplies and procedure checklist prepared for a BetterSelf treatment"
               fill
+              priority
               sizes="(min-width: 1024px) 48vw, 100vw"
               className="object-cover"
             />
@@ -671,6 +672,7 @@ export function AboutPage() {
                 src="/betterself-doctor-kit.jpg"
                 alt="BetterSelf doctor preparing a sterile home-visit aesthetic kit"
                 fill
+                priority
                 sizes="(min-width: 1024px) 420px, 90vw"
                 className="object-cover object-center"
               />
