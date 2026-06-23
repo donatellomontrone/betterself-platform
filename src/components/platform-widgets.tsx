@@ -300,15 +300,17 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
                 onChange={(value) => updateCustomer("emergencyContact", value)}
                 placeholder="Name and phone"
               />
-              <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F] md:col-span-2">
-                Home address
-                <textarea
-                  className="field min-h-24"
-                  placeholder="Building, street, unit number, access notes"
-                  value={customer.address}
-                  onChange={(event) => updateCustomer("address", event.target.value)}
-                />
-              </label>
+              {requiresAddress ? (
+                <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F] md:col-span-2">
+                  Access notes (optional)
+                  <textarea
+                    className="field min-h-24"
+                    placeholder="Unit / floor, building, landmark, parking or access instructions"
+                    value={customer.address}
+                    onChange={(event) => updateCustomer("address", event.target.value)}
+                  />
+                </label>
+              ) : null}
             </div>
             <div className="mt-6 grid gap-3">
               {intakeQuestions.map((question) => (
