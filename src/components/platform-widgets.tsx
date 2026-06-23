@@ -19,9 +19,9 @@ import {
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { formatPeso, getTreatmentById, treatments } from "@/lib/treatments";
 import { Notice, StatusBadge } from "@/components/site-shell";
+import { AddressAutocomplete } from "@/components/address-autocomplete";
 
 const appointmentTypes = ["Home treatment visit", "Online doctor review"];
-const locations = ["BGC", "Makati", "Rockwell", "Alabang", "Ortigas", "Other Metro Manila area"];
 const paymentModes = ["PayMongo hosted checkout"];
 const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
 
@@ -82,7 +82,8 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
       : treatments[0].id,
   );
   const [appointmentType, setAppointmentType] = useState(appointmentTypes[0]);
-  const [location, setLocation] = useState(locations[0]);
+  const [location, setLocation] = useState("");
+  const [locationValid, setLocationValid] = useState(false);
   const [customer, setCustomer] = useState<CustomerDetails>({
     name: "",
     email: "",
@@ -117,6 +118,12 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   function handleNextStep() {
     setCheckoutNote("");
 
+    if (step === 1 && !(location.trim() && locationValid)) {
+      setCheckoutState("error");
+      setCheckoutNote("Please enter your address in Metro Manila to continue.");
+      return;
+    }
+
     if (step === 2 && !isCustomerReady()) {
       setCheckoutState("error");
       setCheckoutNote("Please add name, email, and phone before scheduling.");
@@ -134,6 +141,12 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
     if (!isCustomerReady()) {
       setCheckoutState("error");
       setCheckoutNote("Please add name, email, and phone before payment.");
+      return;
+    }
+
+    if (!(location.trim() && locationValid)) {
+      setCheckoutState("error");
+      setCheckoutNote("Please enter your address in Metro Manila before payment.");
       return;
     }
 
@@ -158,9 +171,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
             name: customer.name,
             email: customer.email,
             phone: customer.phone,
-            address: customer.address
-              ? `${customer.address}, ${location}, Metro Manila`
-              : `${location}, Metro Manila`,
+            address: customer.address ? `${location} (${customer.address})` : location,
           },
         }),
       });
@@ -230,8 +241,17 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           <BookingStep title="Appointment type and location" text="Home treatment visits are available in selected Metro Manila areas, subject to doctor availability.">
             <ChoiceGrid items={appointmentTypes} value={appointmentType} onChange={setAppointmentType} />
             <div className="mt-6">
-              <p className="text-sm font-semibold text-[#1F1F1F]">Preferred location</p>
-              <ChoiceGrid items={locations} value={location} onChange={setLocation} />
+              <p className="text-sm font-semibold text-[#1F1F1F]">Your address</p>
+              <p className="mt-1 text-xs text-[#7A746E]">
+                Start typing and select your address. Home visits are available in Metro Manila only.
+              </p>
+              <AddressAutocomplete
+                value={location}
+                onChange={(address, isValid) => {
+                  setLocation(address);
+                  setLocationValid(isValid);
+                }}
+              />
             </div>
           </BookingStep>
         ) : null}
