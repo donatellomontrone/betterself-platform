@@ -37,6 +37,45 @@ import {
   DoctorChat,
   LoginRegisterPreview,
 } from "@/components/platform-widgets";
+import type { PatientBookingView } from "@/lib/db/queries";
+
+const bookingStatusLabels: Record<string, string> = {
+  pending_doctor_review: "Pending doctor review",
+  needs_more_information: "Needs more information",
+  confirmed: "Confirmed",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
+const paymentStatusLabels: Record<string, string> = {
+  not_required: "No payment required",
+  pending: "Payment pending",
+  paid: "Paid",
+  refunded: "Refunded",
+};
+
+function formatBookingStatus(status: string) {
+  return bookingStatusLabels[status] ?? status;
+}
+
+function formatPaymentStatus(status: string) {
+  return paymentStatusLabels[status] ?? status;
+}
+
+function formatPeso(amount: number | null) {
+  if (amount == null) return "—";
+  return `₱${amount.toLocaleString("en-PH")}`;
+}
+
+function formatBookingDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 const safetyItems = [
   "Medical intake before treatment",
@@ -300,7 +339,14 @@ export function BookingPage({ treatmentId }: { treatmentId?: string }) {
   );
 }
 
-export function DashboardPage({ viewerName }: { viewerName?: string }) {
+export function DashboardPage({
+  viewerName,
+  bookings = [],
+}: {
+  viewerName?: string;
+  bookings?: PatientBookingView[];
+}) {
+  const upcoming = bookings[0];
   return (
     <PageShell>
       <section className="px-5 py-10 lg:px-8 lg:py-14">
@@ -329,29 +375,52 @@ export function DashboardPage({ viewerName }: { viewerName?: string }) {
           </div>
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <section className="card p-6">
-              <p className="eyebrow">Upcoming appointment</p>
-              <h2 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
-                Mesoheal Korean Skin Booster
-              </h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <Summary label="Doctor" value="BetterSelf Medical Doctor" />
-                <Summary label="Date" value="Tomorrow" />
-                <Summary label="Time" value="10:00 AM" />
-                <Summary label="Location" value="BGC, Taguig" />
-                <Summary label="Status" value="Pending doctor review" />
-                <Summary label="Payment" value="Deposit pending" />
-              </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Link className="btn btn-secondary" href="/booking">
-                  View Details
-                </Link>
-                <Link className="btn btn-secondary" href="/booking">
-                  Reschedule
-                </Link>
-                <Link className="btn btn-primary" href="/messages">
-                  Message Doctor
-                </Link>
-              </div>
+              <p className="eyebrow">{upcoming ? "Latest appointment" : "Upcoming appointment"}</p>
+              {upcoming ? (
+                <>
+                  <h2 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
+                    {upcoming.treatment_name}
+                  </h2>
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <Summary label="Doctor" value="BetterSelf Medical Doctor" />
+                    <Summary label="Booked on" value={formatBookingDate(upcoming.created_at)} />
+                    <Summary label="Appointment" value={upcoming.appointment_type} />
+                    <Summary label="Location" value={upcoming.location} />
+                    <Summary label="Status" value={formatBookingStatus(upcoming.status)} />
+                    <Summary
+                      label="Payment"
+                      value={
+                        upcoming.amount != null
+                          ? `${formatPaymentStatus(upcoming.payment_status)} · ${formatPeso(upcoming.amount)}`
+                          : formatPaymentStatus(upcoming.payment_status)
+                      }
+                    />
+                  </div>
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <Link className="btn btn-secondary" href="/booking">
+                      Book Again
+                    </Link>
+                    <Link className="btn btn-primary" href="/messages">
+                      Message Doctor
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
+                    No appointments yet
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">
+                    Once you book a treatment it will appear here, with its doctor-review
+                    status, schedule, and payment.
+                  </p>
+                  <div className="mt-6">
+                    <Link className="btn btn-primary" href="/booking">
+                      Book Your First Appointment
+                    </Link>
+                  </div>
+                </>
+              )}
             </section>
             <section id="aftercare" className="card bg-[#EEF5F5] p-6">
               <p className="eyebrow">Aftercare</p>
@@ -367,6 +436,36 @@ export function DashboardPage({ viewerName }: { viewerName?: string }) {
               />
             </section>
           </div>
+          {bookings.length > 0 ? (
+            <section className="mt-8">
+              <p className="eyebrow">Treatment history</p>
+              <div className="mt-4 grid gap-3">
+                {bookings.map((booking) => (
+                  <article
+                    key={booking.id}
+                    className="card grid gap-4 p-5 lg:grid-cols-[1.4fr_1fr_auto] lg:items-center"
+                  >
+                    <div>
+                      <p className="font-serif text-2xl text-[#1F1F1F]">
+                        {booking.treatment_name}
+                      </p>
+                      <p className="mt-1 text-sm text-[#6F6F6F]">
+                        {booking.appointment_type} · {booking.location}
+                      </p>
+                    </div>
+                    <div className="text-sm text-[#4D4D4D]">
+                      <p>Booked {formatBookingDate(booking.created_at)}</p>
+                      <p>{formatPeso(booking.amount)}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <StatusBadge>{formatBookingStatus(booking.status)}</StatusBadge>
+                      <StatusBadge>{formatPaymentStatus(booking.payment_status)}</StatusBadge>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       </section>
     </PageShell>

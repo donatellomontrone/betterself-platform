@@ -1,5 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { isDatabaseConfigured } from "@/lib/db/client";
+import { markPaidByReference } from "@/lib/db/queries";
 
 function safeCompare(left: string, right: string) {
   const leftBuffer = Buffer.from(left);
@@ -57,12 +59,24 @@ export async function POST(request: NextRequest) {
 
   if (event.data?.type === "checkout_session.payment.paid") {
     const checkoutSession = event.data.data ?? event.data;
+    const referenceNumber = checkoutSession.attributes?.reference_number;
 
-    // TODO: Mark the referenced booking paid in the database and queue doctor dispatch.
+    let bookingsMarkedPaid = 0;
+    if (referenceNumber && isDatabaseConfigured()) {
+      try {
+        bookingsMarkedPaid = await markPaidByReference(referenceNumber);
+      } catch (error) {
+        // Acknowledge the webhook with 200 so PayMongo doesn't retry forever on a
+        // transient DB error; surface the failure in logs for manual follow-up.
+        console.error("[paymongo webhook] failed to mark booking paid:", error);
+      }
+    }
+
     return NextResponse.json({
       received: true,
       action: "booking_payment_confirmed",
-      referenceNumber: checkoutSession.attributes?.reference_number,
+      referenceNumber,
+      bookingsMarkedPaid,
     });
   }
 

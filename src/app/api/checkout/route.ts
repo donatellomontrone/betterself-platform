@@ -1,6 +1,15 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { getTreatmentById } from "@/lib/treatments";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { getTreatmentById, type Treatment } from "@/lib/treatments";
+import { hasValidClerkServerKeys } from "@/lib/clerk-env";
+import { isDatabaseConfigured } from "@/lib/db/client";
+import {
+  createBooking,
+  createPayment,
+  ensureUserProfile,
+  upsertPatientProfile,
+} from "@/lib/db/queries";
 
 type CheckoutRequest = {
   treatmentId?: string;
@@ -24,6 +33,86 @@ function asMetadataValue(value: string | undefined, fallback = "not_provided") {
   return value?.trim() || fallback;
 }
 
+/**
+ * If a Clerk user is signed in (and the DB is configured), persist the patient
+ * profile, the booking and a pending payment, and return the new booking id.
+ * Returns null for anonymous checkouts or if persistence is unavailable.
+ *
+ * A database failure must never block the patient from paying, so the whole
+ * thing is best-effort: on error we log and fall back to a non-persisted
+ * checkout instead of returning an error to the client.
+ */
+async function persistBooking(
+  treatment: Treatment,
+  body: CheckoutRequest,
+  referenceNumber: string,
+  total: number,
+): Promise<string | null> {
+  if (!hasValidClerkServerKeys() || !isDatabaseConfigured()) {
+    return null;
+  }
+
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return null;
+    }
+
+    const user = await currentUser();
+    const clerkEmail = user?.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId,
+    )?.emailAddress;
+    const fullName =
+      [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
+      body.customer?.name?.trim() ||
+      "BetterSelf patient";
+    const email = clerkEmail ?? body.customer?.email?.trim();
+
+    if (!email) {
+      return null;
+    }
+
+    await ensureUserProfile({
+      id: userId,
+      fullName,
+      email,
+      phone: body.customer?.phone ?? null,
+    });
+    await upsertPatientProfile({
+      userId,
+      address: body.customer?.address ?? null,
+    });
+
+    const notes = [
+      body.calendlyEventUri ? `Calendly event: ${body.calendlyEventUri}` : null,
+      body.calendlyInviteeUri ? `Calendly invitee: ${body.calendlyInviteeUri}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const booking = await createBooking({
+      patientId: userId,
+      treatmentId: treatment.id,
+      appointmentType: asMetadataValue(body.appointmentType, "home_visit"),
+      location: asMetadataValue(body.location, "metro_manila"),
+      notes: notes || null,
+    });
+
+    await createPayment({
+      bookingId: booking.id,
+      patientId: userId,
+      amount: total,
+      paymentType: "treatment_and_home_visit",
+      transactionReference: referenceNumber,
+    });
+
+    return booking.id;
+  } catch (error) {
+    console.error("[checkout] failed to persist booking:", error);
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as CheckoutRequest;
   const treatment = body.treatmentId ? getTreatmentById(body.treatmentId) : null;
@@ -39,6 +128,8 @@ export async function POST(request: NextRequest) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
   const secretKey = process.env.PAYMONGO_SECRET_KEY;
   const customerAddress = body.customer?.address;
+  const total = treatment.price + homeVisitFee;
+  const bookingId = await persistBooking(treatment, body, referenceNumber, total);
 
   if (!secretKey) {
     const checkoutUrl = `/checkout-preview?reference=${referenceNumber}&treatment=${treatment.id}`;
@@ -47,6 +138,8 @@ export async function POST(request: NextRequest) {
       checkoutUrl,
       mode: "demo",
       referenceNumber,
+      bookingId,
+      persisted: Boolean(bookingId),
       message:
         "Demo checkout opened. Add PAYMONGO_SECRET_KEY to create real PayMongo sessions.",
     });
@@ -99,6 +192,8 @@ export async function POST(request: NextRequest) {
             },
           },
           metadata: {
+            booking_id: bookingId ?? "not_persisted",
+            reference_number: referenceNumber,
             treatment_id: treatment.id,
             treatment_name: treatment.name,
             appointment_type: asMetadataValue(body.appointmentType, "home_visit"),
@@ -131,6 +226,8 @@ export async function POST(request: NextRequest) {
     referenceNumber,
     mode: "paymongo",
     sessionId: payload.data.id,
+    bookingId,
+    persisted: Boolean(bookingId),
     message: "Redirecting to secure PayMongo checkout.",
   });
 }
