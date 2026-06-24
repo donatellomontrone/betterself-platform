@@ -30,7 +30,7 @@ const zones: TreatmentZone[] = [
     label: "Forehead & expression lines",
     description: "Doctor-assessed injectable options for expression lines and facial balance.",
     x: 50,
-    y: 18,
+    y: 31,
     treatmentIds: ["neurotoxin-face"],
     tag: "Injectable",
   },
@@ -39,8 +39,8 @@ const zones: TreatmentZone[] = [
     view: "face",
     label: "Pores, glow & skin quality",
     description: "Skin boosters and microtox options for texture, hydration, glow, and pore appearance.",
-    x: 68,
-    y: 49,
+    x: 70,
+    y: 48,
     treatmentIds: [
       "skin-microtox-pores",
       "mesoheal-korean-skin-booster",
@@ -59,7 +59,7 @@ const zones: TreatmentZone[] = [
     label: "Jawline & lower face",
     description: "Doctor-reviewed contour support for jawline, masseter, and selected lower-face concerns.",
     x: 63,
-    y: 62,
+    y: 61,
     treatmentIds: ["jawtox", "face-mesolipo"],
     tag: "Contour",
   },
@@ -68,8 +68,8 @@ const zones: TreatmentZone[] = [
     view: "face",
     label: "Acne scars & texture",
     description: "Scar and texture treatments selected after assessment of scar type and skin condition.",
-    x: 39,
-    y: 46,
+    x: 40,
+    y: 48,
     treatmentIds: [
       "3-in-1-scar-treatment",
       "scar-plus",
@@ -85,8 +85,8 @@ const zones: TreatmentZone[] = [
     view: "face",
     label: "Milia, bumps & small lesions",
     description: "Doctor-led removal or extraction options for selected small facial lesions.",
-    x: 33,
-    y: 34,
+    x: 36,
+    y: 41,
     treatmentIds: ["milia-extraction", "sebaceous-hyperplasia-removal", "wart-removal"],
     tag: "Small lesions",
   },
@@ -96,7 +96,7 @@ const zones: TreatmentZone[] = [
     label: "Neck & lower-face skin",
     description: "Skin quality and contour options that may be considered after doctor review.",
     x: 50,
-    y: 78,
+    y: 76,
     treatmentIds: ["face-mesolipo", "crystal-pn-plus", "rejuran-h", "bi-dens"],
     tag: "Doctor review",
   },
@@ -238,15 +238,23 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                           type="button"
                           aria-label={`Show treatments for ${zone.label}`}
                           aria-pressed={isActive}
-                          className={`absolute z-20 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 shadow-lg transition ${
-                            isActive
-                              ? "scale-110 border-white bg-[#3F5249] text-white"
-                              : "border-white bg-[#DDE8E8] text-[#3F5249] hover:scale-105 hover:bg-[#3F5249] hover:text-white"
-                          }`}
+                          className="absolute z-20 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3F5249]/20"
                           style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
                           onClick={() => setActiveZoneId(zone.id)}
                         >
-                          <span className={isActive ? "h-2.5 w-2.5 rounded-full bg-white" : "h-2.5 w-2.5 rounded-full bg-current"} />
+                          <span
+                            className={`grid place-items-center rounded-full border-2 border-white shadow-md transition ${
+                              isActive
+                                ? "h-7 w-7 bg-[#3F5249] ring-2 ring-[#3F5249]/25"
+                                : "h-5 w-5 bg-white/90 ring-1 ring-[#CFE0DF] hover:bg-[#EEF5F5]"
+                            }`}
+                          >
+                            <span
+                              className={`rounded-full ${
+                                isActive ? "h-2 w-2 bg-white" : "h-1.5 w-1.5 bg-[#3F5249]"
+                              }`}
+                            />
+                          </span>
                         </button>
                       );
                     })}
