@@ -153,9 +153,9 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
               <div className="grid min-w-0 gap-3">
                 <label className="relative block">
                   <span className="sr-only">Search treatments</span>
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5C574F]" />
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#5C574F]" />
                   <input
-                    className="field w-full pl-11"
+                    className="h-14 w-full rounded-lg border border-[#E6DFD5] bg-white py-0 pl-12 pr-4 text-base text-[#1F1F1F] outline-none transition placeholder:text-[#8A847B] focus:border-[#3F5249] focus:shadow-[0_0_0_3px_rgb(63_82_73_/_0.18)] sm:h-12 sm:text-sm"
                     value={query}
                     placeholder="Search treatment, concern, or price"
                     onChange={(event) => setQuery(event.target.value)}
@@ -175,7 +175,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
             </div>
 
             <div
-              className="mt-4 flex min-w-0 gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible"
+              className="mt-4 flex min-w-0 flex-wrap gap-2"
               aria-label="Filter by concern"
             >
               {concernChips.map((concern) => {
@@ -185,7 +185,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                   <button
                     key={concern}
                     type="button"
-                    className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    className={`rounded-full border px-3 py-2 text-sm font-semibold leading-none transition sm:px-4 ${
                       isActive
                         ? "border-[#3F5249] bg-[#3F5249] text-white"
                         : "border-[#E6DFD5] bg-white text-[#4D4D4D] hover:border-[#3F5249]"
