@@ -31,6 +31,7 @@ const consentItems = [
 ] as const;
 
 type ConsentId = (typeof consentItems)[number]["id"];
+const CONSENT_VERSION = "account-consent-v1";
 
 export function AccountConsentGate({ children }: { children: ReactNode }) {
   const [checked, setChecked] = useState<Record<ConsentId, boolean>>({
@@ -59,8 +60,12 @@ export function AccountConsentGate({ children }: { children: ReactNode }) {
     window.sessionStorage.setItem(
       "betterself_account_consent_v1",
       JSON.stringify({
+        consentVersion: CONSENT_VERSION,
         acceptedAt: new Date().toISOString(),
-        acceptedItems: consentItems.map((item) => item.id),
+        acceptedItems: consentItems.map((item) => ({
+          id: item.id,
+          label: item.label,
+        })),
       }),
     );
     setIsUnlocked(true);

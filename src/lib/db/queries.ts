@@ -52,6 +52,28 @@ export async function upsertPatientProfile(input: UpsertPatientProfileInput) {
   `;
 }
 
+export type RecordAccountConsentInput = {
+  userId: string;
+  consentVersion: string;
+  acceptedAt?: string | null;
+  acceptedItems: unknown[];
+  userAgent?: string | null;
+};
+
+/** Store account-level legal/privacy/data consent after Clerk signup. */
+export async function recordAccountConsent(input: RecordAccountConsentInput) {
+  const sql = getSql();
+  await sql`
+    insert into public.account_consents
+      (user_id, consent_version, accepted_at, accepted_items, user_agent)
+    values
+      (${input.userId}, ${input.consentVersion},
+       ${input.acceptedAt ?? null}::timestamptz,
+       ${JSON.stringify(input.acceptedItems)}::jsonb,
+       ${input.userAgent ?? null})
+  `;
+}
+
 export async function getPatientProfile(userId: string): Promise<PatientProfile | null> {
   const sql = getSql();
   const rows = (await sql`

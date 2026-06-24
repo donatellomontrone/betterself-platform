@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Cormorant_Garamond, Geist_Mono, Manrope } from "next/font/google";
+import { AccountConsentRecorder } from "@/components/account-consent-recorder";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { hasValidClerkPublishableKey } from "@/lib/clerk-env";
 import "./globals.css";
@@ -33,7 +34,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const content = hasValidClerkPublishableKey() ? (
-    <ClerkProvider>{children}</ClerkProvider>
+    <ClerkProvider>
+      <AccountConsentRecorder />
+      {children}
+    </ClerkProvider>
   ) : (
     children
   );

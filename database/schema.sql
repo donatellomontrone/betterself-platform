@@ -42,6 +42,16 @@ create table public.patient_profiles (
   updated_at timestamptz not null default now()
 );
 
+create table public.account_consents (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.user_profiles(id) on delete cascade,
+  consent_version text not null,
+  accepted_items jsonb not null default '[]'::jsonb,
+  accepted_at timestamptz not null default now(),
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+
 create table public.treatments (
   id text primary key,
   name text not null,
@@ -120,6 +130,7 @@ create table public.aftercare_instructions (
 );
 
 create index bookings_patient_idx on public.bookings(patient_id);
+create index account_consents_user_idx on public.account_consents(user_id, accepted_at desc);
 create index bookings_doctor_idx on public.bookings(doctor_id);
 create index bookings_status_idx on public.bookings(status);
 create index medical_intakes_booking_idx on public.medical_intakes(booking_id);
