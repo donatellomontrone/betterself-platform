@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { BadgeInfo, MousePointer2, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -214,33 +215,42 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
               </div>
 
               <div className="mt-6 grid gap-5 md:grid-cols-[0.95fr_1fr] md:items-center">
-                <div className="relative min-h-[430px] overflow-hidden rounded-lg border border-[#E6DFD5] bg-gradient-to-b from-white to-[#F1ECE4] p-4">
+                <div className="relative min-h-[520px] overflow-hidden rounded-lg border border-[#E6DFD5] bg-gradient-to-b from-white to-[#F1ECE4] p-4">
                   <div className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-[#3F5249] shadow-sm">
                     <MousePointer2 className="h-3.5 w-3.5" />
                     Tap a point
                   </div>
-                  {activeView === "face" ? <FaceDiagram /> : <BodyDiagram />}
-                  {visibleZones.map((zone) => {
-                    const isActive = zone.id === activeZone.id;
+                  <div className="absolute left-1/2 top-20 aspect-[1088/1456] w-[92%] max-w-[330px] -translate-x-1/2">
+                    <Image
+                      src={activeView === "face" ? "/betterself-face-map.png" : "/betterself-body-map.png"}
+                      alt=""
+                      fill
+                      sizes="(min-width: 768px) 330px, 92vw"
+                      className="object-contain opacity-95"
+                      priority
+                    />
+                    {visibleZones.map((zone) => {
+                      const isActive = zone.id === activeZone.id;
 
-                    return (
-                      <button
-                        key={zone.id}
-                        type="button"
-                        aria-label={`Show treatments for ${zone.label}`}
-                        aria-pressed={isActive}
-                        className={`absolute z-20 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 shadow-lg transition ${
-                          isActive
-                            ? "scale-110 border-white bg-[#3F5249] text-white"
-                            : "border-white bg-[#DDE8E8] text-[#3F5249] hover:scale-105 hover:bg-[#3F5249] hover:text-white"
-                        }`}
-                        style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
-                        onClick={() => setActiveZoneId(zone.id)}
-                      >
-                        <span className={isActive ? "h-2.5 w-2.5 rounded-full bg-white" : "h-2.5 w-2.5 rounded-full bg-current"} />
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={zone.id}
+                          type="button"
+                          aria-label={`Show treatments for ${zone.label}`}
+                          aria-pressed={isActive}
+                          className={`absolute z-20 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 shadow-lg transition ${
+                            isActive
+                              ? "scale-110 border-white bg-[#3F5249] text-white"
+                              : "border-white bg-[#DDE8E8] text-[#3F5249] hover:scale-105 hover:bg-[#3F5249] hover:text-white"
+                          }`}
+                          style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
+                          onClick={() => setActiveZoneId(zone.id)}
+                        >
+                          <span className={isActive ? "h-2.5 w-2.5 rounded-full bg-white" : "h-2.5 w-2.5 rounded-full bg-current"} />
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="grid gap-3">
@@ -331,49 +341,5 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
         </div>
       </div>
     </section>
-  );
-}
-
-function FaceDiagram() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="absolute inset-0 h-full w-full"
-      viewBox="0 0 260 430"
-      fill="none"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <path d="M82 358 C100 332 160 332 178 358 L200 420 H60 L82 358Z" fill="#E9DDD0" stroke="#D6C7B7" strokeWidth="2" />
-      <path d="M84 160 C84 87 111 48 135 48 C171 48 194 92 190 164 C187 241 158 295 132 295 C105 295 86 237 84 160Z" fill="#F4E8DD" stroke="#D6C7B7" strokeWidth="2" />
-      <path d="M91 121 C113 63 153 44 181 91 C164 67 135 63 119 89 C105 112 108 149 89 176 C84 158 84 139 91 121Z" fill="#D8C6B6" opacity="0.75" />
-      <path d="M103 162 C113 152 126 152 137 162" stroke="#8B7A6B" strokeWidth="2" strokeLinecap="round" />
-      <path d="M151 162 C159 153 171 153 179 162" stroke="#8B7A6B" strokeWidth="2" strokeLinecap="round" />
-      <path d="M143 172 C137 199 137 212 148 218" stroke="#B69E8A" strokeWidth="2" strokeLinecap="round" />
-      <path d="M126 244 C140 253 157 253 171 244" stroke="#9F8B7A" strokeWidth="2" strokeLinecap="round" />
-      <path d="M100 350 C113 370 153 370 166 350" stroke="#D6C7B7" strokeWidth="2" strokeLinecap="round" />
-      <path d="M55 410 C84 384 176 384 205 410" stroke="#D6C7B7" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function BodyDiagram() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="absolute inset-0 h-full w-full"
-      viewBox="0 0 260 430"
-      fill="none"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <circle cx="130" cy="55" r="34" fill="#F4E8DD" stroke="#D6C7B7" strokeWidth="2" />
-      <path d="M111 91 H149 L167 174 L153 261 H107 L93 174 L111 91Z" fill="#F4E8DD" stroke="#D6C7B7" strokeWidth="2" />
-      <path d="M101 115 C72 140 55 189 52 238" stroke="#D6C7B7" strokeWidth="18" strokeLinecap="round" />
-      <path d="M159 115 C188 140 205 189 208 238" stroke="#D6C7B7" strokeWidth="18" strokeLinecap="round" />
-      <path d="M109 260 C101 304 97 348 93 400" stroke="#D6C7B7" strokeWidth="22" strokeLinecap="round" />
-      <path d="M151 260 C159 304 163 348 167 400" stroke="#D6C7B7" strokeWidth="22" strokeLinecap="round" />
-      <path d="M99 166 H161" stroke="#C8B7A5" strokeWidth="2" strokeLinecap="round" />
-      <path d="M106 223 H154" stroke="#C8B7A5" strokeWidth="2" strokeLinecap="round" />
-      <path d="M113 92 C120 108 140 108 147 92" stroke="#D6C7B7" strokeWidth="2" strokeLinecap="round" />
-    </svg>
   );
 }

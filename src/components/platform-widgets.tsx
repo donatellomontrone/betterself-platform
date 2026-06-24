@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   SquareArrowOutUpRight,
   UserRound,
+  WandSparkles,
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -71,6 +72,30 @@ type CalendlyPayload = {
   };
 };
 
+type RecommendationResult = {
+  recommendation: {
+    recommendedTreatmentId: string;
+    confidence: "low" | "medium" | "high";
+    reason: string;
+    safetyNote: string;
+    source: "openai" | "fallback";
+  };
+  treatment: {
+    id: string;
+    name: string;
+    category: string;
+    description: string;
+    duration: string;
+    priceLabel: string;
+  };
+  alternatives: {
+    id: string;
+    name: string;
+    priceLabel: string;
+  }[];
+  message?: string;
+};
+
 type CalendlyWidgetOptions = {
   url: string;
   parentElement: HTMLElement;
@@ -104,7 +129,10 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   );
   const [location, setLocation] = useState("");
   const [locationValid, setLocationValid] = useState(false);
-  const [consultationNotes, setConsultationNotes] = useState("");
+  const [patientConcern, setPatientConcern] = useState("");
+  const [recommendation, setRecommendation] = useState<RecommendationResult | null>(null);
+  const [recommendationState, setRecommendationState] = useState<"idle" | "loading" | "error">("idle");
+  const [recommendationNote, setRecommendationNote] = useState("");
   const [customer, setCustomer] = useState<CustomerDetails>({
     name: "",
     email: "",
@@ -135,7 +163,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
     : directTreatmentAppointment;
   const stepLabels = [
     "Path",
-    isConsultation ? "Consultation" : "Treatment",
+    isConsultation ? "Concern" : "Treatment",
     "Your details",
     "Schedule",
     "Payment",
@@ -171,6 +199,12 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
       return;
     }
 
+    if (step === 1 && isConsultation && patientConcern.trim().length < 8) {
+      setCheckoutState("error");
+      setCheckoutNote("Please describe what problem you would like to address.");
+      return;
+    }
+
     if (step === 2 && requiresAddress && !(location.trim() && locationValid)) {
       setCheckoutState("error");
       setCheckoutNote("Please enter your address in Metro Manila to continue.");
@@ -192,6 +226,41 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
 
     setCheckoutState("idle");
     setStep((current) => Math.min(4, current + 1));
+  }
+
+  async function requestTreatmentRecommendation() {
+    const concern = patientConcern.trim();
+
+    if (concern.length < 8) {
+      setRecommendationState("error");
+      setRecommendationNote("Write the problem in a little more detail first.");
+      return;
+    }
+
+    setRecommendationState("loading");
+    setRecommendationNote("");
+    setRecommendation(null);
+
+    try {
+      const response = await fetch("/api/recommend-treatment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ concern }),
+      });
+      const payload = (await response.json()) as RecommendationResult;
+
+      if (!response.ok || !payload.recommendation || !payload.treatment) {
+        throw new Error(payload.message ?? "Unable to suggest a treatment right now.");
+      }
+
+      setRecommendation(payload);
+      setRecommendationState("idle");
+    } catch (error) {
+      setRecommendationState("error");
+      setRecommendationNote(
+        error instanceof Error ? error.message : "Unable to suggest a treatment right now.",
+      );
+    }
   }
 
   async function startCheckout() {
@@ -234,7 +303,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           paymentMode,
           calendlyEventUri,
           calendlyInviteeUri,
-          consultationNotes: isConsultation ? consultationNotes.trim() : undefined,
+          patientConcern: patientConcern.trim() || undefined,
           intake: intakeQuestions.filter((_, index) => intake[index]),
           consentConfirmed: allConsented,
           customer: {
@@ -408,8 +477,8 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
 
         {step === 1 && isConsultation ? (
           <BookingStep
-            title="Tell the doctor what you need help deciding"
-            text="The consultation is for patients who are not ready to choose a specific treatment yet. The doctor can review goals, suitability, and possible options."
+            title="What problem would you like to address?"
+            text="Describe the patient concern in their own words. BetterSelf can suggest the closest treatment option, while the doctor still confirms suitability."
           >
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
@@ -424,14 +493,103 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
               </p>
             </div>
             <label className="mt-5 grid gap-2 text-sm font-semibold text-[#1F1F1F]">
-              What are you considering? (optional)
+              <span>
+                What problem would you like to address? <span className="text-[#B42318]">*</span>
+              </span>
               <textarea
                 className="field min-h-32 py-3"
-                placeholder="Example: I want help choosing between skin booster and neurotoxin, or I am not sure what fits my concern."
-                value={consultationNotes}
-                onChange={(event) => setConsultationNotes(event.target.value)}
+                placeholder="Example: I have acne scars on my cheeks, visible pores, underarm sweating, jawline bulk, keloids, warts, or under-eye tiredness."
+                value={patientConcern}
+                onChange={(event) => {
+                  setPatientConcern(event.target.value);
+                  setRecommendation(null);
+                  setRecommendationNote("");
+                  setCheckoutNote("");
+                }}
               />
             </label>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                className="btn btn-secondary justify-center"
+                type="button"
+                disabled={recommendationState === "loading"}
+                onClick={requestTreatmentRecommendation}
+              >
+                <WandSparkles className="h-4 w-4" />
+                {recommendationState === "loading" ? "Finding match..." : "Suggest matching treatment"}
+              </button>
+              <p className="text-xs leading-5 text-[#5C574F]">
+                This is guidance only. The doctor still reviews safety, suitability, and final plan.
+              </p>
+            </div>
+            {recommendationNote ? (
+              <p className="mt-3 text-sm font-medium text-[#B42318]" role="alert">
+                {recommendationNote}
+              </p>
+            ) : null}
+            {recommendation ? (
+              <div className="mt-5 rounded-lg border border-[#DDE8E8] bg-[#EEF5F5] p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
+                      Suggested match
+                    </p>
+                    <h2 className="mt-2 font-serif text-3xl text-[#1F1F1F]">
+                      {recommendation.treatment.name}
+                    </h2>
+                    <p className="mt-1 text-sm font-semibold text-[#4D4D4D]">
+                      {recommendation.treatment.priceLabel}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#3F5249]">
+                    {recommendation.recommendation.confidence} confidence
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-[#4D4D4D]">
+                  {recommendation.recommendation.reason}
+                </p>
+                <p className="mt-3 rounded-lg bg-white p-3 text-xs leading-5 text-[#5C574F]">
+                  {recommendation.recommendation.safetyNote}
+                </p>
+                {recommendation.alternatives.length ? (
+                  <p className="mt-3 text-xs text-[#5C574F]">
+                    Other possible options:{" "}
+                    {recommendation.alternatives
+                      .map((alternative) => alternative.name)
+                      .join(", ")}
+                  </p>
+                ) : null}
+                {recommendation.treatment.id !== consultationService.id ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <button
+                      className="btn btn-primary justify-center"
+                      type="button"
+                      onClick={() => {
+                        setBookingIntent("treatment");
+                        setTreatmentId(recommendation.treatment.id);
+                        setCheckoutNote("");
+                        resetScheduleSelection();
+                        setStep(1);
+                      }}
+                    >
+                      Book this treatment
+                    </button>
+                    <button
+                      className="btn btn-secondary justify-center"
+                      type="button"
+                      onClick={handleNextStep}
+                    >
+                      Continue with consultation
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            {checkoutNote ? (
+              <p className="mt-4 text-sm font-medium text-[#B42318]" role="alert">
+                {checkoutNote}
+              </p>
+            ) : null}
           </BookingStep>
         ) : null}
 

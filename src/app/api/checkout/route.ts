@@ -20,6 +20,7 @@ type CheckoutRequest = {
   paymentMode?: string;
   calendlyEventUri?: string;
   calendlyInviteeUri?: string;
+  patientConcern?: string;
   consultationNotes?: string;
   intake?: string[];
   consentConfirmed?: boolean;
@@ -39,6 +40,10 @@ const paymentMethods = ["card", "gcash", "qrph"];
 
 function asMetadataValue(value: string | undefined, fallback = "not_provided") {
   return value?.trim() || fallback;
+}
+
+function getPatientConcern(body: CheckoutRequest) {
+  return body.patientConcern?.trim() || body.consultationNotes?.trim() || "";
 }
 
 /**
@@ -92,15 +97,14 @@ async function persistBooking(
     });
 
     const isConsultation = isConsultationBooking(treatment, body);
+    const patientConcern = getPatientConcern(body);
     const notes = [
       `Booking flow: ${isConsultation ? "consultation" : "direct treatment"}`,
       body.calendlyEventUri
         ? `Calendly event: ${body.calendlyEventUri}`
         : "Schedule NOT verified in Calendly — confirm the appointment with the patient.",
       body.calendlyInviteeUri ? `Calendly invitee: ${body.calendlyInviteeUri}` : null,
-      body.consultationNotes?.trim()
-        ? `Consultation notes: ${body.consultationNotes.trim()}`
-        : null,
+      patientConcern ? `Patient concern: ${patientConcern}` : null,
     ]
       .filter(Boolean)
       .join("\n");
@@ -127,7 +131,8 @@ async function persistBooking(
       answers: {
         flow: isConsultation ? "consultation" : "direct_treatment",
         flagged: body.intake ?? [],
-        consultationNotes: body.consultationNotes?.trim() ?? null,
+        patientConcern: patientConcern || null,
+        consultationNotes: patientConcern || null,
       },
       consentConfirmed: Boolean(body.consentConfirmed),
     });
