@@ -105,8 +105,8 @@ const zones: TreatmentZone[] = [
     view: "body",
     label: "Underarms",
     description: "Options for excessive sweating and selected underarm tone concerns when suitable.",
-    x: 35,
-    y: 32,
+    x: 39,
+    y: 35,
     treatmentIds: ["sweatox", "underarm-whitening-injectable"],
     tag: "Injectable",
   },
@@ -116,7 +116,7 @@ const zones: TreatmentZone[] = [
     label: "Abdomen & body contour",
     description: "Doctor-led mesolipo treatment requests for selected body areas.",
     x: 50,
-    y: 52,
+    y: 49,
     treatmentIds: ["body-mesolipo"],
     tag: "Contour",
   },
@@ -125,8 +125,8 @@ const zones: TreatmentZone[] = [
     view: "body",
     label: "Arms & selected areas",
     description: "Body-area treatment planning for localized fullness or selected lesion concerns.",
-    x: 66,
-    y: 44,
+    x: 62,
+    y: 46,
     treatmentIds: ["body-mesolipo", "wart-removal", "sebaceous-hyperplasia-removal"],
     tag: "Selected areas",
   },
@@ -135,8 +135,8 @@ const zones: TreatmentZone[] = [
     view: "body",
     label: "Keloids & raised scars",
     description: "Doctor-assessed injection care for selected keloids or raised scar concerns.",
-    x: 35,
-    y: 55,
+    x: 40,
+    y: 59,
     treatmentIds: ["keloid-injection"],
     tag: "Scar care",
   },
@@ -145,8 +145,8 @@ const zones: TreatmentZone[] = [
     view: "body",
     label: "Warts & small lesions",
     description: "Removal options for selected warts, milia, or sebaceous hyperplasia after assessment.",
-    x: 66,
-    y: 62,
+    x: 60,
+    y: 61,
     treatmentIds: ["wart-removal", "milia-extraction", "sebaceous-hyperplasia-removal"],
     tag: "Removal",
   },
@@ -156,7 +156,7 @@ const zones: TreatmentZone[] = [
     label: "Intimate-area tone concerns",
     description: "Discreet doctor-led treatment requests for selected intimate-area tone concerns.",
     x: 50,
-    y: 73,
+    y: 58,
     treatmentIds: ["intimate-area-whitening-injectable"],
     tag: "Discreet care",
   },
@@ -245,13 +245,13 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                           <span
                             className={`grid place-items-center rounded-full border-2 border-white shadow-md transition ${
                               isActive
-                                ? "h-7 w-7 bg-[#3F5249] ring-2 ring-[#3F5249]/25"
-                                : "h-5 w-5 bg-white/90 ring-1 ring-[#CFE0DF] hover:bg-[#EEF5F5]"
+                                ? "h-6 w-6 bg-[#3F5249] ring-2 ring-[#3F5249]/25"
+                                : "h-4 w-4 bg-white/90 ring-1 ring-[#CFE0DF] hover:bg-[#EEF5F5]"
                             }`}
                           >
                             <span
                               className={`rounded-full ${
-                                isActive ? "h-2 w-2 bg-white" : "h-1.5 w-1.5 bg-[#3F5249]"
+                                isActive ? "h-1.5 w-1.5 bg-white" : "h-1.5 w-1.5 bg-[#3F5249]"
                               }`}
                             />
                           </span>
