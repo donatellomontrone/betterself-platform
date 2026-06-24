@@ -43,6 +43,10 @@ export async function POST(request: NextRequest) {
     return dashboardRedirect(request, "retry_missing");
   }
 
+  if (booking.status !== "confirmed") {
+    return dashboardRedirect(request, "not_confirmed");
+  }
+
   const referenceNumber = `BS-RETRY-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
   const secretKey = process.env.PAYMONGO_SECRET_KEY;

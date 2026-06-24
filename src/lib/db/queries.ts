@@ -119,7 +119,7 @@ export type CreatePaymentInput = {
   patientId: string;
   amount: number; // PHP pesos
   paymentType: string;
-  transactionReference: string;
+  transactionReference?: string | null;
   paymongoCheckoutId?: string | null;
 };
 
@@ -131,7 +131,7 @@ export async function createPayment(input: CreatePaymentInput) {
       (booking_id, patient_id, amount, currency, payment_type, status, transaction_reference, paymongo_checkout_id)
     values
       (${input.bookingId}, ${input.patientId}, ${input.amount}, 'PHP', ${input.paymentType},
-       'pending', ${input.transactionReference}, ${input.paymongoCheckoutId ?? null})
+       'pending', ${input.transactionReference ?? null}, ${input.paymongoCheckoutId ?? null})
   `;
 }
 

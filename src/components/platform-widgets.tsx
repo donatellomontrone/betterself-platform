@@ -7,7 +7,6 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
-  CreditCard,
   MapPin,
   MessageCircle,
   Paperclip,
@@ -27,9 +26,8 @@ import {
 import { Notice, StatusBadge } from "@/components/site-shell";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 
-const directTreatmentAppointment = "Home treatment visit";
-const consultationAppointment = "Online consultation";
-const paymentModes = ["PayMongo QR Ph checkout"];
+const directTreatmentAppointment = "Doctor review call";
+const consultationAppointment = "Doctor consultation call";
 const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
 
 const intakeQuestions = [
@@ -152,7 +150,6 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
   const [calendlyEventUri, setCalendlyEventUri] = useState("");
   const [calendlyInviteeUri, setCalendlyInviteeUri] = useState("");
   const [scheduleConfirmed, setScheduleConfirmed] = useState(false);
-  const paymentMode = paymentModes[0];
   const [checkoutState, setCheckoutState] = useState<"idle" | "loading" | "error">("idle");
   const [checkoutNote, setCheckoutNote] = useState("");
   const [intake, setIntake] = useState(() => intakeQuestions.map(() => false));
@@ -175,7 +172,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
     isConsultation ? "Concern" : "Treatment",
     "Your details",
     "Schedule",
-    "Payment",
+    "Review",
   ];
   const progress = ((step + 1) / 5) * 100;
   const scheduleStatus = scheduleConfirmed ? "Calendly appointment selected" : "Not scheduled yet";
@@ -229,7 +226,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
 
     if (step === 3 && calendlyUrl && !scheduleConfirmed) {
       setCheckoutState("error");
-      setCheckoutNote("Please choose a Calendly appointment before payment.");
+      setCheckoutNote("Please choose a doctor call before submitting.");
       return;
     }
 
@@ -272,36 +269,36 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
     }
   }
 
-  async function startCheckout() {
+  async function submitBookingRequest() {
     setCheckoutState("loading");
     setCheckoutNote("");
 
     if (!isCustomerReady()) {
       setCheckoutState("error");
-      setCheckoutNote("Please add name, email, and phone before payment.");
+      setCheckoutNote("Please add name, email, and phone before submitting.");
       return;
     }
 
     if (requiresAddress && !(location.trim() && locationValid)) {
       setCheckoutState("error");
-      setCheckoutNote("Please enter your address in Metro Manila before payment.");
+      setCheckoutNote("Please enter your address in Metro Manila before submitting.");
       return;
     }
 
     if (calendlyUrl && !scheduleConfirmed) {
       setCheckoutState("error");
-      setCheckoutNote("Please choose a Calendly appointment before payment.");
+      setCheckoutNote("Please choose a doctor call before submitting.");
       return;
     }
 
     if (!allConsented) {
       setCheckoutState("error");
-      setCheckoutNote("Please tick all the consent boxes before continuing to payment.");
+      setCheckoutNote("Please tick all the consent boxes before submitting.");
       return;
     }
 
     try {
-      const response = await fetch("/api/checkout", {
+      const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -309,7 +306,6 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
           treatmentId: selectedService.id,
           appointmentType,
           location: requiresAddress ? location : "Online consultation",
-          paymentMode,
           calendlyEventUri,
           calendlyInviteeUri,
           patientConcern: patientConcern.trim() || undefined,
@@ -330,19 +326,25 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
       });
 
       const payload = (await response.json()) as {
-        checkoutUrl?: string;
+        dashboardUrl?: string;
         message?: string;
+        signInUrl?: string;
       };
 
-      if (!response.ok || !payload.checkoutUrl) {
-        throw new Error(payload.message ?? "Checkout is not available yet.");
+      if (response.status === 401 && payload.signInUrl) {
+        window.location.href = payload.signInUrl;
+        return;
       }
 
-      window.location.href = payload.checkoutUrl;
+      if (!response.ok || !payload.dashboardUrl) {
+        throw new Error(payload.message ?? "Booking request is not available yet.");
+      }
+
+      window.location.href = payload.dashboardUrl;
     } catch (error) {
       setCheckoutState("error");
       setCheckoutNote(
-        error instanceof Error ? error.message : "Unable to create checkout right now.",
+        error instanceof Error ? error.message : "Unable to submit this booking right now.",
       );
     }
   }
@@ -380,7 +382,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               Step {step + 1} of 5 · {stepLabels[step]}
             </span>
             <span className="font-medium normal-case tracking-normal text-[#8A847B]">
-              No charge until the last step
+              Payment only after doctor confirmation
             </span>
           </div>
         </div>
@@ -388,7 +390,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
         {step === 0 ? (
           <BookingStep
             title="How would you like to book?"
-            text="Choose the path that matches the patient. If they already know the treatment, they can book and pay for it directly. If they are unsure, they can book a paid doctor consultation first."
+            text="Choose the path that matches the patient. If they already know the treatment, they can request that service. If they are unsure, they can start with a doctor consultation call."
           >
             <div className="grid gap-4 md:grid-cols-2">
               <button
@@ -411,8 +413,8 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                   Book a treatment
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-[#595550]">
-                  Choose the exact service, complete intake, schedule the home
-                  visit, then pay for that treatment.
+                  Choose the exact service, complete intake, schedule the doctor
+                  review call, then pay from the dashboard after confirmation.
                 </p>
                 <p className="mt-4 text-sm font-bold text-[#1F1F1F]">
                   Treatment price applies
@@ -492,14 +494,14 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
           >
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
-                Consultation fee
+                Consultation request
               </p>
               <p className="mt-2 font-serif text-4xl text-[#1F1F1F]">
                 {consultationService.priceLabel}
               </p>
               <p className="mt-2 text-sm leading-6 text-[#595550]">
-                Paid before the consultation slot. Treatment pricing is separate
-                if the patient books a procedure later.
+                The doctor call happens first. Any payment or next step appears
+                in the patient dashboard after BetterSelf confirms it.
               </p>
             </div>
             <label className="mt-5 grid gap-2 text-sm font-semibold text-[#1F1F1F]">
@@ -605,11 +607,11 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
 
         {step === 2 ? (
           <BookingStep
-            title={isConsultation ? "Patient details for consultation" : "Patient details and home address"}
+            title={isConsultation ? "Patient details for the doctor call" : "Patient details and home address"}
             text={
               isConsultation
-                ? "These details pre-fill Calendly and PayMongo for the paid doctor consultation."
-                : "These details pre-fill Calendly and PayMongo. The doctor still reviews medical answers before confirming treatment."
+                ? "These details pre-fill Calendly for the doctor consultation call."
+                : "These details pre-fill Calendly for the doctor review call. Payment happens later from the dashboard after review."
             }
           >
             {requiresAddress ? (
@@ -699,11 +701,11 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
 
         {step === 3 ? (
           <BookingStep
-            title={isConsultation ? "Choose consultation time" : "Choose home treatment time"}
+            title={isConsultation ? "Choose consultation call time" : "Choose doctor review call time"}
             text={
               isConsultation
-                ? "Calendly handles the doctor's consultation availability. After the slot is selected, the patient continues to PayMongo payment."
-                : "Calendly handles the doctor's home-visit availability. After the slot is selected, the patient continues to PayMongo payment."
+                ? "Calendly handles the doctor's consultation availability. After the call, the next step appears in the patient dashboard."
+                : "Calendly handles the doctor's review-call availability. The home visit is confirmed only after review and payment from the dashboard."
             }
           >
             <CalendlyScheduler
@@ -721,22 +723,22 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
 
         {step === 4 ? (
           <BookingStep
-            title={isConsultation ? "Review consultation and payment" : "Review treatment booking and payment"}
+            title={isConsultation ? "Review consultation request" : "Review treatment request"}
             text={
               isConsultation
-                ? "Confirm the paid consultation request. Treatment booking and treatment payment happen separately if the patient chooses a procedure later."
-                : "Confirm the treatment booking request. The doctor may need to approve or adjust the treatment before the home visit is fully confirmed."
+                ? "Submit the consultation request. The doctor call happens first, then payment or next steps are handled from the dashboard."
+                : "Submit the treatment request. The doctor reviews the patient first, then the patient pays from the dashboard to confirm the service."
             }
           >
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4">
               <p className="flex items-center gap-2 text-sm font-semibold text-[#1F1F1F]">
                 <ShieldCheck className="h-4 w-4 text-[#3F5249]" />
-                Secure payment via PayMongo QR Ph
+                Doctor review before payment
               </p>
               <p className="mt-2 text-sm leading-6 text-[#595550]">
                 {isConsultation
-                  ? "You'll be redirected to PayMongo's secure hosted page to pay the consultation fee with QR Ph."
-                  : "You'll be redirected to PayMongo's secure hosted page to pay with QR Ph. If the doctor cannot proceed after review, your payment is refunded."}
+                  ? "You will not pay at this step. BetterSelf confirms the doctor call first."
+                  : "You will not pay at this step. After the doctor call, the dashboard will show Pay now when the service is ready to confirm."}
               </p>
             </div>
             <div className="mt-6 rounded-lg border border-[#E6DFD5] p-4">
@@ -761,17 +763,17 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
             <button
               className="btn btn-primary mt-6 h-12 w-full justify-center"
               disabled={checkoutState === "loading" || !allConsented}
-              onClick={startCheckout}
+              onClick={submitBookingRequest}
             >
-              <CreditCard className="h-4 w-4" />
+              <Check className="h-4 w-4" />
               {checkoutState === "loading"
-                ? "Creating secure checkout..."
+                ? "Submitting request..."
                 : isConsultation
-                  ? "Pay consultation fee"
-                  : "Continue to secure payment"}
+                  ? "Submit consultation request"
+                  : "Submit treatment request"}
             </button>
             <p className="mt-3 text-center text-xs text-[#5C574F]">
-              You&apos;ll review the final amount on PayMongo before paying.
+              Payment opens from the dashboard after the doctor review/call.
             </p>
             {checkoutNote ? (
               <p className="mt-3 text-sm font-medium text-[#B42318]" role="alert" aria-live="polite">
@@ -821,7 +823,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               }
             />
             <SummaryRow label="Calendar" value={scheduleStatus} />
-            <SummaryRow label="Payment" value="QR Ph via PayMongo" />
+            <SummaryRow label="Payment" value="After doctor confirmation" />
           </div>
           <div className="mt-5 rounded-lg bg-[#FAF8F4] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
@@ -834,8 +836,8 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
         </section>
         <Notice title="Booking disclaimer">
           {isConsultation
-            ? "The consultation helps the doctor guide treatment options. Any later procedure is booked and paid separately."
-            : "Your treatment booking may require doctor approval before the home visit is confirmed. Suitability, treatment plan, and expected outcomes depend on individual medical assessment."}
+            ? "The consultation helps the doctor guide treatment options. Any payment or later procedure is handled from the dashboard after confirmation."
+            : "Your treatment request requires doctor review before payment and home-visit confirmation. Suitability, treatment plan, and expected outcomes depend on individual medical assessment."}
         </Notice>
       </aside>
     </div>
@@ -938,7 +940,7 @@ function CalendlyScheduler({
           onScheduled({});
         }}
       >
-        I scheduled in Calendly and want to continue to payment
+        I scheduled the doctor call and want to continue
       </button>
     </div>
   );

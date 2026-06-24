@@ -1,0 +1,182 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { consultationService, getTreatmentById, type Treatment } from "@/lib/treatments";
+import { hasValidClerkServerKeys } from "@/lib/clerk-env";
+import { isDatabaseConfigured } from "@/lib/db/client";
+import {
+  createBooking,
+  createMedicalIntake,
+  createPayment,
+  ensureUserProfile,
+  upsertPatientProfile,
+} from "@/lib/db/queries";
+
+type BookingRequest = {
+  bookingIntent?: "treatment" | "consultation";
+  treatmentId?: string;
+  appointmentType?: string;
+  location?: string;
+  calendlyEventUri?: string;
+  calendlyInviteeUri?: string;
+  patientConcern?: string;
+  consultationNotes?: string;
+  intake?: string[];
+  consentConfirmed?: boolean;
+  customer?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    emergencyContact?: string;
+  };
+};
+
+function isConsultationBooking(treatment: Treatment, body: BookingRequest) {
+  return body.bookingIntent === "consultation" || treatment.id === consultationService.id;
+}
+
+function getPatientConcern(body: BookingRequest) {
+  return body.patientConcern?.trim() || body.consultationNotes?.trim() || "";
+}
+
+function asMetadataValue(value: string | undefined, fallback = "not_provided") {
+  return value?.trim() || fallback;
+}
+
+export async function POST(request: NextRequest) {
+  if (!hasValidClerkServerKeys()) {
+    return NextResponse.json(
+      { message: "Patient accounts are not configured yet." },
+      { status: 503 },
+    );
+  }
+
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json(
+      {
+        message: "Please sign in before submitting a booking request.",
+        signInUrl: "/sign-in?redirect_url=/booking",
+      },
+      { status: 401 },
+    );
+  }
+
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json(
+      { message: "Booking database is not available right now." },
+      { status: 503 },
+    );
+  }
+
+  const body = (await request.json()) as BookingRequest;
+  const treatment = body.treatmentId ? getTreatmentById(body.treatmentId) : null;
+
+  if (!treatment) {
+    return NextResponse.json(
+      { message: "Please choose a valid treatment before submitting." },
+      { status: 400 },
+    );
+  }
+
+  const isConsultation = isConsultationBooking(treatment, body);
+  const patientConcern = getPatientConcern(body);
+
+  if (!body.consentConfirmed) {
+    return NextResponse.json(
+      { message: "Please accept the consent items before submitting." },
+      { status: 400 },
+    );
+  }
+
+  if (!isConsultation && !body.location?.trim()) {
+    return NextResponse.json(
+      { message: "Please enter the home visit address before submitting." },
+      { status: 400 },
+    );
+  }
+
+  const user = await currentUser();
+  const clerkEmail = user?.emailAddresses.find(
+    (email) => email.id === user.primaryEmailAddressId,
+  )?.emailAddress;
+  const clerkPhone =
+    user?.phoneNumbers.find((phone) => phone.id === user.primaryPhoneNumberId)?.phoneNumber ??
+    user?.phoneNumbers[0]?.phoneNumber;
+  const fullName =
+    user?.fullName ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
+    body.customer?.name?.trim() ||
+    "BetterSelf patient";
+  const email = clerkEmail ?? body.customer?.email?.trim();
+
+  if (!email) {
+    return NextResponse.json(
+      { message: "Please add an email address to your account before submitting." },
+      { status: 400 },
+    );
+  }
+
+  await ensureUserProfile({
+    id: userId,
+    fullName,
+    email,
+    phone: body.customer?.phone ?? clerkPhone ?? null,
+  });
+  await upsertPatientProfile({
+    userId,
+    address: (body.location?.trim() || body.customer?.address) ?? null,
+    emergencyContact: body.customer?.emergencyContact ?? null,
+  });
+
+  const notes = [
+    `Booking flow: ${isConsultation ? "consultation call" : "doctor review call before payment"}`,
+    "Payment is collected from the patient dashboard after doctor review/confirmation.",
+    body.calendlyEventUri
+      ? `Calendly event: ${body.calendlyEventUri}`
+      : "Schedule NOT verified in Calendly — confirm the call with the patient.",
+    body.calendlyInviteeUri ? `Calendly invitee: ${body.calendlyInviteeUri}` : null,
+    patientConcern ? `Patient concern: ${patientConcern}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const booking = await createBooking({
+    patientId: userId,
+    treatmentId: treatment.id,
+    appointmentType: asMetadataValue(body.appointmentType, "doctor_review_call"),
+    location: asMetadataValue(
+      body.location,
+      isConsultation ? "Online consultation" : "Metro Manila",
+    ),
+    notes,
+  });
+
+  await createPayment({
+    bookingId: booking.id,
+    patientId: userId,
+    amount: treatment.price,
+    paymentType: isConsultation ? "consultation" : "treatment",
+  });
+
+  await createMedicalIntake({
+    patientId: userId,
+    bookingId: booking.id,
+    answers: {
+      flow: isConsultation ? "consultation_call" : "doctor_review_before_payment",
+      flagged: body.intake ?? [],
+      patientConcern: patientConcern || null,
+      consultationNotes: patientConcern || null,
+    },
+    consentConfirmed: true,
+  });
+
+  return NextResponse.json(
+    {
+      bookingId: booking.id,
+      dashboardUrl: "/dashboard?booking=submitted",
+      message: "Booking request submitted. The doctor will review it before payment.",
+    },
+    { status: 201 },
+  );
+}

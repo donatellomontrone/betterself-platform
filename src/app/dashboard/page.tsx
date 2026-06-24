@@ -13,6 +13,7 @@ export default async function Dashboard({
 }) {
   const params = await searchParams;
   const paymentStatus = Array.isArray(params.payment) ? params.payment[0] : params.payment;
+  const bookingStatus = Array.isArray(params.booking) ? params.booking[0] : params.booking;
   const user = await currentUser();
   const primaryEmail = user?.emailAddresses.find(
     (email) => email.id === user.primaryEmailAddressId,
@@ -32,6 +33,7 @@ export default async function Dashboard({
       viewerName={user?.firstName ?? user?.fullName ?? primaryEmail}
       bookings={bookings}
       paymentStatus={paymentStatus}
+      bookingStatus={bookingStatus}
     />
   );
 }

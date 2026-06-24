@@ -86,9 +86,13 @@ function paymentStatusTone(status: string): StatusTone {
 function canRetryPayment(booking: PatientBookingView) {
   return (
     booking.amount != null &&
-    booking.status !== "cancelled" &&
+    booking.status === "confirmed" &&
     (booking.payment_status === "pending" || booking.payment_status === "refunded")
   );
+}
+
+function isAwaitingDoctorConfirmation(booking: PatientBookingView) {
+  return booking.payment_status === "pending" && booking.status === "pending_doctor_review";
 }
 
 function RetryPaymentButton({
@@ -126,6 +130,17 @@ const paymentRetryMessages: Record<string, { title: string; text: string }> = {
   already_paid: {
     title: "Payment already completed",
     text: "This booking is already marked as paid.",
+  },
+  not_confirmed: {
+    title: "Doctor confirmation required",
+    text: "Payment opens here after the doctor call/review confirms the service.",
+  },
+};
+
+const bookingRequestMessages: Record<string, { title: string; text: string }> = {
+  submitted: {
+    title: "Request submitted",
+    text: "The doctor call/review happens first. Once BetterSelf confirms the service, the payment button will appear here in your dashboard.",
   },
 };
 
@@ -165,13 +180,13 @@ const howItWorksSteps = [
     icon: FileText,
   },
   {
-    title: "Book a private appointment",
-    text: "Select your preferred date, time, and location in selected Metro Manila areas.",
+    title: "Speak with the doctor",
+    text: "Choose a video call or phone review so the doctor can confirm the right next step.",
     icon: CalendarDays,
   },
   {
-    title: "Receive care at home",
-    text: "A licensed doctor visits with the required medical setup and aftercare guidance.",
+    title: "Pay after confirmation",
+    text: "When the service is confirmed, pay from your dashboard to secure the home visit.",
     icon: Home,
   },
 ];
@@ -346,7 +361,7 @@ export function BookingPage({
       <PageHero
         eyebrow="Book appointment"
         title="Choose a treatment directly or start with a doctor consultation."
-        text="Patients can book a known treatment and pay for that service, or book a ₱1,500 doctor consultation first when they need help choosing the right option."
+        text="Patients submit the request first, schedule a doctor call or review, then pay from the dashboard only after BetterSelf confirms the service."
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -361,14 +376,17 @@ export function DashboardPage({
   viewerName,
   bookings = [],
   paymentStatus,
+  bookingStatus,
 }: {
   viewerName?: string;
   bookings?: PatientBookingView[];
   paymentStatus?: string;
+  bookingStatus?: string;
 }) {
   const upcoming = bookings[0];
   const hasCompleted = bookings.some((b) => b.status === "completed");
   const paymentRetryMessage = paymentStatus ? paymentRetryMessages[paymentStatus] : undefined;
+  const bookingRequestMessage = bookingStatus ? bookingRequestMessages[bookingStatus] : undefined;
   const stats = [
     { label: "Total bookings", value: bookings.length },
     {
@@ -401,6 +419,11 @@ export function DashboardPage({
           {paymentRetryMessage ? (
             <div className="mt-6">
               <Notice title={paymentRetryMessage.title}>{paymentRetryMessage.text}</Notice>
+            </div>
+          ) : null}
+          {bookingRequestMessage ? (
+            <div className="mt-6">
+              <Notice title={bookingRequestMessage.title}>{bookingRequestMessage.text}</Notice>
             </div>
           ) : null}
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -437,6 +460,10 @@ export function DashboardPage({
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                     {canRetryPayment(upcoming) ? (
                       <RetryPaymentButton bookingId={upcoming.id} />
+                    ) : isAwaitingDoctorConfirmation(upcoming) ? (
+                      <span className="btn btn-secondary cursor-default justify-center opacity-80">
+                        Payment after doctor call
+                      </span>
                     ) : (
                       <Link className="btn btn-secondary" href="/booking">
                         Book Again
@@ -529,6 +556,8 @@ export function DashboardPage({
                           label="Retry payment"
                           compact
                         />
+                      ) : isAwaitingDoctorConfirmation(booking) ? (
+                        <StatusBadge tone="neutral">Payment after doctor call</StatusBadge>
                       ) : null}
                     </div>
                   </article>
@@ -686,7 +715,9 @@ export function AdminPage({
   ];
   const filteredBookings = bookings.filter((booking) => matchesAdminFilters(booking, filters));
   const uniquePatients = new Set(bookings.map((booking) => booking.patient_id)).size;
-  const pendingPayments = bookings.filter((booking) => booking.payment_status === "pending").length;
+  const paymentsReady = bookings.filter(
+    (booking) => booking.status === "confirmed" && booking.payment_status === "pending",
+  ).length;
   const flaggedIntakes = bookings.filter((booking) => {
     const answers = asRecord(booking.intake_answers);
     return getStringList(answers.flagged).length > 0;
@@ -712,7 +743,7 @@ export function AdminPage({
           <div className="mt-4 grid gap-4 md:grid-cols-4">
             {[
               ["Patients", uniquePatients],
-              ["Pending payments", pendingPayments],
+              ["Ready to pay", paymentsReady],
               ["Flagged intakes", flaggedIntakes],
               ["Shown after filters", filteredBookings.length],
             ].map(([label, value]) => (
@@ -1306,7 +1337,7 @@ function HowItWorksSection() {
         <SectionHeading
           eyebrow="How BetterSelf works"
           title="A structured, doctor-led path from booking to aftercare."
-          text="The journey is intentionally calm: treatment selection, intake, scheduling, medical review, payment, home visit, and follow-up."
+          text="The journey is intentionally calm: treatment request, intake, doctor call or review, confirmation, dashboard payment, home visit, and follow-up."
         />
         <div className="mt-8 grid gap-4 md:grid-cols-4">
           {howItWorksSteps.map((step, index) => (
@@ -1356,7 +1387,7 @@ function FeaturedTreatmentsSection() {
           <SectionHeading
             eyebrow="Popular treatments"
             title="Selected treatments, medically reviewed."
-            text="Patients can book the treatment directly, with doctor review before final confirmation."
+            text="Patients can request the treatment directly, with doctor review before final confirmation and payment."
           />
           <ArrowLink href="/treatments">View all treatments</ArrowLink>
         </div>
@@ -1484,7 +1515,7 @@ function PricingSectionCompact() {
             items={[
               "No monthly or annual membership",
               "Prices are per treatment, unit, area, or piece where noted",
-              "Home visit fee and payment timing are shown before checkout",
+              "Payment opens from the dashboard after doctor confirmation",
               "Doctor assessment is required before final treatment confirmation",
               "Eligible employee and referral discounts can still apply",
             ]}
