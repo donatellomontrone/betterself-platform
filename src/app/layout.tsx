@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Cormorant_Garamond, Geist_Mono, Manrope } from "next/font/google";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { hasValidClerkPublishableKey } from "@/lib/clerk-env";
 import "./globals.css";
 
@@ -42,7 +43,10 @@ export default function RootLayout({
       lang="en"
       className={`${manrope.variable} ${cormorant.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{content}</body>
+      <body className="min-h-full flex flex-col">
+        {content}
+        <CookieConsentBanner />
+      </body>
     </html>
   );
 }

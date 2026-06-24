@@ -1,5 +1,6 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
+import { AccountConsentGate } from "@/components/account-consent-gate";
 import { hasValidClerkPublishableKey } from "@/lib/clerk-env";
 
 export default function SignUpPage() {
@@ -27,16 +28,18 @@ export default function SignUpPage() {
 
   return (
     <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 py-10">
-      <SignUp
-        signInUrl="/sign-in"
-        fallbackRedirectUrl="/dashboard"
-        appearance={{
-          variables: {
-            colorPrimary: "#4F5B55",
-            borderRadius: "8px",
-          },
-        }}
-      />
+      <AccountConsentGate>
+        <SignUp
+          signInUrl="/sign-in"
+          fallbackRedirectUrl="/dashboard"
+          appearance={{
+            variables: {
+              colorPrimary: "#4F5B55",
+              borderRadius: "8px",
+            },
+          }}
+        />
+      </AccountConsentGate>
     </main>
   );
 }

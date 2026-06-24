@@ -8,7 +8,7 @@ import { PageShell } from "@/components/site-shell";
  * before relying on them. Update the `updated` date when revised.
  */
 
-const LAST_UPDATED = "23 June 2026";
+const LAST_UPDATED = "24 June 2026";
 
 function LegalDoc({
   eyebrow,
@@ -94,6 +94,15 @@ export function PrivacyPolicyPage() {
           run our platform, scheduling, and payments (for example our database host,
           authentication, scheduling, and payment partners), under confidentiality
           obligations. We do not sell your personal data.
+        </p>
+      </Clause>
+      <Clause title="Cookies">
+        <p>
+          We use essential cookies and similar browser storage for account access,
+          booking, payment security, and site functionality. Optional cookies, such
+          as analytics or service-improvement cookies, are used only after you accept
+          them in the cookie banner. You can change your choice by clearing your
+          browser storage for BetterSelf or contacting us for help.
         </p>
       </Clause>
       <Clause title="How long we keep it">
