@@ -720,6 +720,148 @@ function AdminMeta({ label, value }: { label: string; value?: string | number | 
   );
 }
 
+type BookingCallFields = {
+  appointment_type: string;
+  location: string;
+  appointment_date?: string | null;
+  appointment_time?: string | null;
+  notes?: string | null;
+};
+
+const defaultDoctorVideoCallUrl = process.env.NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL?.trim() ?? "";
+
+function extractNoteValue(notes: string | null | undefined, label: string) {
+  const prefix = `${label}:`;
+  return (
+    notes
+      ?.split("\n")
+      .map((line) => line.trim())
+      .find((line) => line.startsWith(prefix))
+      ?.slice(prefix.length)
+      .trim() || null
+  );
+}
+
+function isVideoCallBooking(booking: BookingCallFields) {
+  const appointment = booking.appointment_type.toLowerCase();
+  const location = booking.location.toLowerCase();
+  return appointment.includes("call") || appointment.includes("consultation") || location.includes("online");
+}
+
+function getVideoCallLink(booking: BookingCallFields) {
+  const calendlyInvitee = extractNoteValue(booking.notes, "Calendly invitee");
+  const calendlyEvent = extractNoteValue(booking.notes, "Calendly event");
+  if (calendlyInvitee || calendlyEvent) return calendlyInvitee ?? calendlyEvent;
+  if (isVideoCallBooking(booking) && defaultDoctorVideoCallUrl) return defaultDoctorVideoCallUrl;
+  return null;
+}
+
+function getScheduleLabel(booking: BookingCallFields) {
+  if (booking.appointment_date && booking.appointment_time) {
+    return `${formatBookingDate(booking.appointment_date)} · ${booking.appointment_time}`;
+  }
+  if (getVideoCallLink(booking)) return "Scheduled in call link";
+  return "Schedule pending";
+}
+
+function AdminSidebar({
+  totalBookings,
+  confirmedCount,
+  messageCount,
+  patientCount,
+  readyToPay,
+}: {
+  totalBookings: number;
+  confirmedCount: number;
+  messageCount: number;
+  patientCount: number;
+  readyToPay: number;
+}) {
+  const items = [
+    ["Overview", "#overview", totalBookings],
+    ["Calendar", "#calendar", confirmedCount],
+    ["Messages", "#messages", messageCount],
+    ["Patients", "#patients", patientCount],
+    ["Payments", "#payments", readyToPay],
+    ["Bookings", "#bookings", totalBookings],
+  ] as const;
+
+  return (
+    <aside className="card h-fit p-4 lg:sticky lg:top-28">
+      <p className="eyebrow">Doctor menu</p>
+      <nav className="mt-4 grid gap-2" aria-label="Doctor workspace">
+        {items.map(([label, href, count]) => (
+          <a
+            key={label}
+            className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-bold text-[#1F1F1F] hover:bg-[#EEF5F5]"
+            href={href}
+          >
+            <span>{label}</span>
+            <span className="rounded-full bg-[#FAF8F4] px-2 py-1 text-xs text-[#5C574F]">
+              {count}
+            </span>
+          </a>
+        ))}
+      </nav>
+      <div className="mt-5 rounded-lg bg-[#EEF5F5] p-3 text-xs leading-5 text-[#566060]">
+        Flow: review call first, mark booking confirmed, then patient payment opens in dashboard.
+      </div>
+    </aside>
+  );
+}
+
+function AdminPanel({
+  id,
+  eyebrow,
+  title,
+  children,
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section id={id} className="card scroll-mt-28 p-5">
+      <p className="eyebrow">{eyebrow}</p>
+      <h2 className="mt-2 font-serif text-3xl text-[#1F1F1F]">{title}</h2>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+function AdminBookingSummaryCard({ booking }: { booking: AdminBookingView }) {
+  const callLink = getVideoCallLink(booking);
+  return (
+    <article className="rounded-lg border border-[#E6DFD5] bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-serif text-2xl text-[#1F1F1F]">{booking.patient_name}</p>
+          <p className="mt-1 text-sm font-semibold text-[#1F1F1F]">{booking.treatment_name}</p>
+          <p className="mt-1 text-sm text-[#595550]">{booking.appointment_type}</p>
+        </div>
+        <StatusBadge tone={bookingStatusTone(booking.status)}>
+          {formatBookingStatus(booking.status)}
+        </StatusBadge>
+      </div>
+      <p className="mt-3 text-sm text-[#595550]">{getScheduleLabel(booking)}</p>
+      {callLink ? (
+        <a className="btn btn-secondary mt-4 h-10" href={callLink} rel="noreferrer" target="_blank">
+          Open video call
+        </a>
+      ) : (
+        <p className="mt-4 rounded-lg bg-[#FAF8F4] p-3 text-xs leading-5 text-[#5C574F]">
+          Video call link pending. Add it via Calendly or set NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL.
+        </p>
+      )}
+    </article>
+  );
+}
+
+function AdminEmptyState({ children }: { children: ReactNode }) {
+  return <p className="rounded-lg bg-[#FAF8F4] p-4 text-sm text-[#595550]">{children}</p>;
+}
+
 export function AdminPage({
   authorized = false,
   bookings = [],
@@ -761,6 +903,13 @@ export function AdminPage({
   const paymentsReady = bookings.filter(
     (booking) => booking.status === "confirmed" && booking.payment_status === "pending",
   ).length;
+  const confirmedBookings = bookings.filter((booking) => booking.status === "confirmed");
+  const confirmedVideoCalls = confirmedBookings.filter(isVideoCallBooking);
+  const confirmedHomeVisits = confirmedBookings.filter((booking) => !isVideoCallBooking(booking));
+  const activeMessageThreads = bookings.filter((booking) => booking.status !== "cancelled").slice(0, 6);
+  const patientSummaries = Array.from(
+    new Map(bookings.map((booking) => [booking.patient_id, booking])).values(),
+  );
   const flaggedIntakes = bookings.filter((booking) => {
     const answers = asRecord(booking.intake_answers);
     return getStringList(answers.flagged).length > 0;
@@ -769,35 +918,45 @@ export function AdminPage({
   return (
     <PageShell>
       <section className="px-5 py-10 lg:px-8 lg:py-14">
-        <div className="mx-auto max-w-7xl">
-          <SectionHeading
-            eyebrow="Doctor / Admin dashboard"
-            title="Manage real patient bookings."
-            text="Live bookings from the database. Review each request, then update its status."
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+          <AdminSidebar
+            totalBookings={bookings.length}
+            confirmedCount={confirmedBookings.length}
+            messageCount={activeMessageThreads.length}
+            patientCount={uniquePatients}
+            readyToPay={paymentsReady}
           />
-          <div className="mt-8 grid gap-4 md:grid-cols-4">
-            {stats.map(([label, value]) => (
-              <div key={label} className="card p-5">
-                <p className="text-sm text-[#595550]">{label}</p>
-                <p className="mt-3 font-serif text-4xl text-[#1F1F1F]">{value}</p>
+          <div className="min-w-0">
+            <section id="overview" className="scroll-mt-28">
+              <SectionHeading
+                eyebrow="Doctor / Admin dashboard"
+                title="Manage real patient bookings."
+                text="Live bookings from the database. Review each request, confirm the call or treatment, then payment opens for the patient."
+              />
+              <div className="mt-8 grid gap-4 md:grid-cols-4">
+                {stats.map(([label, value]) => (
+                  <div key={label} className="card p-5">
+                    <p className="text-sm text-[#595550]">{label}</p>
+                    <p className="mt-3 font-serif text-4xl text-[#1F1F1F]">{value}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-4">
-            {[
-              ["Patients", uniquePatients],
-              ["Ready to pay", paymentsReady],
-              ["Flagged intakes", flaggedIntakes],
-              ["Shown after filters", filteredBookings.length],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-lg border border-[#E6DFD5] bg-white p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7A746E]">
-                  {label}
-                </p>
-                <p className="mt-2 font-serif text-3xl text-[#1F1F1F]">{value}</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-4">
+                {[
+                  ["Patients", uniquePatients],
+                  ["Ready to pay", paymentsReady],
+                  ["Flagged intakes", flaggedIntakes],
+                  ["Shown after filters", filteredBookings.length],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-[#E6DFD5] bg-white p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7A746E]">
+                      {label}
+                    </p>
+                    <p className="mt-2 font-serif text-3xl text-[#1F1F1F]">{value}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </section>
 
           <form
             className="card mt-8 grid gap-3 p-5 lg:grid-cols-[1.4fr_repeat(3,minmax(0,1fr))_auto]"
@@ -859,10 +1018,137 @@ export function AdminPage({
             </Link>
           </div>
 
+          <div className="mt-8 grid gap-6">
+            <AdminPanel id="calendar" eyebrow="Calendar" title="Confirmed calls and visits">
+              <div className="grid gap-4 xl:grid-cols-2">
+                <div>
+                  <p className="text-sm font-bold text-[#1F1F1F]">Video calls confirmed</p>
+                  <div className="mt-3 grid gap-3">
+                    {confirmedVideoCalls.length > 0 ? (
+                      confirmedVideoCalls.map((booking) => (
+                        <AdminBookingSummaryCard key={booking.id} booking={booking} />
+                      ))
+                    ) : (
+                      <AdminEmptyState>No confirmed video calls yet.</AdminEmptyState>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[#1F1F1F]">Home visits confirmed</p>
+                  <div className="mt-3 grid gap-3">
+                    {confirmedHomeVisits.length > 0 ? (
+                      confirmedHomeVisits.map((booking) => (
+                        <article key={booking.id} className="rounded-lg border border-[#E6DFD5] bg-white p-4">
+                          <p className="font-serif text-2xl text-[#1F1F1F]">{booking.patient_name}</p>
+                          <p className="mt-1 text-sm font-semibold text-[#1F1F1F]">
+                            {booking.treatment_name}
+                          </p>
+                          <p className="mt-1 text-sm text-[#595550]">{booking.location}</p>
+                          <p className="mt-3 text-sm text-[#595550]">{getScheduleLabel(booking)}</p>
+                        </article>
+                      ))
+                    ) : (
+                      <AdminEmptyState>No confirmed home visits yet.</AdminEmptyState>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </AdminPanel>
+
+            <AdminPanel id="messages" eyebrow="Messages" title="Doctor-side patient threads">
+              <div className="grid gap-3">
+                {activeMessageThreads.length > 0 ? (
+                  activeMessageThreads.map((booking) => (
+                    <article
+                      key={booking.id}
+                      className="grid gap-4 rounded-lg border border-[#E6DFD5] bg-white p-4 lg:grid-cols-[1fr_auto] lg:items-center"
+                    >
+                      <div>
+                        <p className="font-serif text-2xl text-[#1F1F1F]">{booking.patient_name}</p>
+                        <p className="mt-1 text-sm text-[#595550]">
+                          {booking.treatment_name} · {booking.patient_email}
+                        </p>
+                        <p className="mt-2 text-sm text-[#4D4D4D]">
+                          {getPatientConcern(booking.intake_answers) || "No patient concern recorded yet."}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Link className="btn btn-secondary h-10" href={`/messages?booking=${booking.id}`}>
+                          Open chat
+                        </Link>
+                        <a
+                          className="btn btn-ghost h-10"
+                          href={`mailto:${booking.patient_email}?subject=${encodeURIComponent(`BetterSelf: ${booking.treatment_name}`)}`}
+                        >
+                          Email
+                        </a>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <AdminEmptyState>No active patient threads yet.</AdminEmptyState>
+                )}
+              </div>
+            </AdminPanel>
+
+            <AdminPanel id="patients" eyebrow="Patients" title="Patient quick list">
+              <div className="grid gap-3 md:grid-cols-2">
+                {patientSummaries.length > 0 ? (
+                  patientSummaries.map((patient) => (
+                    <article key={patient.patient_id} className="rounded-lg border border-[#E6DFD5] bg-white p-4">
+                      <p className="font-serif text-2xl text-[#1F1F1F]">{patient.patient_name}</p>
+                      <p className="mt-1 text-sm text-[#595550]">{patient.patient_email}</p>
+                      <div className="mt-3 grid gap-2 text-sm">
+                        <Summary label="Phone" value={patient.patient_phone ?? "No phone"} />
+                        <Summary label="Bookings" value={String(patient.patient_total_bookings)} />
+                        <Summary label="Spend" value={formatPeso(patient.patient_total_spend)} />
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <AdminEmptyState>No patients yet.</AdminEmptyState>
+                )}
+              </div>
+            </AdminPanel>
+
+            <AdminPanel id="payments" eyebrow="Payments" title="Payment queue">
+              <div className="grid gap-3">
+                {bookings.filter((booking) => booking.payment_status !== "paid").length > 0 ? (
+                  bookings
+                    .filter((booking) => booking.payment_status !== "paid")
+                    .slice(0, 8)
+                    .map((booking) => (
+                      <article
+                        key={booking.id}
+                        className="grid gap-3 rounded-lg border border-[#E6DFD5] bg-white p-4 md:grid-cols-[1fr_auto] md:items-center"
+                      >
+                        <div>
+                          <p className="font-serif text-2xl text-[#1F1F1F]">{booking.treatment_name}</p>
+                          <p className="mt-1 text-sm text-[#595550]">
+                            {booking.patient_name} · {formatPeso(booking.amount)}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <StatusBadge tone={bookingStatusTone(booking.status)}>
+                            {formatBookingStatus(booking.status)}
+                          </StatusBadge>
+                          <StatusBadge tone={paymentStatusTone(booking.payment_status)}>
+                            {formatPaymentStatus(booking.payment_status)}
+                          </StatusBadge>
+                        </div>
+                      </article>
+                    ))
+                ) : (
+                  <AdminEmptyState>No unpaid bookings in the queue.</AdminEmptyState>
+                )}
+              </div>
+            </AdminPanel>
+          </div>
+
           {bookings.length === 0 ? (
             <p className="card mt-8 p-6 text-sm text-[#595550]">No bookings yet.</p>
           ) : (
-            <div className="mt-8 grid gap-4">
+            <div id="bookings" className="mt-8 grid scroll-mt-28 gap-4">
               {filteredBookings.length === 0 ? (
                 <p className="card p-6 text-sm text-[#595550]">
                   No bookings match the current filters.

@@ -8,7 +8,10 @@ import {
   updateBookingPaymentStatus,
 } from "@/lib/db/queries";
 
-const paymentMethods = ["qrph"];
+// Card uses Payment Intents (re-payable); gcash/qrph use single-use sources that
+// throw "source has consumed status" if a QR is reopened after being scanned.
+// Offering card alongside QR Ph gives a reliable, retry-safe path.
+const paymentMethods = ["card", "gcash", "qrph"];
 
 function dashboardRedirect(request: NextRequest, status: string) {
   return NextResponse.redirect(new URL(`/dashboard?payment=${status}`, request.url), 303);
