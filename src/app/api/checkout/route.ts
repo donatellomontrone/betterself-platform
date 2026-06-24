@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getTreatmentById, type Treatment } from "@/lib/treatments";
+import { consultationService, getTreatmentById, type Treatment } from "@/lib/treatments";
 import { hasValidClerkServerKeys } from "@/lib/clerk-env";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import {
@@ -13,12 +13,14 @@ import {
 } from "@/lib/db/queries";
 
 type CheckoutRequest = {
+  bookingIntent?: "treatment" | "consultation";
   treatmentId?: string;
   appointmentType?: string;
   location?: string;
   paymentMode?: string;
   calendlyEventUri?: string;
   calendlyInviteeUri?: string;
+  consultationNotes?: string;
   intake?: string[];
   consentConfirmed?: boolean;
   customer?: {
@@ -29,12 +31,11 @@ type CheckoutRequest = {
   };
 };
 
-function isHomeVisit(appointmentType: string | undefined) {
-  return (appointmentType ?? "Home treatment visit") === "Home treatment visit";
+function isConsultationBooking(treatment: Treatment, body: CheckoutRequest) {
+  return body.bookingIntent === "consultation" || treatment.id === consultationService.id;
 }
 
 const paymentMethods = ["card", "gcash", "qrph"];
-const homeVisitFee = 1500;
 
 function asMetadataValue(value: string | undefined, fallback = "not_provided") {
   return value?.trim() || fallback;
@@ -90,11 +91,16 @@ async function persistBooking(
       address: body.customer?.address ?? null,
     });
 
+    const isConsultation = isConsultationBooking(treatment, body);
     const notes = [
+      `Booking flow: ${isConsultation ? "consultation" : "direct treatment"}`,
       body.calendlyEventUri
         ? `Calendly event: ${body.calendlyEventUri}`
         : "Schedule NOT verified in Calendly — confirm the appointment with the patient.",
       body.calendlyInviteeUri ? `Calendly invitee: ${body.calendlyInviteeUri}` : null,
+      body.consultationNotes?.trim()
+        ? `Consultation notes: ${body.consultationNotes.trim()}`
+        : null,
     ]
       .filter(Boolean)
       .join("\n");
@@ -111,14 +117,18 @@ async function persistBooking(
       bookingId: booking.id,
       patientId: userId,
       amount: total,
-      paymentType: "treatment_and_home_visit",
+      paymentType: isConsultation ? "consultation" : "treatment",
       transactionReference: referenceNumber,
     });
 
     await createMedicalIntake({
       patientId: userId,
       bookingId: booking.id,
-      answers: { flagged: body.intake ?? [] },
+      answers: {
+        flow: isConsultation ? "consultation" : "direct_treatment",
+        flagged: body.intake ?? [],
+        consultationNotes: body.consultationNotes?.trim() ?? null,
+      },
       consentConfirmed: Boolean(body.consentConfirmed),
     });
 
@@ -144,8 +154,8 @@ export async function POST(request: NextRequest) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
   const secretKey = process.env.PAYMONGO_SECRET_KEY;
   const customerAddress = body.customer?.address;
-  const visitFee = isHomeVisit(body.appointmentType) ? homeVisitFee : 0;
-  const total = treatment.price + visitFee;
+  const isConsultation = isConsultationBooking(treatment, body);
+  const total = treatment.price;
   const bookingId = await persistBooking(treatment, body, referenceNumber, total);
 
   if (!secretKey) {
@@ -179,20 +189,10 @@ export async function POST(request: NextRequest) {
               amount: treatment.price * 100,
               currency: "PHP",
               quantity: 1,
-              description: treatment.description,
+              description: isConsultation
+                ? "Doctor consultation before choosing or booking a treatment."
+                : treatment.description,
             },
-            ...(visitFee > 0
-              ? [
-                  {
-                    name: "BetterSelf home visit fee",
-                    amount: visitFee * 100,
-                    currency: "PHP",
-                    quantity: 1,
-                    description:
-                      "Private home appointment support, subject to doctor approval and area availability.",
-                  },
-                ]
-              : []),
           ],
           payment_method_types: paymentMethods,
           success_url: `${origin}/booking/success?reference=${referenceNumber}`,
@@ -217,12 +217,19 @@ export async function POST(request: NextRequest) {
             reference_number: referenceNumber,
             treatment_id: treatment.id,
             treatment_name: treatment.name,
-            appointment_type: asMetadataValue(body.appointmentType, "home_visit"),
-            appointment_location: asMetadataValue(body.location, "metro_manila"),
+            booking_intent: isConsultation ? "consultation" : "treatment",
+            appointment_type: asMetadataValue(
+              body.appointmentType,
+              isConsultation ? "online_consultation" : "home_treatment_visit",
+            ),
+            appointment_location: asMetadataValue(
+              body.location,
+              isConsultation ? "online_consultation" : "metro_manila",
+            ),
             payment_mode: asMetadataValue(body.paymentMode, "paymongo_checkout"),
             calendly_event_uri: asMetadataValue(body.calendlyEventUri),
             calendly_invitee_uri: asMetadataValue(body.calendlyInviteeUri),
-            care_model: "home_visit",
+            care_model: isConsultation ? "consultation" : "home_treatment",
           },
         },
       },

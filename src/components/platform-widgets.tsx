@@ -17,11 +17,17 @@ import {
   UserRound,
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { formatPeso, getTreatmentById, treatments } from "@/lib/treatments";
+import {
+  consultationService,
+  formatPeso,
+  getTreatmentById,
+  treatments,
+} from "@/lib/treatments";
 import { Notice, StatusBadge } from "@/components/site-shell";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 
-const appointmentTypes = ["Home treatment visit", "Online doctor review"];
+const directTreatmentAppointment = "Home treatment visit";
+const consultationAppointment = "Online consultation";
 const paymentModes = ["PayMongo hosted checkout"];
 const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
 
@@ -37,12 +43,12 @@ const intakeQuestions = [
 
 const consentItems = [
   "I confirm the information provided is accurate.",
-  "I understand that treatment is subject to doctor assessment.",
+  "I understand that care is subject to doctor assessment.",
   "I understand that results vary per patient.",
   "I agree to receive appointment-related messages.",
 ];
 
-const stepLabels = ["Treatment", "Appointment", "Your details", "Schedule", "Payment"];
+type BookingIntent = "treatment" | "consultation";
 
 type BookingFlowProps = {
   initialTreatmentId?: string;
@@ -84,15 +90,21 @@ declare global {
 }
 
 export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
-  const [step, setStep] = useState(0);
+  const hasInitialTreatment = Boolean(
+    initialTreatmentId && treatments.some((treatment) => treatment.id === initialTreatmentId),
+  );
+  const [step, setStep] = useState(hasInitialTreatment ? 1 : 0);
+  const [bookingIntent, setBookingIntent] = useState<BookingIntent | null>(
+    hasInitialTreatment ? "treatment" : null,
+  );
   const [treatmentId, setTreatmentId] = useState(
-    initialTreatmentId && getTreatmentById(initialTreatmentId)
+    hasInitialTreatment && initialTreatmentId
       ? initialTreatmentId
       : treatments[0].id,
   );
-  const [appointmentType, setAppointmentType] = useState(appointmentTypes[0]);
   const [location, setLocation] = useState("");
   const [locationValid, setLocationValid] = useState(false);
+  const [consultationNotes, setConsultationNotes] = useState("");
   const [customer, setCustomer] = useState<CustomerDetails>({
     name: "",
     email: "",
@@ -115,18 +127,35 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
     [treatmentId],
   );
 
+  const isConsultation = bookingIntent === "consultation";
+  const isDirectTreatment = bookingIntent === "treatment";
+  const selectedService = isConsultation ? consultationService : selectedTreatment;
+  const appointmentType = isConsultation
+    ? consultationAppointment
+    : directTreatmentAppointment;
+  const stepLabels = [
+    "Path",
+    isConsultation ? "Consultation" : "Treatment",
+    "Your details",
+    "Schedule",
+    "Payment",
+  ];
   const progress = ((step + 1) / 5) * 100;
   const scheduleStatus = scheduleConfirmed ? "Calendly appointment selected" : "Not scheduled yet";
-  // A home address (and the home-visit fee) only apply to in-person home visits.
-  const requiresAddress = appointmentType === "Home treatment visit";
-  const homeVisitFee = requiresAddress ? 1500 : 0;
-  const total = selectedTreatment.price + homeVisitFee;
+  const requiresAddress = isDirectTreatment;
+  const total = selectedService.price;
   const allConsented = consents.every(Boolean);
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
   const phoneValid = customer.phone.replace(/[^\d+]/g, "").length >= 10;
 
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }));
+  }
+
+  function resetScheduleSelection() {
+    setCalendlyEventUri("");
+    setCalendlyInviteeUri("");
+    setScheduleConfirmed(false);
   }
 
   function isCustomerReady() {
@@ -136,7 +165,13 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
   function handleNextStep() {
     setCheckoutNote("");
 
-    if (step === 1 && requiresAddress && !(location.trim() && locationValid)) {
+    if (step === 0 && !bookingIntent) {
+      setCheckoutState("error");
+      setCheckoutNote("Please choose whether you want to book a treatment or a consultation.");
+      return;
+    }
+
+    if (step === 2 && requiresAddress && !(location.trim() && locationValid)) {
       setCheckoutState("error");
       setCheckoutNote("Please enter your address in Metro Manila to continue.");
       return;
@@ -146,6 +181,12 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
       setTriedDetails(true);
       setCheckoutState("error");
       setCheckoutNote("Please complete your name, a valid email, and a valid phone number.");
+      return;
+    }
+
+    if (step === 3 && calendlyUrl && !scheduleConfirmed) {
+      setCheckoutState("error");
+      setCheckoutNote("Please choose a Calendly appointment before payment.");
       return;
     }
 
@@ -186,12 +227,14 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          treatmentId: selectedTreatment.id,
+          bookingIntent: isConsultation ? "consultation" : "treatment",
+          treatmentId: selectedService.id,
           appointmentType,
-          location: requiresAddress ? location : "Online doctor review",
+          location: requiresAddress ? location : "Online consultation",
           paymentMode,
           calendlyEventUri,
           calendlyInviteeUri,
+          consultationNotes: isConsultation ? consultationNotes.trim() : undefined,
           intake: intakeQuestions.filter((_, index) => intake[index]),
           consentConfirmed: allConsented,
           customer: {
@@ -236,7 +279,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
             <p className="font-serif text-2xl text-[#1F1F1F]">{formatPeso(total)}</p>
           </div>
           <p className="max-w-[55%] text-right text-xs text-[#595550]">
-            {selectedTreatment.name}
+            {bookingIntent ? selectedService.name : "Choose booking path"}
           </p>
         </div>
         <div className="mb-6">
@@ -264,6 +307,75 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         </div>
 
         {step === 0 ? (
+          <BookingStep
+            title="How would you like to book?"
+            text="Choose the path that matches the patient. If they already know the treatment, they can book and pay for it directly. If they are unsure, they can book a paid doctor consultation first."
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <button
+                className={`rounded-lg border p-5 text-left transition ${
+                  bookingIntent === "treatment"
+                    ? "border-[#1F1F1F] bg-[#FAF8F4]"
+                    : "border-[#E6DFD5] bg-white hover:border-[#A8B8A1]"
+                }`}
+                type="button"
+                onClick={() => {
+                  setBookingIntent("treatment");
+                  setCheckoutNote("");
+                  resetScheduleSelection();
+                }}
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
+                  I know what I want
+                </p>
+                <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
+                  Book a treatment
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-[#595550]">
+                  Choose the exact service, complete intake, schedule the home
+                  visit, then pay for that treatment.
+                </p>
+                <p className="mt-4 text-sm font-bold text-[#1F1F1F]">
+                  Treatment price applies
+                </p>
+              </button>
+              <button
+                className={`rounded-lg border p-5 text-left transition ${
+                  bookingIntent === "consultation"
+                    ? "border-[#1F1F1F] bg-[#FAF8F4]"
+                    : "border-[#E6DFD5] bg-white hover:border-[#A8B8A1]"
+                }`}
+                type="button"
+                onClick={() => {
+                  setBookingIntent("consultation");
+                  setCheckoutNote("");
+                  resetScheduleSelection();
+                }}
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
+                  I need guidance
+                </p>
+                <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
+                  Book a consultation
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-[#595550]">
+                  Talk with the doctor first, discuss goals and suitability, then
+                  decide the right treatment later.
+                </p>
+                <p className="mt-4 text-sm font-bold text-[#1F1F1F]">
+                  {consultationService.priceLabel}
+                </p>
+              </button>
+            </div>
+            {checkoutNote ? (
+              <p className="mt-4 text-sm font-medium text-[#B42318]" role="alert">
+                {checkoutNote}
+              </p>
+            ) : null}
+          </BookingStep>
+        ) : null}
+
+        {step === 1 && isDirectTreatment ? (
           <BookingStep title="Select treatment to book" text="Choose the treatment you want to book directly. The doctor still reviews suitability before confirming or performing it.">
             <div className="grid gap-3 md:grid-cols-2">
               {treatments.map((treatment) => (
@@ -274,7 +386,10 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
                       ? "border-[#1F1F1F] bg-[#FAF8F4]"
                       : "border-[#E6DFD5] bg-white hover:border-[#A8B8A1]"
                   }`}
-                  onClick={() => setTreatmentId(treatment.id)}
+                  onClick={() => {
+                    setTreatmentId(treatment.id);
+                    resetScheduleSelection();
+                  }}
                 >
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#5C574F]">
                     {treatment.category}
@@ -291,14 +406,49 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           </BookingStep>
         ) : null}
 
-        {step === 1 ? (
-          <BookingStep title="Appointment type and location" text="Home treatment visits are available in selected Metro Manila areas, subject to doctor availability.">
-            <ChoiceGrid items={appointmentTypes} value={appointmentType} onChange={setAppointmentType} />
+        {step === 1 && isConsultation ? (
+          <BookingStep
+            title="Tell the doctor what you need help deciding"
+            text="The consultation is for patients who are not ready to choose a specific treatment yet. The doctor can review goals, suitability, and possible options."
+          >
+            <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
+                Consultation fee
+              </p>
+              <p className="mt-2 font-serif text-4xl text-[#1F1F1F]">
+                {consultationService.priceLabel}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#595550]">
+                Paid before the consultation slot. Treatment pricing is separate
+                if the patient books a procedure later.
+              </p>
+            </div>
+            <label className="mt-5 grid gap-2 text-sm font-semibold text-[#1F1F1F]">
+              What are you considering? (optional)
+              <textarea
+                className="field min-h-32 py-3"
+                placeholder="Example: I want help choosing between skin booster and neurotoxin, or I am not sure what fits my concern."
+                value={consultationNotes}
+                onChange={(event) => setConsultationNotes(event.target.value)}
+              />
+            </label>
+          </BookingStep>
+        ) : null}
+
+        {step === 2 ? (
+          <BookingStep
+            title={isConsultation ? "Patient details for consultation" : "Patient details and home address"}
+            text={
+              isConsultation
+                ? "These details pre-fill Calendly and PayMongo for the paid doctor consultation."
+                : "These details pre-fill Calendly and PayMongo. The doctor still reviews medical answers before confirming treatment."
+            }
+          >
             {requiresAddress ? (
-              <div className="mt-6">
-                <p className="text-sm font-semibold text-[#1F1F1F]">Your address</p>
+              <div className="mb-6">
+                <p className="text-sm font-semibold text-[#1F1F1F]">Home visit address</p>
                 <p className="mt-1 text-xs text-[#5C574F]">
-                  Start typing and select your address. Home visits are available in Metro Manila only.
+                  Start typing and select the address. Home treatments are available in Metro Manila only.
                 </p>
                 <AddressAutocomplete
                   value={location}
@@ -308,17 +458,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
                   }}
                 />
               </div>
-            ) : (
-              <p className="mt-6 text-sm text-[#595550]">
-                No home address needed for an online doctor review — you&apos;ll meet the doctor
-                remotely.
-              </p>
-            )}
-          </BookingStep>
-        ) : null}
-
-        {step === 2 ? (
-          <BookingStep title="Patient details and medical intake" text="These details pre-fill Calendly and PayMongo. The doctor still reviews the medical answers before confirming treatment.">
+            ) : null}
             <div className="grid gap-4 md:grid-cols-2">
               <TextField
                 label="Full name"
@@ -380,19 +520,28 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
                 </label>
               ))}
             </div>
-            <label className="mt-4 flex items-center gap-3 rounded-lg border border-dashed border-[#C8B89F] bg-[#FAF8F4] p-4 text-sm text-[#595550]">
-              <Paperclip className="h-4 w-4" />
-              Optional photo upload structure
-            </label>
+            {isDirectTreatment ? (
+              <label className="mt-4 flex items-center gap-3 rounded-lg border border-dashed border-[#C8B89F] bg-[#FAF8F4] p-4 text-sm text-[#595550]">
+                <Paperclip className="h-4 w-4" />
+                Optional photo upload structure
+              </label>
+            ) : null}
           </BookingStep>
         ) : null}
 
         {step === 3 ? (
-          <BookingStep title="Choose date and time in Calendly" text="Calendly handles the doctor's real availability. After the slot is selected, the patient continues to PayMongo payment.">
+          <BookingStep
+            title={isConsultation ? "Choose consultation time" : "Choose home treatment time"}
+            text={
+              isConsultation
+                ? "Calendly handles the doctor's consultation availability. After the slot is selected, the patient continues to PayMongo payment."
+                : "Calendly handles the doctor's home-visit availability. After the slot is selected, the patient continues to PayMongo payment."
+            }
+          >
             <CalendlyScheduler
               customer={customer}
-              location={location}
-              treatmentName={selectedTreatment.name}
+              location={requiresAddress ? location : "Online consultation"}
+              treatmentName={selectedService.name}
               onScheduled={(payload) => {
                 setCalendlyEventUri(payload.event?.uri ?? "");
                 setCalendlyInviteeUri(payload.invitee?.uri ?? "");
@@ -403,16 +552,23 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         ) : null}
 
         {step === 4 ? (
-          <BookingStep title="Review treatment booking and payment" text="Confirm the treatment booking request. The doctor may need to approve or adjust the treatment before the home visit is fully confirmed.">
+          <BookingStep
+            title={isConsultation ? "Review consultation and payment" : "Review treatment booking and payment"}
+            text={
+              isConsultation
+                ? "Confirm the paid consultation request. Treatment booking and treatment payment happen separately if the patient chooses a procedure later."
+                : "Confirm the treatment booking request. The doctor may need to approve or adjust the treatment before the home visit is fully confirmed."
+            }
+          >
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4">
               <p className="flex items-center gap-2 text-sm font-semibold text-[#1F1F1F]">
                 <ShieldCheck className="h-4 w-4 text-[#3F5249]" />
                 Secure payment via PayMongo
               </p>
               <p className="mt-2 text-sm leading-6 text-[#595550]">
-                You&apos;ll be redirected to PayMongo&apos;s secure hosted page to pay by
-                card, GCash, or QR Ph. If the doctor cannot proceed after review, your
-                payment is refunded.
+                {isConsultation
+                  ? "You'll be redirected to PayMongo's secure hosted page to pay the consultation fee by card, GCash, or QR Ph."
+                  : "You'll be redirected to PayMongo's secure hosted page to pay by card, GCash, or QR Ph. If the doctor cannot proceed after review, your payment is refunded."}
               </p>
             </div>
             <div className="mt-6 rounded-lg border border-[#E6DFD5] p-4">
@@ -442,7 +598,9 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
               <CreditCard className="h-4 w-4" />
               {checkoutState === "loading"
                 ? "Creating secure checkout..."
-                : "Continue to secure payment"}
+                : isConsultation
+                  ? "Pay consultation fee"
+                  : "Continue to secure payment"}
             </button>
             <p className="mt-3 text-center text-xs text-[#5C574F]">
               You&apos;ll review the final amount on PayMongo before paying.
@@ -480,18 +638,18 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
         <section className="card p-5">
           <p className="eyebrow">Booking summary</p>
           <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
-            {selectedTreatment.name}
+            {bookingIntent ? selectedService.name : "Choose a path"}
           </h2>
           <div className="mt-5 grid gap-3 text-sm">
-            <SummaryRow label="Treatment" value={selectedTreatment.priceLabel} />
-            {requiresAddress ? (
-              <SummaryRow label="Home visit fee" value={formatPeso(homeVisitFee)} />
-            ) : null}
+            <SummaryRow
+              label={isConsultation ? "Consultation" : "Treatment"}
+              value={bookingIntent ? selectedService.priceLabel : "Select a path"}
+            />
             <SummaryRow label="Appointment" value={appointmentType} />
             <SummaryRow
               label="Location"
               value={
-                requiresAddress ? location || "Add your address" : "Online doctor review"
+                requiresAddress ? location || "Add your address" : "Online consultation"
               }
             />
             <SummaryRow label="Calendar" value={scheduleStatus} />
@@ -507,9 +665,9 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
           </div>
         </section>
         <Notice title="Booking disclaimer">
-          Your treatment booking may require doctor approval before the home visit is confirmed.
-          Suitability, treatment plan, and expected outcomes depend on individual
-          medical assessment.
+          {isConsultation
+            ? "The consultation helps the doctor guide treatment options. Any later procedure is booked and paid separately."
+            : "Your treatment booking may require doctor approval before the home visit is confirmed. Suitability, treatment plan, and expected outcomes depend on individual medical assessment."}
         </Notice>
       </aside>
     </div>
@@ -673,32 +831,6 @@ function TextField({
         <span className="text-xs font-medium text-[#B42318]">{error}</span>
       ) : null}
     </label>
-  );
-}
-
-function ChoiceGrid({
-  items,
-  value,
-  onChange,
-}: {
-  items: string[];
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-      {items.map((item) => (
-        <button
-          key={item}
-          className={`rounded-lg border p-4 text-left text-sm font-semibold ${
-            value === item ? "border-[#1F1F1F] bg-[#FAF8F4]" : "border-[#E6DFD5] bg-white"
-          }`}
-          onClick={() => onChange(item)}
-        >
-          {item}
-        </button>
-      ))}
-    </div>
   );
 }
 

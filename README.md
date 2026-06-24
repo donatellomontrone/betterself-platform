@@ -80,7 +80,7 @@ The file also includes employee discount tiers and referral promo structures.
 - Doctor-led homepage and public service positioning
 - Full treatment catalog with detail pages
 - Medical-safe treatment copy and disclaimers
-- Booking flow with treatment, appointment type, location, patient details, medical intake, Calendly scheduling, review, and PayMongo payment
+- Booking flow with two paths: direct treatment booking or paid doctor consultation, then patient details, Calendly scheduling, review, and PayMongo payment
 - Patient dashboard with bookings, treatment plan, messages, aftercare, and payment status
 - Internal doctor-patient chat structure with emergency disclaimer and attachment placeholder
 - Doctor/admin dashboard preview for appointments, intake review, patient messaging, payment status, and notes
@@ -116,9 +116,9 @@ PAYMONGO_SECRET_KEY=sk_test_...
 PAYMONGO_WEBHOOK_SECRET=...
 ```
 
-If `NEXT_PUBLIC_CALENDLY_URL` is missing, the booking page shows a Calendly setup notice. If present, the booking page embeds Calendly and pre-fills name, email, treatment, location, phone, and address.
+If `NEXT_PUBLIC_CALENDLY_URL` is missing, the booking page shows a Calendly setup notice. If present, the booking page embeds Calendly and pre-fills name, email, treatment or consultation, location, phone, and address when relevant.
 
-If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo checkout page. If present, `/api/checkout` creates a PayMongo Hosted Checkout session server-side after the Calendly step.
+If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo checkout page. If present, `/api/checkout` creates a PayMongo Hosted Checkout session server-side after the Calendly step. Direct treatment bookings charge the selected treatment; consultation bookings charge the ₱1,500 consultation service.
 
 ## Production next steps
 

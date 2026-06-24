@@ -604,6 +604,41 @@ export const featuredTreatmentIds = [
   "wart-removal",
 ];
 
+export const consultationService: Treatment = {
+  id: "doctor-consultation",
+  name: "Doctor Consultation",
+  category: "Others",
+  description:
+    "A paid doctor consultation for patients who want medical guidance before choosing a treatment.",
+  duration: "30 min",
+  price: 1500,
+  priceLabel: "₱1,500",
+  doctor: "BetterSelf Medical Doctor",
+  concerns: ["Treatment planning", "Medical suitability", "Personalized advice"],
+  mayHelpWith: [
+    "Choosing the right treatment",
+    "Understanding suitability and contraindications",
+    "Planning next steps before a home treatment",
+  ],
+  suitableFor: ["Patients who are unsure which aesthetic treatment is right for them"],
+  avoidIf: ["Emergency symptoms or urgent medical concerns"],
+  whatToExpect: [
+    "Doctor-led review of your goals and medical background.",
+    "Personalized recommendation for treatment options when suitable.",
+    "Clear next steps if a home treatment booking is appropriate.",
+  ],
+  beforecare: [
+    "Prepare your main concerns and any questions for the doctor.",
+    "Share relevant medical history, allergies, medication, and recent procedures.",
+  ],
+  aftercare: [
+    "Follow the doctor's recommendation before booking a treatment.",
+    "Message BetterSelf if you need clarification after the consultation.",
+  ],
+  requiresDoctorApproval: false,
+  homeVisitAvailable: false,
+};
+
 export const discountTiers: DiscountCategory[] = [
   {
     category: "Toxin-Based",
@@ -657,7 +692,8 @@ export const referralPromos = [
 ];
 
 export function getTreatmentById(id: string) {
-  return treatments.find((treatment) => treatment.id === id);
+  return treatments.find((treatment) => treatment.id === id) ??
+    (id === consultationService.id ? consultationService : undefined);
 }
 
 export function getTreatmentsByCategory(category: TreatmentCategory) {

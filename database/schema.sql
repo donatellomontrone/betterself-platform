@@ -137,6 +137,42 @@ create index medical_intakes_booking_idx on public.medical_intakes(booking_id);
 create index messages_conversation_idx on public.messages(conversation_id, created_at);
 create index payments_booking_idx on public.payments(booking_id);
 
+insert into public.treatments
+  (id, name, category, description, duration, starting_price, price_label,
+   requires_doctor_approval, beforecare, aftercare, contraindications, is_active)
+values
+  (
+    'doctor-consultation',
+    'Doctor Consultation',
+    'Others',
+    'A paid doctor consultation for patients who want medical guidance before choosing a treatment.',
+    '30 min',
+    1500,
+    '₱1,500',
+    false,
+    array[
+      'Prepare your main concerns and any questions for the doctor.',
+      'Share relevant medical history, allergies, medication, and recent procedures.'
+    ],
+    array[
+      'Follow the doctor''s recommendation before booking a treatment.',
+      'Message BetterSelf if you need clarification after the consultation.'
+    ],
+    array['Emergency symptoms or urgent medical concerns'],
+    true
+  )
+on conflict (id) do update set
+  name = excluded.name,
+  description = excluded.description,
+  duration = excluded.duration,
+  starting_price = excluded.starting_price,
+  price_label = excluded.price_label,
+  requires_doctor_approval = excluded.requires_doctor_approval,
+  beforecare = excluded.beforecare,
+  aftercare = excluded.aftercare,
+  contraindications = excluded.contraindications,
+  is_active = excluded.is_active;
+
 -- Neon stores the data; Clerk supplies the authenticated user ID.
 -- Enforce patient/doctor/admin authorization in Next.js Server Components,
 -- Server Actions, and Route Handlers before running database queries.

@@ -153,11 +153,13 @@ export function TermsPage() {
           the doctor makes the final clinical decision.
         </p>
       </Clause>
-      <Clause title="Bookings, payments, and the home-visit fee">
+      <Clause title="Bookings, payments, and consultations">
         <p>
           Prices are shown in Philippine Peso and may be starting or unit-based rates.
-          Home visits include a home-visit fee shown before payment. Payment is
-          processed by our payment partner on a secure hosted page.
+          Patients may book a known treatment directly and pay for that treatment,
+          or book a paid doctor consultation first when they need help choosing a
+          service. The consultation fee is separate from any later treatment booking.
+          Payment is processed by our payment partner on a secure hosted page.
         </p>
       </Clause>
       <Clause title="Rescheduling, cancellation, and refunds">

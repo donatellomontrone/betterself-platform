@@ -284,8 +284,8 @@ export function BookingPage({ treatmentId }: { treatmentId?: string }) {
     <PageShell>
       <PageHero
         eyebrow="Book appointment"
-        title="Book your treatment directly for private medical aesthetic care."
-        text="Select the treatment, appointment type, Metro Manila location, schedule, medical intake, and payment option. The doctor confirms suitability before performing care."
+        title="Choose a treatment directly or start with a doctor consultation."
+        text="Patients can book a known treatment and pay for that service, or book a ₱1,500 doctor consultation first when they need help choosing the right option."
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
