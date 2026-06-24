@@ -59,6 +59,10 @@ type AddressAutocompleteProps = {
   onChange: (address: string, isValid: boolean) => void;
 };
 
+function isUsableManualAddress(address: string) {
+  return address.trim().length >= 8;
+}
+
 export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -89,6 +93,8 @@ export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProp
           locationRestriction: METRO_MANILA_BOUNDS,
         });
         element.style.width = "100%";
+        element.style.display = "block";
+        element.style.minHeight = "52px";
         host.replaceChildren(element);
         setReady(true);
 
@@ -133,19 +139,37 @@ export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProp
         className="field mt-2 w-full"
         placeholder="Your full address (Metro Manila)"
         value={value}
-        onChange={(event) => onChange(event.target.value, true)}
+        onChange={(event) => {
+          const address = event.target.value;
+          onChange(address, isUsableManualAddress(address));
+        }}
       />
     );
   }
 
   return (
-    <div className="mt-2">
-      <div ref={containerRef} />
+    <div className="mt-2 grid gap-3">
+      <input
+        className="field w-full"
+        placeholder="Type your full address in Metro Manila"
+        value={value}
+        onChange={(event) => {
+          const address = event.target.value;
+          setError("");
+          onChange(address, isUsableManualAddress(address));
+        }}
+      />
+      <div className="rounded-lg border border-[#E6DFD5] bg-white p-3">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#5C574F]">
+          Search Google Places (optional)
+        </p>
+        <div ref={containerRef} />
+      </div>
       {!ready && !error ? (
         <p className="mt-2 text-xs text-[#7A746E]">Loading address search…</p>
       ) : null}
       {value ? (
-        <p className="mt-2 text-sm text-[#4D4D4D]">Selected: {value}</p>
+        <p className="text-sm text-[#4D4D4D]">Address for this booking: {value}</p>
       ) : null}
       {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
     </div>
