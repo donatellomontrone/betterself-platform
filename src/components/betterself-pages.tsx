@@ -13,7 +13,6 @@ import {
   featuredTreatmentIds,
   getFeaturedTreatments,
   getTreatmentById,
-  getTreatmentsByCategory,
   Treatment,
   treatments,
 } from "@/lib/treatments";
@@ -34,6 +33,7 @@ import {
   DoctorChat,
   LoginRegisterPreview,
 } from "@/components/platform-widgets";
+import { TreatmentExplorer } from "@/components/treatment-explorer";
 import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
 import { updateBookingStatusAction } from "@/app/admin/actions";
 
@@ -215,35 +215,7 @@ export function TreatmentsPage() {
         title="Doctor-led aesthetic treatments delivered privately at home."
         text="Browse the current BetterSelf service menu. Prices are starting points or unit-based rates where noted. Every treatment remains subject to medical intake and doctor assessment."
       />
-      <section className="px-5 pb-14 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-6 flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <a key={category} className="btn btn-secondary" href={`#${slugify(category)}`}>
-                {category}
-              </a>
-            ))}
-          </div>
-          <div className="grid gap-12">
-            {categories.map((category) => (
-              <section key={category} id={slugify(category)}>
-                <div className="mb-5 flex items-end justify-between gap-4">
-                  <SectionHeading eyebrow="Service category" title={category} />
-                  <p className="hidden max-w-sm text-sm leading-6 text-[#595550] md:block">
-                    Book the treatment request directly. The doctor still
-                    reviews suitability before confirming or performing care.
-                  </p>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {getTreatmentsByCategory(category).map((treatment) => (
-                    <TreatmentCard key={treatment.id} treatment={treatment} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        </div>
-      </section>
+      <TreatmentExplorer categories={categories} treatments={treatments} />
     </PageShell>
   );
 }
@@ -1111,10 +1083,6 @@ function Summary({ label, value }: { label: string; value: string }) {
       <span className="text-right font-semibold text-[#1F1F1F]">{value}</span>
     </div>
   );
-}
-
-function slugify(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
 export function getStaticTreatmentIds() {
