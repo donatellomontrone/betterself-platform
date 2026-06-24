@@ -1,5 +1,5 @@
 import { getSql } from "./client";
-import type { BookingStatus, Json, PatientProfile, PaymentStatus } from "./types";
+import type { BookingStatus, Json, PatientProfile, PaymentStatus, UserProfile } from "./types";
 
 /**
  * Data-access layer for the BetterSelf patient flow.
@@ -31,6 +31,14 @@ export async function ensureUserProfile(input: EnsureUserProfileInput) {
       email = excluded.email,
       phone = coalesce(excluded.phone, public.user_profiles.phone)
   `;
+}
+
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const sql = getSql();
+  const rows = (await sql`
+    select * from public.user_profiles where id = ${userId}
+  `) as unknown as UserProfile[];
+  return rows[0] ?? null;
 }
 
 export type UpsertPatientProfileInput = {

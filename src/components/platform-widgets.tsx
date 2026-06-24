@@ -53,6 +53,7 @@ type BookingIntent = "treatment" | "consultation";
 
 type BookingFlowProps = {
   initialTreatmentId?: string;
+  prefill?: BookingPrefill;
 };
 
 type CustomerDetails = {
@@ -61,6 +62,14 @@ type CustomerDetails = {
   phone: string;
   address: string;
   emergencyContact: string;
+};
+
+export type BookingPrefill = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  emergencyContact?: string;
 };
 
 type CalendlyPayload = {
@@ -114,7 +123,7 @@ declare global {
   }
 }
 
-export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
+export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
   const hasInitialTreatment = Boolean(
     initialTreatmentId && treatments.some((treatment) => treatment.id === initialTreatmentId),
   );
@@ -127,18 +136,18 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
       ? initialTreatmentId
       : treatments[0].id,
   );
-  const [location, setLocation] = useState("");
-  const [locationValid, setLocationValid] = useState(false);
+  const [location, setLocation] = useState(prefill?.address ?? "");
+  const [locationValid, setLocationValid] = useState(Boolean(prefill?.address));
   const [patientConcern, setPatientConcern] = useState("");
   const [recommendation, setRecommendation] = useState<RecommendationResult | null>(null);
   const [recommendationState, setRecommendationState] = useState<"idle" | "loading" | "error">("idle");
   const [recommendationNote, setRecommendationNote] = useState("");
   const [customer, setCustomer] = useState<CustomerDetails>({
-    name: "",
-    email: "",
-    phone: "",
+    name: prefill?.name ?? "",
+    email: prefill?.email ?? "",
+    phone: prefill?.phone ?? "",
     address: "",
-    emergencyContact: "",
+    emergencyContact: prefill?.emergencyContact ?? "",
   });
   const [calendlyEventUri, setCalendlyEventUri] = useState("");
   const [calendlyInviteeUri, setCalendlyInviteeUri] = useState("");
@@ -310,6 +319,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
             name: customer.name,
             email: customer.email,
             phone: customer.phone,
+            emergencyContact: customer.emergencyContact,
             address: requiresAddress
               ? customer.address
                 ? `${location} (${customer.address})`

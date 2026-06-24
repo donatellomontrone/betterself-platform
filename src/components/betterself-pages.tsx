@@ -32,6 +32,7 @@ import {
   BookingFlow,
   DoctorChat,
   LoginRegisterPreview,
+  type BookingPrefill,
 } from "@/components/platform-widgets";
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
@@ -279,7 +280,13 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
   );
 }
 
-export function BookingPage({ treatmentId }: { treatmentId?: string }) {
+export function BookingPage({
+  treatmentId,
+  prefill,
+}: {
+  treatmentId?: string;
+  prefill?: BookingPrefill;
+}) {
   return (
     <PageShell>
       <PageHero
@@ -289,7 +296,7 @@ export function BookingPage({ treatmentId }: { treatmentId?: string }) {
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <BookingFlow initialTreatmentId={treatmentId} />
+          <BookingFlow initialTreatmentId={treatmentId} prefill={prefill} />
         </div>
       </section>
     </PageShell>

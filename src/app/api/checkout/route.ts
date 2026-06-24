@@ -29,6 +29,7 @@ type CheckoutRequest = {
     email?: string;
     phone?: string;
     address?: string;
+    emergencyContact?: string;
   };
 };
 
@@ -93,7 +94,8 @@ async function persistBooking(
     });
     await upsertPatientProfile({
       userId,
-      address: body.customer?.address ?? null,
+      address: (body.location?.trim() || body.customer?.address) ?? null,
+      emergencyContact: body.customer?.emergencyContact ?? null,
     });
 
     const isConsultation = isConsultationBooking(treatment, body);
