@@ -133,6 +133,7 @@ Production:
 ```bash
 NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_CALENDLY_URL=
+NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL=
 DATABASE_URL=
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
@@ -147,6 +148,9 @@ PAYMONGO_WEBHOOK_SECRET=
 Set `NEXT_PUBLIC_SITE_URL` to the Vercel domain for preview/production.
 Set `NEXT_PUBLIC_CALENDLY_URL` to the public Calendly event URL and redeploy
 after changing it.
+Set `NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL` only if the doctor wants one fallback
+call room to appear for consultation bookings when Calendly does not provide a
+per-booking meeting link.
 
 ## 6. PayMongo
 

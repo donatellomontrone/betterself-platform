@@ -105,6 +105,7 @@ Copy `.env.example` to `.env.local` and fill in:
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_CALENDLY_URL=https://calendly.com/your-calendly-user/betterself-home-treatment
+NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL=https://meet.google.com/...
 DATABASE_URL=postgres://...
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
@@ -117,6 +118,8 @@ PAYMONGO_WEBHOOK_SECRET=...
 ```
 
 If `NEXT_PUBLIC_CALENDLY_URL` is missing, the booking page shows a Calendly setup notice. If present, the booking page embeds Calendly and pre-fills name, email, treatment or consultation, location, phone, and address when relevant.
+
+If `NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL` is present, doctor-consultation bookings show that call link in the patient dashboard and admin calendar whenever Calendly has not stored a booking-specific link.
 
 If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo checkout page. If present, `/api/checkout` creates a PayMongo Hosted Checkout session server-side after the Calendly step. Direct treatment bookings charge the selected treatment; consultation bookings charge the ₱1,500 consultation service.
 

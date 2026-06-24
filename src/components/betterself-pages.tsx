@@ -421,6 +421,7 @@ export function DashboardPage({
   bookingStatus?: string;
 }) {
   const upcoming = bookings[0];
+  const upcomingCallLink = upcoming ? getVideoCallLink(upcoming) : null;
   const hasCompleted = bookings.some((b) => b.status === "completed");
   const paymentRetryMessage = paymentStatus ? paymentRetryMessages[paymentStatus] : undefined;
   const bookingRequestMessage = bookingStatus ? bookingRequestMessages[bookingStatus] : undefined;
@@ -512,6 +513,16 @@ export function DashboardPage({
                     >
                       Message Doctor
                     </Link>
+                    {upcomingCallLink ? (
+                      <a
+                        className="btn btn-secondary"
+                        href={upcomingCallLink}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Join video call
+                      </a>
+                    ) : null}
                     {canCancelBooking(upcoming) ? (
                       <CancelRequestButton bookingId={upcoming.id} />
                     ) : null}
@@ -566,45 +577,58 @@ export function DashboardPage({
             <section className="mt-8">
               <p className="eyebrow">Treatment history</p>
               <div className="mt-4 grid gap-3">
-                {bookings.map((booking) => (
-                  <article
-                    key={booking.id}
-                    className="card grid gap-4 p-5 lg:grid-cols-[1.4fr_1fr_auto] lg:items-center"
-                  >
-                    <div>
-                      <p className="font-serif text-2xl text-[#1F1F1F]">
-                        {booking.treatment_name}
-                      </p>
-                      <p className="mt-1 text-sm text-[#595550]">
-                        {booking.appointment_type} · {booking.location}
-                      </p>
-                    </div>
-                    <div className="text-sm text-[#4D4D4D]">
-                      <p>Booked {formatBookingDate(booking.created_at)}</p>
-                      <p>{formatPeso(booking.amount)}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <StatusBadge tone={bookingStatusTone(booking.status)}>
-                        {formatBookingStatus(booking.status)}
-                      </StatusBadge>
-                      <StatusBadge tone={paymentStatusTone(booking.payment_status)}>
-                        {formatPaymentStatus(booking.payment_status)}
-                      </StatusBadge>
-                      {canRetryPayment(booking) ? (
-                        <RetryPaymentButton
-                          bookingId={booking.id}
-                          label="Retry payment"
-                          compact
-                        />
-                      ) : isAwaitingDoctorConfirmation(booking) ? (
-                        <StatusBadge tone="neutral">Payment after doctor call</StatusBadge>
-                      ) : null}
-                      {canCancelBooking(booking) ? (
-                        <CancelRequestButton bookingId={booking.id} compact />
-                      ) : null}
-                    </div>
-                  </article>
-                ))}
+                {bookings.map((booking) => {
+                  const callLink = getVideoCallLink(booking);
+                  return (
+                    <article
+                      key={booking.id}
+                      className="card grid gap-4 p-5 lg:grid-cols-[1.4fr_1fr_auto] lg:items-center"
+                    >
+                      <div>
+                        <p className="font-serif text-2xl text-[#1F1F1F]">
+                          {booking.treatment_name}
+                        </p>
+                        <p className="mt-1 text-sm text-[#595550]">
+                          {booking.appointment_type} · {booking.location}
+                        </p>
+                      </div>
+                      <div className="text-sm text-[#4D4D4D]">
+                        <p>Booked {formatBookingDate(booking.created_at)}</p>
+                        <p>{formatPeso(booking.amount)}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <StatusBadge tone={bookingStatusTone(booking.status)}>
+                          {formatBookingStatus(booking.status)}
+                        </StatusBadge>
+                        <StatusBadge tone={paymentStatusTone(booking.payment_status)}>
+                          {formatPaymentStatus(booking.payment_status)}
+                        </StatusBadge>
+                        {callLink ? (
+                          <a
+                            className="btn btn-secondary h-10"
+                            href={callLink}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            Video call
+                          </a>
+                        ) : null}
+                        {canRetryPayment(booking) ? (
+                          <RetryPaymentButton
+                            bookingId={booking.id}
+                            label="Retry payment"
+                            compact
+                          />
+                        ) : isAwaitingDoctorConfirmation(booking) ? (
+                          <StatusBadge tone="neutral">Payment after doctor call</StatusBadge>
+                        ) : null}
+                        {canCancelBooking(booking) ? (
+                          <CancelRequestButton bookingId={booking.id} compact />
+                        ) : null}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           ) : null}
@@ -1158,6 +1182,7 @@ export function AdminPage({
                 const answers = asRecord(b.intake_answers);
                 const flagged = getStringList(answers.flagged);
                 const patientConcern = getPatientConcern(b.intake_answers);
+                const callLink = getVideoCallLink(b);
                 return (
                   <article key={b.id} className="card p-5">
                     <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr_auto] lg:items-start">
@@ -1284,6 +1309,30 @@ export function AdminPage({
                         </section>
 
                         <section>
+                          <p className="eyebrow">Call & schedule</p>
+                          <div className="mt-3 grid gap-3 md:grid-cols-3">
+                            <AdminMeta label="Appointment" value={b.appointment_type} />
+                            <AdminMeta label="Schedule" value={getScheduleLabel(b)} />
+                            <AdminMeta label="Location" value={b.location} />
+                          </div>
+                          {callLink ? (
+                            <a
+                              className="btn btn-secondary mt-4"
+                              href={callLink}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              Open video call
+                            </a>
+                          ) : (
+                            <p className="mt-4 rounded-lg bg-[#FAF8F4] p-4 text-sm leading-6 text-[#595550]">
+                              No video call link is stored yet. Calendly can provide one, or set
+                              NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL for a default doctor call link.
+                            </p>
+                          )}
+                        </section>
+
+                        <section>
                           <p className="eyebrow">Medical intake</p>
                           <div className="mt-3 grid gap-3 md:grid-cols-2">
                             <AdminMeta label="Patient concern" value={patientConcern} />
@@ -1395,6 +1444,7 @@ export function AdminPage({
               })}
             </div>
           )}
+        </div>
         </div>
       </section>
     </PageShell>
