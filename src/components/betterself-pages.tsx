@@ -33,6 +33,7 @@ import {
   DoctorChat,
   LoginRegisterPreview,
 } from "@/components/platform-widgets";
+import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
 import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
 import { updateBookingStatusAction } from "@/app/admin/actions";
@@ -215,6 +216,7 @@ export function TreatmentsPage() {
         title="Doctor-led aesthetic treatments delivered privately at home."
         text="Browse the current BetterSelf service menu. Prices are starting points or unit-based rates where noted. Every treatment remains subject to medical intake and doctor assessment."
       />
+      <TreatmentAnatomyMap treatments={treatments} />
       <TreatmentExplorer categories={categories} treatments={treatments} />
     </PageShell>
   );
