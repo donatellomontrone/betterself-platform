@@ -29,7 +29,7 @@ import { AddressAutocomplete } from "@/components/address-autocomplete";
 
 const directTreatmentAppointment = "Home treatment visit";
 const consultationAppointment = "Online consultation";
-const paymentModes = ["PayMongo hosted checkout"];
+const paymentModes = ["PayMongo QR Ph checkout"];
 const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
 
 const intakeQuestions = [
@@ -721,12 +721,12 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4">
               <p className="flex items-center gap-2 text-sm font-semibold text-[#1F1F1F]">
                 <ShieldCheck className="h-4 w-4 text-[#3F5249]" />
-                Secure payment via PayMongo
+                Secure payment via PayMongo QR Ph
               </p>
               <p className="mt-2 text-sm leading-6 text-[#595550]">
                 {isConsultation
-                  ? "You'll be redirected to PayMongo's secure hosted page to pay the consultation fee by card, GCash, or QR Ph."
-                  : "You'll be redirected to PayMongo's secure hosted page to pay by card, GCash, or QR Ph. If the doctor cannot proceed after review, your payment is refunded."}
+                  ? "You'll be redirected to PayMongo's secure hosted page to pay the consultation fee with QR Ph."
+                  : "You'll be redirected to PayMongo's secure hosted page to pay with QR Ph. If the doctor cannot proceed after review, your payment is refunded."}
               </p>
             </div>
             <div className="mt-6 rounded-lg border border-[#E6DFD5] p-4">
@@ -811,7 +811,7 @@ export function BookingFlow({ initialTreatmentId }: BookingFlowProps) {
               }
             />
             <SummaryRow label="Calendar" value={scheduleStatus} />
-            <SummaryRow label="Payment" value="Card, GCash, or QR Ph" />
+            <SummaryRow label="Payment" value="QR Ph via PayMongo" />
           </div>
           <div className="mt-5 rounded-lg bg-[#FAF8F4] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">

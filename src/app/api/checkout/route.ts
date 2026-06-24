@@ -36,7 +36,7 @@ function isConsultationBooking(treatment: Treatment, body: CheckoutRequest) {
   return body.bookingIntent === "consultation" || treatment.id === consultationService.id;
 }
 
-const paymentMethods = ["card", "gcash", "qrph"];
+const paymentMethods = ["qrph"];
 
 function asMetadataValue(value: string | undefined, fallback = "not_provided") {
   return value?.trim() || fallback;
