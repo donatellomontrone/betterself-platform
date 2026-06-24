@@ -169,6 +169,24 @@ export type PatientBookingView = {
   created_at: string;
 };
 
+export type RetryableBookingCheckout = {
+  id: string;
+  patient_id: string;
+  treatment_id: string;
+  treatment_name: string;
+  treatment_description: string;
+  appointment_type: string;
+  location: string;
+  status: BookingStatus;
+  payment_status: PaymentStatus;
+  amount: number;
+  payment_type: string;
+  patient_name: string;
+  patient_email: string;
+  patient_phone: string | null;
+  patient_address: string | null;
+};
+
 /** All of a patient's bookings, newest first, with treatment name and latest payment amount. */
 export async function getPatientBookings(patientId: string): Promise<PatientBookingView[]> {
   const sql = getSql();
@@ -197,6 +215,49 @@ export async function getPatientBookings(patientId: string): Promise<PatientBook
     order by b.created_at desc
   `) as unknown as PatientBookingView[];
   return rows;
+}
+
+export async function getRetryableBookingForCheckout(
+  patientId: string,
+  bookingId: string,
+): Promise<RetryableBookingCheckout | null> {
+  const sql = getSql();
+  const rows = (await sql`
+    select
+      b.id,
+      b.patient_id,
+      b.treatment_id,
+      t.name as treatment_name,
+      t.description as treatment_description,
+      b.appointment_type,
+      b.location,
+      b.status,
+      b.payment_status,
+      coalesce(p.amount, t.starting_price) as amount,
+      coalesce(
+        p.payment_type,
+        case when b.treatment_id = 'doctor-consultation' then 'consultation' else 'treatment' end
+      ) as payment_type,
+      u.full_name as patient_name,
+      u.email as patient_email,
+      u.phone as patient_phone,
+      pp.address as patient_address
+    from public.bookings b
+    join public.treatments t on t.id = b.treatment_id
+    join public.user_profiles u on u.id = b.patient_id
+    left join public.patient_profiles pp on pp.user_id = b.patient_id
+    left join lateral (
+      select *
+      from public.payments p
+      where p.booking_id = b.id
+      order by p.created_at desc
+      limit 1
+    ) p on true
+    where b.id::text = ${bookingId}
+      and b.patient_id = ${patientId}
+    limit 1
+  `) as unknown as RetryableBookingCheckout[];
+  return rows[0] ?? null;
 }
 
 export type AdminBookingView = {

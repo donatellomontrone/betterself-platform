@@ -83,6 +83,52 @@ function paymentStatusTone(status: string): StatusTone {
   return "neutral";
 }
 
+function canRetryPayment(booking: PatientBookingView) {
+  return (
+    booking.amount != null &&
+    booking.status !== "cancelled" &&
+    (booking.payment_status === "pending" || booking.payment_status === "refunded")
+  );
+}
+
+function RetryPaymentButton({
+  bookingId,
+  label = "Pay now",
+  compact = false,
+}: {
+  bookingId: string;
+  label?: string;
+  compact?: boolean;
+}) {
+  return (
+    <form action="/api/checkout/retry" method="post">
+      <input type="hidden" name="bookingId" value={bookingId} />
+      <button className={compact ? "btn btn-primary h-10" : "btn btn-primary"} type="submit">
+        {label}
+      </button>
+    </form>
+  );
+}
+
+const paymentRetryMessages: Record<string, { title: string; text: string }> = {
+  retry_failed: {
+    title: "Payment could not be reopened",
+    text: "PayMongo could not create a new checkout session. Please try again or message the doctor.",
+  },
+  retry_unavailable: {
+    title: "Payment retry unavailable",
+    text: "The booking database is not available right now. Please try again shortly.",
+  },
+  retry_missing: {
+    title: "Booking not found",
+    text: "We could not find that unpaid booking under your account.",
+  },
+  already_paid: {
+    title: "Payment already completed",
+    text: "This booking is already marked as paid.",
+  },
+};
+
 function formatPeso(amount: number | null) {
   if (amount == null) return "—";
   return `₱${amount.toLocaleString("en-PH")}`;
@@ -314,12 +360,15 @@ export function BookingPage({
 export function DashboardPage({
   viewerName,
   bookings = [],
+  paymentStatus,
 }: {
   viewerName?: string;
   bookings?: PatientBookingView[];
+  paymentStatus?: string;
 }) {
   const upcoming = bookings[0];
   const hasCompleted = bookings.some((b) => b.status === "completed");
+  const paymentRetryMessage = paymentStatus ? paymentRetryMessages[paymentStatus] : undefined;
   const stats = [
     { label: "Total bookings", value: bookings.length },
     {
@@ -349,6 +398,11 @@ export function DashboardPage({
               Book Appointment
             </Link>
           </div>
+          {paymentRetryMessage ? (
+            <div className="mt-6">
+              <Notice title={paymentRetryMessage.title}>{paymentRetryMessage.text}</Notice>
+            </div>
+          ) : null}
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat) => (
               <article key={stat.label} className="card p-5">
@@ -381,10 +435,17 @@ export function DashboardPage({
                     />
                   </div>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <Link className="btn btn-secondary" href="/booking">
-                      Book Again
-                    </Link>
-                    <Link className="btn btn-primary" href="/messages">
+                    {canRetryPayment(upcoming) ? (
+                      <RetryPaymentButton bookingId={upcoming.id} />
+                    ) : (
+                      <Link className="btn btn-secondary" href="/booking">
+                        Book Again
+                      </Link>
+                    )}
+                    <Link
+                      className={canRetryPayment(upcoming) ? "btn btn-secondary" : "btn btn-primary"}
+                      href="/messages"
+                    >
                       Message Doctor
                     </Link>
                   </div>
@@ -462,6 +523,13 @@ export function DashboardPage({
                       <StatusBadge tone={paymentStatusTone(booking.payment_status)}>
                         {formatPaymentStatus(booking.payment_status)}
                       </StatusBadge>
+                      {canRetryPayment(booking) ? (
+                        <RetryPaymentButton
+                          bookingId={booking.id}
+                          label="Retry payment"
+                          compact
+                        />
+                      ) : null}
                     </div>
                   </article>
                 ))}
