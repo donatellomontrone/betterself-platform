@@ -114,6 +114,31 @@ function RetryPaymentButton({
   );
 }
 
+function canCancelBooking(booking: PatientBookingView) {
+  return (
+    booking.payment_status !== "paid" &&
+    booking.status !== "completed" &&
+    booking.status !== "cancelled"
+  );
+}
+
+function CancelRequestButton({
+  bookingId,
+  compact = false,
+}: {
+  bookingId: string;
+  compact?: boolean;
+}) {
+  return (
+    <form action="/api/bookings/cancel" method="post">
+      <input type="hidden" name="bookingId" value={bookingId} />
+      <button className={compact ? "btn btn-ghost h-10" : "btn btn-ghost"} type="submit">
+        Cancel request
+      </button>
+    </form>
+  );
+}
+
 const paymentRetryMessages: Record<string, { title: string; text: string }> = {
   retry_failed: {
     title: "Payment could not be reopened",
@@ -141,6 +166,18 @@ const bookingRequestMessages: Record<string, { title: string; text: string }> = 
   submitted: {
     title: "Request submitted",
     text: "The doctor call/review happens first. Once BetterSelf confirms the service, the payment button will appear here in your dashboard.",
+  },
+  cancelled: {
+    title: "Request cancelled",
+    text: "Your booking request has been cancelled. You can book again any time.",
+  },
+  cancel_failed: {
+    title: "Could not cancel",
+    text: "This booking can't be cancelled (it may already be paid, completed, or cancelled). Message the doctor if you need help.",
+  },
+  cancel_unavailable: {
+    title: "Cancellation unavailable",
+    text: "The booking database is not available right now. Please try again shortly.",
   },
 };
 
@@ -475,6 +512,9 @@ export function DashboardPage({
                     >
                       Message Doctor
                     </Link>
+                    {canCancelBooking(upcoming) ? (
+                      <CancelRequestButton bookingId={upcoming.id} />
+                    ) : null}
                   </div>
                 </>
               ) : (
@@ -558,6 +598,9 @@ export function DashboardPage({
                         />
                       ) : isAwaitingDoctorConfirmation(booking) ? (
                         <StatusBadge tone="neutral">Payment after doctor call</StatusBadge>
+                      ) : null}
+                      {canCancelBooking(booking) ? (
+                        <CancelRequestButton bookingId={booking.id} compact />
                       ) : null}
                     </div>
                   </article>

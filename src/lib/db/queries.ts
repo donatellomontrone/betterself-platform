@@ -260,6 +260,28 @@ export async function getRetryableBookingForCheckout(
   return rows[0] ?? null;
 }
 
+/**
+ * Patient cancels their own booking. Enforced in SQL: only the owner, only while
+ * unpaid, and only if not already completed/cancelled. Returns true if a row was
+ * cancelled.
+ */
+export async function cancelPatientBooking(
+  bookingId: string,
+  patientId: string,
+): Promise<boolean> {
+  const sql = getSql();
+  const rows = (await sql`
+    update public.bookings
+    set status = 'cancelled', updated_at = now()
+    where id::text = ${bookingId}
+      and patient_id = ${patientId}
+      and payment_status <> 'paid'
+      and status not in ('completed', 'cancelled')
+    returning id
+  `) as unknown as { id: string }[];
+  return rows.length > 0;
+}
+
 export type AdminBookingView = {
   id: string;
   patient_id: string;
