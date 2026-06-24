@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   CalendarDays,
   Check,
@@ -37,7 +38,14 @@ import {
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
 import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
-import { updateBookingStatusAction } from "@/app/admin/actions";
+import type { Json } from "@/lib/db/types";
+import {
+  updateBookingNotesAction,
+  updateBookingPaymentStatusAction,
+  updateBookingStatusAction,
+  updateIntakeReviewAction,
+  updatePatientProfileAction,
+} from "@/app/admin/actions";
 
 const bookingStatusLabels: Record<string, string> = {
   pending_doctor_review: "Pending doctor review",
@@ -483,12 +491,103 @@ export function MessagesPage() {
   );
 }
 
+type AdminFilters = {
+  q?: string;
+  status?: string;
+  payment?: string;
+  intake?: string;
+};
+
+function formatIntakeStatus(status: string | null | undefined) {
+  if (!status) return "No intake";
+  return status.replaceAll("_", " ");
+}
+
+function intakeStatusTone(status: string | null | undefined): StatusTone {
+  if (status === "approved") return "positive";
+  if (status === "rejected") return "danger";
+  if (status === "needs_more_information") return "warning";
+  if (status === "submitted") return "warning";
+  return "neutral";
+}
+
+function asRecord(value: Json | null | undefined): Record<string, Json | undefined> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return value;
+}
+
+function getStringList(value: Json | undefined) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+}
+
+function getPatientConcern(answers: Json | null | undefined) {
+  const record = asRecord(answers);
+  return typeof record.patientConcern === "string"
+    ? record.patientConcern
+    : typeof record.consultationNotes === "string"
+      ? record.consultationNotes
+      : "";
+}
+
+function matchesAdminFilters(booking: AdminBookingView, filters: AdminFilters) {
+  const query = filters.q?.trim().toLowerCase();
+  const queryMatch =
+    !query ||
+    [
+      booking.patient_name,
+      booking.patient_email,
+      booking.patient_phone,
+      booking.treatment_name,
+      booking.location,
+      booking.transaction_reference,
+      getPatientConcern(booking.intake_answers),
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query));
+  const statusMatch = !filters.status || booking.status === filters.status;
+  const paymentMatch = !filters.payment || booking.payment_status === filters.payment;
+  const intakeMatch = !filters.intake || booking.intake_review_status === filters.intake;
+  return queryMatch && statusMatch && paymentMatch && intakeMatch;
+}
+
+function AdminField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F]">
+      {label}
+      {children}
+    </label>
+  );
+}
+
+function AdminMeta({ label, value }: { label: string; value?: string | number | null }) {
+  return (
+    <div className="rounded-lg bg-[#FAF8F4] p-3">
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7A746E]">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm font-semibold text-[#1F1F1F]">
+        {value == null || value === "" ? "—" : value}
+      </p>
+    </div>
+  );
+}
+
 export function AdminPage({
   authorized = false,
   bookings = [],
+  filters = {},
 }: {
   authorized?: boolean;
   bookings?: AdminBookingView[];
+  filters?: AdminFilters;
 }) {
   if (!authorized) {
     return (
@@ -517,6 +616,13 @@ export function AdminPage({
     ["Confirmed", bookings.filter((b) => b.status === "confirmed").length],
     ["Paid", bookings.filter((b) => b.payment_status === "paid").length],
   ];
+  const filteredBookings = bookings.filter((booking) => matchesAdminFilters(booking, filters));
+  const uniquePatients = new Set(bookings.map((booking) => booking.patient_id)).size;
+  const pendingPayments = bookings.filter((booking) => booking.payment_status === "pending").length;
+  const flaggedIntakes = bookings.filter((booking) => {
+    const answers = asRecord(booking.intake_answers);
+    return getStringList(answers.flagged).length > 0;
+  }).length;
 
   return (
     <PageShell>
@@ -535,61 +641,330 @@ export function AdminPage({
               </div>
             ))}
           </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-4">
+            {[
+              ["Patients", uniquePatients],
+              ["Pending payments", pendingPayments],
+              ["Flagged intakes", flaggedIntakes],
+              ["Shown after filters", filteredBookings.length],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg border border-[#E6DFD5] bg-white p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7A746E]">
+                  {label}
+                </p>
+                <p className="mt-2 font-serif text-3xl text-[#1F1F1F]">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          <form
+            className="card mt-8 grid gap-3 p-5 lg:grid-cols-[1.4fr_repeat(3,minmax(0,1fr))_auto]"
+            action="/admin"
+          >
+            <AdminField label="Search">
+              <input
+                className="field"
+                name="q"
+                defaultValue={filters.q ?? ""}
+                placeholder="Name, email, treatment, reference..."
+              />
+            </AdminField>
+            <AdminField label="Booking status">
+              <select className="field" name="status" defaultValue={filters.status ?? ""}>
+                <option value="">All</option>
+                <option value="pending_doctor_review">Pending review</option>
+                <option value="needs_more_information">Needs info</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </AdminField>
+            <AdminField label="Payment">
+              <select className="field" name="payment" defaultValue={filters.payment ?? ""}>
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="refunded">Refunded</option>
+                <option value="not_required">Not required</option>
+              </select>
+            </AdminField>
+            <AdminField label="Intake">
+              <select className="field" name="intake" defaultValue={filters.intake ?? ""}>
+                <option value="">All</option>
+                <option value="submitted">Submitted</option>
+                <option value="needs_more_information">Needs info</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="not_started">Not started</option>
+              </select>
+            </AdminField>
+            <div className="flex items-end gap-2">
+              <button className="btn btn-primary h-12" type="submit">
+                Filter
+              </button>
+              <Link className="btn btn-secondary h-12" href="/admin">
+                Clear
+              </Link>
+            </div>
+          </form>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link className="btn btn-secondary" href="/admin/export.csv">
+              Export CSV
+            </Link>
+            <Link className="btn btn-secondary" href="/dashboard">
+              Patient view
+            </Link>
+          </div>
+
           {bookings.length === 0 ? (
             <p className="card mt-8 p-6 text-sm text-[#595550]">No bookings yet.</p>
           ) : (
             <div className="mt-8 grid gap-4">
-              {bookings.map((b) => (
-                <article key={b.id} className="card p-5">
-                  <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr_auto] lg:items-center">
-                    <div>
-                      <p className="font-serif text-2xl text-[#1F1F1F]">{b.patient_name}</p>
-                      <p className="mt-1 text-sm text-[#595550]">{b.patient_email}</p>
-                      <p className="mt-1 text-sm text-[#4D4D4D]">
-                        {b.treatment_name} · {b.appointment_type}
-                      </p>
-                      <p className="text-sm text-[#595550]">
-                        {b.location} · booked {formatBookingDate(b.created_at)}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <StatusBadge tone={bookingStatusTone(b.status)}>
-                        {formatBookingStatus(b.status)}
-                      </StatusBadge>
-                      <StatusBadge tone={paymentStatusTone(b.payment_status)}>
-                        {formatPaymentStatus(b.payment_status)}
-                      </StatusBadge>
-                      {b.intake_review_status ? (
-                        <StatusBadge tone="neutral">Intake: {b.intake_review_status}</StatusBadge>
-                      ) : null}
-                      {b.amount != null ? (
-                        <StatusBadge tone="neutral">{formatPeso(b.amount)}</StatusBadge>
-                      ) : null}
-                    </div>
-                    <form
-                      action={updateBookingStatusAction}
-                      className="flex flex-wrap items-center gap-2"
-                    >
-                      <input type="hidden" name="bookingId" value={b.id} />
-                      <select
-                        name="status"
-                        defaultValue={b.status}
-                        className="field h-10 max-w-[13rem]"
-                        aria-label={`Status for ${b.patient_name}`}
+              {filteredBookings.length === 0 ? (
+                <p className="card p-6 text-sm text-[#595550]">
+                  No bookings match the current filters.
+                </p>
+              ) : null}
+              {filteredBookings.map((b) => {
+                const answers = asRecord(b.intake_answers);
+                const flagged = getStringList(answers.flagged);
+                const patientConcern = getPatientConcern(b.intake_answers);
+                return (
+                  <article key={b.id} className="card p-5">
+                    <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr_auto] lg:items-start">
+                      <div>
+                        <p className="font-serif text-2xl text-[#1F1F1F]">{b.patient_name}</p>
+                        <p className="mt-1 text-sm text-[#595550]">
+                          {b.patient_email} · {b.patient_phone || "No phone"}
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-[#1F1F1F]">
+                          {b.treatment_name} · {b.treatment_price_label}
+                        </p>
+                        <p className="mt-1 text-sm text-[#595550]">
+                          {b.appointment_type} · {b.location}
+                        </p>
+                        <p className="mt-1 text-xs text-[#7A746E]">
+                          Booked {formatBookingDate(b.created_at)} · updated{" "}
+                          {formatBookingDate(b.updated_at)}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <StatusBadge tone={bookingStatusTone(b.status)}>
+                          {formatBookingStatus(b.status)}
+                        </StatusBadge>
+                        <StatusBadge tone={paymentStatusTone(b.payment_status)}>
+                          {formatPaymentStatus(b.payment_status)}
+                        </StatusBadge>
+                        <StatusBadge tone={intakeStatusTone(b.intake_review_status)}>
+                          Intake: {formatIntakeStatus(b.intake_review_status)}
+                        </StatusBadge>
+                        {flagged.length > 0 ? (
+                          <StatusBadge tone="warning">{flagged.length} medical flags</StatusBadge>
+                        ) : null}
+                        {b.amount != null ? (
+                          <StatusBadge tone="neutral">{formatPeso(b.amount)}</StatusBadge>
+                        ) : null}
+                      </div>
+                      <form
+                        action={updateBookingStatusAction}
+                        className="flex flex-wrap items-center gap-2"
                       >
-                        <option value="pending_doctor_review">Pending doctor review</option>
-                        <option value="needs_more_information">Needs more information</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                      <button className="btn btn-primary h-10" type="submit">
-                        Update
-                      </button>
-                    </form>
-                  </div>
-                </article>
-              ))}
+                        <input type="hidden" name="bookingId" value={b.id} />
+                        <select
+                          name="status"
+                          defaultValue={b.status}
+                          className="field h-10 max-w-[13rem]"
+                          aria-label={`Status for ${b.patient_name}`}
+                        >
+                          <option value="pending_doctor_review">Pending review</option>
+                          <option value="needs_more_information">Needs more info</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <button className="btn btn-primary h-10" type="submit">
+                          Update
+                        </button>
+                      </form>
+                    </div>
+
+                    <details className="mt-5 rounded-lg border border-[#E6DFD5] bg-white p-4">
+                      <summary className="cursor-pointer text-sm font-bold text-[#1F1F1F]">
+                        Review full booking, patient, intake, payment, and notes
+                      </summary>
+                      <div className="mt-5 grid gap-5">
+                        <section>
+                          <p className="eyebrow">Patient profile</p>
+                          <div className="mt-3 grid gap-3 md:grid-cols-3">
+                            <AdminMeta label="Address" value={b.patient_address || b.location} />
+                            <AdminMeta label="Emergency contact" value={b.patient_emergency_contact} />
+                            <AdminMeta label="Total bookings" value={b.patient_total_bookings} />
+                            <AdminMeta label="Paid bookings" value={b.patient_paid_bookings} />
+                            <AdminMeta label="Patient spend" value={formatPeso(b.patient_total_spend)} />
+                            <AdminMeta label="Profile" value={b.profile_completion_status} />
+                          </div>
+                          <form
+                            action={updatePatientProfileAction}
+                            className="mt-4 grid gap-3 md:grid-cols-2"
+                          >
+                            <input type="hidden" name="userId" value={b.patient_id} />
+                            <AdminField label="Phone">
+                              <input className="field" name="phone" defaultValue={b.patient_phone ?? ""} />
+                            </AdminField>
+                            <AdminField label="Emergency contact">
+                              <input
+                                className="field"
+                                name="emergencyContact"
+                                defaultValue={b.patient_emergency_contact ?? ""}
+                              />
+                            </AdminField>
+                            <AdminField label="Address">
+                              <textarea
+                                className="field min-h-20"
+                                name="address"
+                                defaultValue={b.patient_address ?? b.location}
+                              />
+                            </AdminField>
+                            <AdminField label="Allergies">
+                              <textarea
+                                className="field min-h-20"
+                                name="allergies"
+                                defaultValue={b.patient_allergies ?? ""}
+                              />
+                            </AdminField>
+                            <AdminField label="Medications">
+                              <textarea
+                                className="field min-h-20"
+                                name="medications"
+                                defaultValue={b.patient_medications ?? ""}
+                              />
+                            </AdminField>
+                            <AdminField label="Contraindications / risk notes">
+                              <textarea
+                                className="field min-h-20"
+                                name="contraindications"
+                                defaultValue={b.patient_contraindications ?? ""}
+                              />
+                            </AdminField>
+                            <div className="md:col-span-2">
+                              <button className="btn btn-secondary" type="submit">
+                                Save patient profile
+                              </button>
+                            </div>
+                          </form>
+                        </section>
+
+                        <section>
+                          <p className="eyebrow">Medical intake</p>
+                          <div className="mt-3 grid gap-3 md:grid-cols-2">
+                            <AdminMeta label="Patient concern" value={patientConcern} />
+                            <AdminMeta
+                              label="Consent"
+                              value={b.intake_consent_confirmed ? "Confirmed" : "Missing"}
+                            />
+                          </div>
+                          {flagged.length > 0 ? (
+                            <div className="mt-3 rounded-lg border border-[#F6D7A7] bg-[#FFF8E7] p-4">
+                              <p className="text-sm font-bold text-[#1F1F1F]">Flagged answers</p>
+                              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#5C574F]">
+                                {flagged.map((item) => (
+                                  <li key={item}>{item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : (
+                            <p className="mt-3 rounded-lg bg-[#EEF5F5] p-4 text-sm text-[#566060]">
+                              No medical flags were submitted for this booking.
+                            </p>
+                          )}
+                          <form
+                            action={updateIntakeReviewAction}
+                            className="mt-4 grid gap-3 md:grid-cols-[240px_1fr_auto]"
+                          >
+                            <input type="hidden" name="bookingId" value={b.id} />
+                            <AdminField label="Review status">
+                              <select
+                                className="field"
+                                name="intakeStatus"
+                                defaultValue={b.intake_review_status ?? "submitted"}
+                              >
+                                <option value="not_started">Not started</option>
+                                <option value="submitted">Submitted</option>
+                                <option value="needs_more_information">Needs more info</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                              </select>
+                            </AdminField>
+                            <AdminField label="Doctor notes">
+                              <textarea
+                                className="field min-h-20"
+                                name="doctorNotes"
+                                defaultValue={b.intake_doctor_notes ?? ""}
+                                placeholder="Clinical review notes, follow-up questions, suitability..."
+                              />
+                            </AdminField>
+                            <div className="flex items-end">
+                              <button className="btn btn-primary h-12" type="submit">
+                                Save intake
+                              </button>
+                            </div>
+                          </form>
+                        </section>
+
+                        <section>
+                          <p className="eyebrow">Payment</p>
+                          <div className="mt-3 grid gap-3 md:grid-cols-4">
+                            <AdminMeta label="Amount" value={formatPeso(b.amount)} />
+                            <AdminMeta label="Type" value={b.payment_type} />
+                            <AdminMeta label="Reference" value={b.transaction_reference} />
+                            <AdminMeta label="PayMongo session" value={b.paymongo_checkout_id} />
+                          </div>
+                          <form
+                            action={updateBookingPaymentStatusAction}
+                            className="mt-4 flex flex-wrap items-end gap-3"
+                          >
+                            <input type="hidden" name="bookingId" value={b.id} />
+                            <AdminField label="Payment status">
+                              <select
+                                className="field min-w-56"
+                                name="paymentStatus"
+                                defaultValue={b.payment_status}
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="paid">Paid</option>
+                                <option value="refunded">Refunded</option>
+                                <option value="not_required">Not required</option>
+                              </select>
+                            </AdminField>
+                            <button className="btn btn-secondary h-12" type="submit">
+                              Update payment
+                            </button>
+                          </form>
+                        </section>
+
+                        <section>
+                          <p className="eyebrow">Internal booking notes</p>
+                          <form action={updateBookingNotesAction} className="mt-3 grid gap-3">
+                            <input type="hidden" name="bookingId" value={b.id} />
+                            <textarea
+                              className="field min-h-32"
+                              name="notes"
+                              defaultValue={b.notes ?? ""}
+                              placeholder="Internal notes for doctor/admin only..."
+                            />
+                            <div>
+                              <button className="btn btn-secondary" type="submit">
+                                Save notes
+                              </button>
+                            </div>
+                          </form>
+                        </section>
+                      </div>
+                    </details>
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>

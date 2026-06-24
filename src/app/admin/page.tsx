@@ -6,7 +6,12 @@ import { getAllBookings, type AdminBookingView } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 
-export default async function Admin() {
+export default async function Admin({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
   const user = await currentUser();
   const email = user?.emailAddresses.find(
     (entry) => entry.id === user.primaryEmailAddressId,
@@ -22,5 +27,21 @@ export default async function Admin() {
     }
   }
 
-  return <AdminPage authorized={authorized} bookings={bookings} />;
+  const readParam = (key: string) => {
+    const value = params[key];
+    return Array.isArray(value) ? value[0] : value;
+  };
+
+  return (
+    <AdminPage
+      authorized={authorized}
+      bookings={bookings}
+      filters={{
+        q: readParam("q"),
+        status: readParam("status"),
+        payment: readParam("payment"),
+        intake: readParam("intake"),
+      }}
+    />
+  );
 }
