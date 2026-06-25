@@ -114,7 +114,7 @@ export function Footer() {
           title="Trust"
           links={[
             ["Safety", "/safety"],
-            ["About Doctor", "/about"],
+            ["Our approach", "/about"],
             ["FAQ", "/faq"],
             ["Contact", "/contact"],
           ]}

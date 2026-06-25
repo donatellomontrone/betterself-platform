@@ -398,7 +398,7 @@ export function BookingPage({
       <PageHero
         eyebrow="Book appointment"
         title="Choose a treatment directly or start with a doctor consultation."
-        text="Patients submit the request first, schedule a doctor call or review, then pay from the dashboard only after BetterSelf confirms the service."
+        text="Submit your request first, schedule a doctor call or review, then pay from your dashboard only after BetterSelf confirms the service."
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -1572,7 +1572,7 @@ export function AboutPage() {
             </div>
           </div>
           <div>
-            <Badge>Meet your doctor</Badge>
+            <Badge>Our approach</Badge>
             <h1 className="mt-5 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
               Private aesthetic care, guided by a licensed medical doctor.
             </h1>
@@ -1880,9 +1880,9 @@ function DoctorProfileSection() {
         </div>
         <div>
           <SectionHeading
-            eyebrow="Meet your doctor"
+            eyebrow="Our approach"
             title="Care begins with proper assessment."
-            text="BetterSelf is led by a licensed medical doctor with experience in aesthetic care and patient-centered treatment planning. Every appointment begins with medical screening and clear aftercare guidance."
+            text="Every BetterSelf treatment is doctor-led and follows the same process: medical intake, suitability review, written consent, sterile preparation, and clear aftercare. Treatment only proceeds when it is medically appropriate."
           />
           <Link className="btn btn-primary mt-8" href="/booking">
             Book Treatment

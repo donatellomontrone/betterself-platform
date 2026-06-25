@@ -509,7 +509,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
         {step === 1 && isConsultation ? (
           <BookingStep
             title="What problem would you like to address?"
-            text="Describe the patient concern in their own words. BetterSelf can suggest the closest treatment option, while the doctor still confirms suitability."
+            text="Tell us what you'd like to address, in your own words. BetterSelf can suggest the closest treatment option, and the doctor still confirms suitability."
           >
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
