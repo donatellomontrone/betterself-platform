@@ -32,7 +32,6 @@ import {
 import {
   BookingFlow,
   DoctorChat,
-  LoginRegisterPreview,
   type BookingPrefill,
 } from "@/components/platform-widgets";
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
@@ -643,11 +642,14 @@ export function MessagesPage() {
     <PageShell>
       <PageHero
         eyebrow="Messages"
-        title="Internal doctor-patient chat structure."
-        text="Patients can message the doctor before or after treatment, attach photos, and keep conversations linked to bookings."
+        title="Message your BetterSelf doctor."
+        text="Ask non-urgent questions about your treatment and bookings before or after your appointment."
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
+          <Link className="btn btn-ghost mb-4 inline-flex" href="/dashboard">
+            ← Back to dashboard
+          </Link>
           <DoctorChat />
         </div>
       </section>
@@ -1564,7 +1566,7 @@ export function FaqPage() {
       <PageHero
         eyebrow="FAQ"
         title="Clear answers before you book."
-        text="BetterSelf should sell trust first, treatment second. These answers keep the experience calm, transparent, and medically guided."
+        text="Clear answers about how BetterSelf works, who performs your treatment, safety, and what to expect at a home visit."
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto grid max-w-4xl gap-4">
@@ -1586,14 +1588,14 @@ export function LoginPage({ status }: { status?: string }) {
       <section className="px-5 py-10 lg:px-8 lg:py-14">
         <div className="mx-auto grid max-w-7xl gap-6">
           <section className="card p-7">
-            <p className="eyebrow">Clerk Auth</p>
+            <p className="eyebrow">Patient account</p>
             <h1 className="mt-3 font-serif text-5xl leading-tight text-[#1F1F1F]">
               Sign in to your private BetterSelf account.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#595550]">
-              Patient accounts now use Clerk. After you add the Clerk environment
-              variables from Vercel, patients can sign in, book treatments, and
-              message the doctor from the protected portal.
+              Sign in to track your bookings, message the doctor, and pay securely
+              once your treatment is confirmed. New here? Create an account in a
+              minute.
             </p>
             {status ? (
               <div className="mt-5">
@@ -1612,13 +1614,12 @@ export function LoginPage({ status }: { status?: string }) {
                 Create account
               </Link>
             </div>
-            <Notice title="Protected portal">
-              The dashboard, messages, and admin preview are protected routes.
-              Booking stays open so patients can request treatment directly,
-              then create or use an account for ongoing care.
+            <Notice title="Your account is private">
+              Your dashboard and messages are private to you. You can request a
+              treatment without an account, then sign in to track it and pay once
+              the doctor confirms.
             </Notice>
           </section>
-          <LoginRegisterPreview />
         </div>
       </section>
     </PageShell>
@@ -1673,8 +1674,8 @@ export function ContactPage() {
               ]}
             />
             <Notice title="Support">
-              Internal doctor-patient messaging is included in the first version.
-              WhatsApp support can be added later.
+              Once you&apos;ve booked, you can message the doctor anytime from your
+              patient dashboard.
             </Notice>
           </section>
         </div>
