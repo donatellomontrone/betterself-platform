@@ -24,6 +24,7 @@ import {
 } from "@/lib/treatments";
 import { Notice, StatusBadge } from "@/components/site-shell";
 import { useUser } from "@clerk/nextjs";
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from "@/lib/contact";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 
 const directTreatmentAppointment = "Doctor review call";
@@ -1049,7 +1050,7 @@ type ChatMessage = {
 const seedMessages: ChatMessage[] = [
   {
     sender: "system",
-    text: "This is your private channel with the BetterSelf medical team. Send a message and a doctor will reply here before your appointment.",
+    text: `This is your private message box with the BetterSelf medical team. For the fastest reply, message us on WhatsApp or email ${SUPPORT_EMAIL} — we'll also follow up here about your booking.`,
     time: "",
   },
 ];
@@ -1067,7 +1068,7 @@ export function DoctorChat() {
       { sender: "patient", text, time: "Now" },
       {
         sender: "system",
-        text: "Message sent. A doctor will review and reply here — you'll be notified.",
+        text: `Thanks — we've noted this. For a faster reply, message us on WhatsApp or email ${SUPPORT_EMAIL}.`,
         time: "Now",
       },
     ]);
@@ -1086,9 +1087,21 @@ export function DoctorChat() {
             </p>
           </div>
         </div>
-        <p className="mt-5 rounded-lg bg-[#EEF5F5] p-3 text-xs leading-5 text-[#566060]">
-          WhatsApp support coming soon. Internal messaging is prepared first.
-        </p>
+        <div className="mt-5 grid gap-2">
+          {SUPPORT_WHATSAPP ? (
+            <a
+              className="btn btn-primary justify-center"
+              href={SUPPORT_WHATSAPP}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Message us on WhatsApp
+            </a>
+          ) : null}
+          <a className="btn btn-secondary justify-center" href={`mailto:${SUPPORT_EMAIL}`}>
+            Email the team
+          </a>
+        </div>
       </aside>
       <section className="flex flex-col">
         <div className="flex items-center justify-between border-b border-[#E6DFD5] p-5">
