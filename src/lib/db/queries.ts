@@ -419,6 +419,22 @@ export async function updateBookingStatus(bookingId: string, status: BookingStat
   `;
 }
 
+/** Set the confirmed appointment date/time for a booking (admin/doctor). */
+export async function updateBookingSchedule(
+  bookingId: string,
+  appointmentDate: string | null,
+  appointmentTime: string | null,
+) {
+  const sql = getSql();
+  await sql`
+    update public.bookings
+    set appointment_date = ${appointmentDate}::date,
+        appointment_time = ${appointmentTime},
+        updated_at = now()
+    where id::text = ${bookingId}
+  `;
+}
+
 export async function updateBookingNotes(bookingId: string, notes: string | null) {
   const sql = getSql();
   await sql`

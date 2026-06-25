@@ -41,6 +41,7 @@ import type { Json } from "@/lib/db/types";
 import {
   updateBookingNotesAction,
   updateBookingPaymentStatusAction,
+  updateBookingScheduleAction,
   updateBookingStatusAction,
   updateIntakeReviewAction,
   updatePatientProfileAction,
@@ -1332,6 +1333,31 @@ export function AdminPage({
                             <AdminMeta label="Schedule" value={getScheduleLabel(b)} />
                             <AdminMeta label="Location" value={b.location} />
                           </div>
+                          <form
+                            action={updateBookingScheduleAction}
+                            className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end"
+                          >
+                            <input type="hidden" name="bookingId" value={b.id} />
+                            <AdminField label="Visit date">
+                              <input
+                                className="field"
+                                type="date"
+                                name="appointmentDate"
+                                defaultValue={b.appointment_date ?? ""}
+                              />
+                            </AdminField>
+                            <AdminField label="Visit time">
+                              <input
+                                className="field"
+                                type="time"
+                                name="appointmentTime"
+                                defaultValue={b.appointment_time ?? ""}
+                              />
+                            </AdminField>
+                            <button className="btn btn-secondary h-12" type="submit">
+                              Save schedule
+                            </button>
+                          </form>
                           {callLink ? (
                             <a
                               className="btn btn-secondary mt-4"

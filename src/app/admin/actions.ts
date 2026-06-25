@@ -6,6 +6,7 @@ import { isAdminEmail } from "@/lib/admin";
 import {
   updateBookingNotes,
   updateBookingPaymentStatus,
+  updateBookingSchedule,
   updateBookingStatus,
   updateMedicalIntakeReview,
   updatePatientAdminProfile,
@@ -74,6 +75,20 @@ export async function updateIntakeReviewAction(formData: FormData) {
   if (!bookingId || !VALID_INTAKE_STATUSES.includes(status)) return;
 
   await updateMedicalIntakeReview(bookingId, status, cleanText(formData.get("doctorNotes")));
+  revalidatePath("/admin");
+}
+
+export async function updateBookingScheduleAction(formData: FormData) {
+  if (!(await assertAdmin())) return;
+
+  const bookingId = String(formData.get("bookingId") ?? "");
+  if (!bookingId) return;
+
+  await updateBookingSchedule(
+    bookingId,
+    cleanText(formData.get("appointmentDate")),
+    cleanText(formData.get("appointmentTime")),
+  );
   revalidatePath("/admin");
 }
 
