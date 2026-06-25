@@ -37,14 +37,14 @@ export function CookieConsentBanner() {
     >
       <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3F5249]">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8F5B67]">
             Cookie consent
           </p>
           <p className="mt-2 text-sm leading-6 text-[#4A4641]">
             BetterSelf uses essential cookies for account access, booking,
             payments, and site security. Optional cookies are used only after
             you accept them. Read our{" "}
-            <Link className="font-bold text-[#2F3D36] underline" href="/privacy">
+            <Link className="font-bold text-[#6E444E] underline" href="/privacy">
               Privacy Policy
             </Link>
             .

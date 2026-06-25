@@ -77,7 +77,7 @@ export function AccountConsentGate({ children }: { children: ReactNode }) {
 
   return (
     <section className="w-full max-w-3xl rounded-lg border border-[#E6DFD5] bg-white p-5 shadow-xl sm:p-7">
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3F5249]">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8F5B67]">
         Account consent
       </p>
       <h1 className="mt-3 font-serif text-4xl leading-tight text-[#1F1F1F] sm:text-5xl">
@@ -96,7 +96,7 @@ export function AccountConsentGate({ children }: { children: ReactNode }) {
             className="flex gap-3 rounded-lg border border-[#EDE6DC] bg-[#FAF8F4] p-4 text-sm leading-6 text-[#37332F]"
           >
             <input
-              className="mt-1 h-4 w-4 accent-[#3F5249]"
+              className="mt-1 h-4 w-4 accent-[#8F5B67]"
               type="checkbox"
               checked={checked[item.id]}
               onChange={() => toggleConsent(item.id)}
@@ -106,7 +106,7 @@ export function AccountConsentGate({ children }: { children: ReactNode }) {
         ))}
       </div>
 
-      <div className="mt-5 rounded-lg border border-[#DDE8E8] bg-[#EEF5F5] p-4 text-sm leading-6 text-[#4A5A55]">
+      <div className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-4 text-sm leading-6 text-[#4A5A55]">
         Review the full{" "}
         <Link className="font-bold underline" href="/terms">
           Terms

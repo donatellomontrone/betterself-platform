@@ -103,7 +103,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
         <div className="grid min-w-0 gap-5 overflow-hidden rounded-lg border border-[#E6DFD5] bg-white p-4 shadow-sm lg:grid-cols-[280px_1fr] lg:overflow-visible lg:p-5">
           <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
             <div className="min-w-0 overflow-hidden rounded-lg bg-[#FAF8F4] p-3">
-              <div className="flex items-center gap-2 px-2 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#3F5249]">
+              <div className="flex items-center gap-2 px-2 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#8F5B67]">
                 <SlidersHorizontal className="h-4 w-4" />
                 Sections
               </div>
@@ -123,8 +123,8 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                       aria-selected={isActive}
                       className={`min-w-[11rem] rounded-lg border px-4 py-3 text-left transition lg:min-w-0 ${
                         isActive
-                          ? "border-[#3F5249] bg-[#3F5249] text-white shadow-sm"
-                          : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#3F5249]"
+                          ? "border-[#8F5B67] bg-[#8F5B67] text-white shadow-sm"
+                          : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"
                       }`}
                       onClick={() => setActiveCategory(category)}
                     >
@@ -155,7 +155,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                   <span className="sr-only">Search treatments</span>
                   <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#5C574F]" />
                   <input
-                    className="h-14 w-full rounded-lg border border-[#E6DFD5] bg-white py-0 pl-12 pr-4 text-base text-[#1F1F1F] outline-none transition placeholder:text-[#5C574F] focus:border-[#3F5249] focus:shadow-[0_0_0_3px_rgb(63_82_73_/_0.18)] sm:h-12 sm:text-sm"
+                    className="h-14 w-full rounded-lg border border-[#E6DFD5] bg-white py-0 pl-12 pr-4 text-base text-[#1F1F1F] outline-none transition placeholder:text-[#5C574F] focus:border-[#8F5B67] focus:shadow-[0_0_0_3px_rgb(63_82_73_/_0.18)] sm:h-12 sm:text-sm"
                     value={query}
                     placeholder="Search treatment, concern, or price"
                     onChange={(event) => setQuery(event.target.value)}
@@ -164,7 +164,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                 {hasFilters ? (
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#E6DFD5] bg-white px-3 py-2 text-sm font-semibold text-[#3F5249]"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#E6DFD5] bg-white px-3 py-2 text-sm font-semibold text-[#8F5B67]"
                     onClick={resetFilters}
                   >
                     <X className="h-4 w-4" />
@@ -187,8 +187,8 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                     type="button"
                     className={`rounded-full border px-3 py-2 text-sm font-semibold leading-none transition sm:px-4 ${
                       isActive
-                        ? "border-[#3F5249] bg-[#3F5249] text-white"
-                        : "border-[#E6DFD5] bg-white text-[#4D4D4D] hover:border-[#3F5249]"
+                        ? "border-[#8F5B67] bg-[#8F5B67] text-white"
+                        : "border-[#E6DFD5] bg-white text-[#4D4D4D] hover:border-[#8F5B67]"
                     }`}
                     onClick={() => setActiveConcern(isActive ? "" : concern)}
                   >
@@ -221,7 +221,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                     {spotlight.concerns.slice(0, 4).map((concern) => (
                       <span
                         key={concern}
-                        className="rounded-full bg-[#EEF5F5] px-3 py-1 text-xs font-semibold text-[#3F5249]"
+                        className="rounded-full bg-[#F6EDEA] px-3 py-1 text-xs font-semibold text-[#8F5B67]"
                       >
                         {concern}
                       </span>
@@ -278,7 +278,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                         {treatment.concerns.slice(0, 3).map((concern) => (
                           <span
                             key={concern}
-                            className="rounded-full bg-[#EEF5F5] px-3 py-1 text-xs font-semibold text-[#3F5249]"
+                            className="rounded-full bg-[#F6EDEA] px-3 py-1 text-xs font-semibold text-[#8F5B67]"
                           >
                             {concern}
                           </span>

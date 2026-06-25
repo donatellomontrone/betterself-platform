@@ -95,7 +95,7 @@ export function Footer() {
             Doctor-led aesthetic services. Private home appointments in selected
             Metro Manila areas, subject to medical suitability and availability.
           </p>
-          <p className="mt-5 rounded-lg border border-[#DDE8E8] bg-[#EEF5F5] p-4 text-xs leading-5 text-[#566060]">
+          <p className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-4 text-xs leading-5 text-[#6E565A]">
             BetterSelf provides doctor-led aesthetic services. All treatments are
             subject to medical assessment. Results vary per patient. This website
             is not a substitute for medical advice, diagnosis, or emergency care.
@@ -249,7 +249,7 @@ export function SectionHeading({
 
 export function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-[#DDE8E8] bg-[#EEF5F5] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#566060]">
+    <span className="inline-flex items-center rounded-full border border-[#ECDCDE] bg-[#F6EDEA] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#6E565A]">
       {children}
     </span>
   );
@@ -263,9 +263,9 @@ export function Notice({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-[#DDE8E8] bg-[#EEF5F5] p-4">
+    <div className="rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-4">
       <p className="text-sm font-semibold text-[#1F1F1F]">{title}</p>
-      <div className="mt-2 text-sm leading-6 text-[#566060]">{children}</div>
+      <div className="mt-2 text-sm leading-6 text-[#6E565A]">{children}</div>
     </div>
   );
 }
@@ -275,7 +275,7 @@ export function SafetyChecklist({ items }: { items: string[] }) {
     <div className="grid gap-3">
       {items.map((item) => (
         <div key={item} className="flex gap-3 text-sm leading-6 text-[#4D4D4D]">
-          <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#DDE8E8] text-[#4F5B55]">
+          <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#ECDCDE] text-[#8F5B67]">
             <Check className="h-3.5 w-3.5" />
           </span>
           <span>{item}</span>
@@ -344,7 +344,7 @@ export function DoctorLedStrip() {
       <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-4">
         {items.map(([Icon, title, text]) => (
           <div key={title} className="flex gap-3 rounded-lg bg-[#FAF8F4] p-4">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#DDE8E8] text-[#4F5B55]">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#ECDCDE] text-[#8F5B67]">
               <Icon className="h-5 w-5" />
             </span>
             <div>
@@ -368,7 +368,7 @@ export function BookingPreviewCard() {
             Treatment booking preview
           </h3>
         </div>
-        <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#DDE8E8] text-[#4F5B55]">
+        <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#ECDCDE] text-[#8F5B67]">
           <CalendarDays className="h-5 w-5" />
         </span>
       </div>
@@ -405,7 +405,7 @@ export function StatusBadge({
   tone?: StatusTone;
 }) {
   const tones: Record<StatusTone, string> = {
-    default: "bg-[#EEF5F5] text-[#3F5249]",
+    default: "bg-[#F6EDEA] text-[#8F5B67]",
     positive: "bg-[#E7F1E9] text-[#2F5135]",
     warning: "bg-[#F6EEDD] text-[#7A5A1E]",
     danger: "bg-[#F7E6E3] text-[#9B2C20]",
@@ -451,7 +451,7 @@ export function ArrowLink({ href, children }: { href: string; children: React.Re
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 text-sm font-semibold text-[#1F1F1F] transition hover:text-[#4F5B55]"
+      className="inline-flex items-center gap-2 text-sm font-semibold text-[#1F1F1F] transition hover:text-[#8F5B67]"
     >
       {children}
       <ArrowRight className="h-4 w-4" />

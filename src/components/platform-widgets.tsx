@@ -365,7 +365,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
         <div className="mb-6">
           <Notice title="Sign in to submit your request">
             You can fill this in, but you&apos;ll need a free BetterSelf account to send it —{" "}
-            <Link className="font-semibold text-[#2F3D36] underline" href="/sign-in?redirect_url=/booking">
+            <Link className="font-semibold text-[#6E444E] underline" href="/sign-in?redirect_url=/booking">
               sign in or create one
             </Link>{" "}
             first so you don&apos;t lose your progress.
@@ -397,7 +397,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
             aria-label={`Booking step ${step + 1} of 5: ${stepLabels[step]}`}
           >
             <div
-              className="h-full rounded-full bg-[#3F5249] transition-all"
+              className="h-full rounded-full bg-[#8F5B67] transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -421,7 +421,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                 className={`rounded-lg border p-5 text-left transition ${
                   bookingIntent === "treatment"
                     ? "border-[#1F1F1F] bg-[#FAF8F4]"
-                    : "border-[#E6DFD5] bg-white hover:border-[#A8B8A1]"
+                    : "border-[#E6DFD5] bg-white hover:border-[#CAA6AD]"
                 }`}
                 type="button"
                 onClick={() => {
@@ -430,7 +430,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                   resetScheduleSelection();
                 }}
               >
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8F5B67]">
                   I know what I want
                 </p>
                 <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
@@ -448,7 +448,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                 className={`rounded-lg border p-5 text-left transition ${
                   bookingIntent === "consultation"
                     ? "border-[#1F1F1F] bg-[#FAF8F4]"
-                    : "border-[#E6DFD5] bg-white hover:border-[#A8B8A1]"
+                    : "border-[#E6DFD5] bg-white hover:border-[#CAA6AD]"
                 }`}
                 type="button"
                 onClick={() => {
@@ -457,7 +457,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                   resetScheduleSelection();
                 }}
               >
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8F5B67]">
                   I need guidance
                 </p>
                 <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
@@ -489,7 +489,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                   className={`rounded-lg border p-4 text-left transition ${
                     treatmentId === treatment.id
                       ? "border-[#1F1F1F] bg-[#FAF8F4]"
-                      : "border-[#E6DFD5] bg-white hover:border-[#A8B8A1]"
+                      : "border-[#E6DFD5] bg-white hover:border-[#CAA6AD]"
                   }`}
                   onClick={() => {
                     setTreatmentId(treatment.id);
@@ -517,7 +517,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
             text="Tell us what you'd like to address, in your own words. BetterSelf can suggest the closest treatment option, and the doctor still confirms suitability."
           >
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8F5B67]">
                 Consultation request
               </p>
               <p className="mt-2 font-serif text-4xl text-[#1F1F1F]">
@@ -564,10 +564,10 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               </p>
             ) : null}
             {recommendation ? (
-              <div className="mt-5 rounded-lg border border-[#DDE8E8] bg-[#EEF5F5] p-5">
+              <div className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3F5249]">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8F5B67]">
                       Suggested match
                     </p>
                     <h2 className="mt-2 font-serif text-3xl text-[#1F1F1F]">
@@ -577,7 +577,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                       {recommendation.treatment.priceLabel}
                     </p>
                   </div>
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#3F5249]">
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#8F5B67]">
                     {recommendation.recommendation.confidence} confidence
                   </span>
                 </div>
@@ -701,7 +701,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               {intakeQuestions.map((question, index) => (
                 <label key={question} className="flex items-start gap-3 rounded-lg border border-[#E6DFD5] bg-white p-4 text-sm text-[#4D4D4D]">
                   <input
-                    className="mt-0.5 h-5 w-5 shrink-0 accent-[#3F5249]"
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-[#8F5B67]"
                     type="checkbox"
                     checked={intake[index]}
                     onChange={(event) =>
@@ -766,7 +766,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
           >
             <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4">
               <p className="flex items-center gap-2 text-sm font-semibold text-[#1F1F1F]">
-                <ShieldCheck className="h-4 w-4 text-[#3F5249]" />
+                <ShieldCheck className="h-4 w-4 text-[#8F5B67]" />
                 {isConsultation ? "Secure payment via PayMongo" : "Doctor review before payment"}
               </p>
               <p className="mt-2 text-sm leading-6 text-[#595550]">
@@ -781,7 +781,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                 {consentItems.map((item, index) => (
                   <label key={item} className="flex items-start gap-3 text-sm text-[#4D4D4D]">
                     <input
-                      className="mt-0.5 h-5 w-5 shrink-0 accent-[#3F5249]"
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-[#8F5B67]"
                       type="checkbox"
                       checked={consents[index]}
                       onChange={(event) =>
@@ -1098,7 +1098,7 @@ export function DoctorChat() {
       <aside className="border-b border-[#E6DFD5] bg-[#FAF8F4] p-4 lg:border-b-0 lg:border-r">
         <p className="eyebrow">Messages</p>
         <div className="mt-4 grid gap-3">
-          <div className="rounded-lg border border-[#A8B8A1] bg-white p-4">
+          <div className="rounded-lg border border-[#CAA6AD] bg-white p-4">
             <p className="font-semibold text-[#1F1F1F]">Your conversation</p>
             <p className="mt-1 text-xs text-[#595550]">
               Private channel with the BetterSelf medical team
@@ -1141,7 +1141,7 @@ export function DoctorChat() {
                 message.sender === "patient"
                   ? "ml-auto bg-[#1F1F1F] text-white"
                   : message.sender === "doctor"
-                    ? "bg-[#EEF5F5] text-[#1F1F1F]"
+                    ? "bg-[#F6EDEA] text-[#1F1F1F]"
                     : "mx-auto bg-[#F1ECE4] text-[#595550]"
               }`}
             >
@@ -1207,7 +1207,7 @@ export function LoginRegisterPreview() {
           </Link>
         </div>
       </section>
-      <section className="card bg-[#EEF5F5] p-7">
+      <section className="card bg-[#F6EDEA] p-7">
         <p className="eyebrow">Account structure</p>
         <div className="mt-5 grid gap-4">
           {[
@@ -1218,7 +1218,7 @@ export function LoginRegisterPreview() {
             "Doctor-patient messages and photo uploads",
           ].map((item) => (
             <div key={item} className="flex gap-3 text-sm text-[#4D4D4D]">
-              <Check className="mt-0.5 h-4 w-4 text-[#4F5B55]" />
+              <Check className="mt-0.5 h-4 w-4 text-[#8F5B67]" />
               <span>{item}</span>
             </div>
           ))}
@@ -1243,7 +1243,7 @@ export function ConfirmationSummary() {
           [Check, "Preparation", "Complete intake and avoid active skin irritation."],
         ].map(([Icon, label, value]) => (
           <div key={label as string} className="rounded-lg border border-[#E6DFD5] p-4">
-            <Icon className="h-5 w-5 text-[#4F5B55]" />
+            <Icon className="h-5 w-5 text-[#8F5B67]" />
             <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
               {label as string}
             </p>

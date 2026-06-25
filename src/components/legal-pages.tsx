@@ -38,7 +38,7 @@ function LegalDoc({
           <div className="mt-6 grid gap-8">{children}</div>
           <p className="mt-10 text-sm leading-6 text-[#595550]">
             Questions about this document? Visit our{" "}
-            <Link className="font-semibold text-[#2F3D36] underline" href="/contact">
+            <Link className="font-semibold text-[#6E444E] underline" href="/contact">
               contact page
             </Link>
             .

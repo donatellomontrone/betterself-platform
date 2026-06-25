@@ -548,7 +548,7 @@ export function DashboardPage({
                 </>
               )}
             </section>
-            <section id="aftercare" className="card bg-[#EEF5F5] p-6">
+            <section id="aftercare" className="card bg-[#F6EDEA] p-6">
               <p className="eyebrow">Aftercare</p>
               {hasCompleted ? (
                 <>
@@ -840,7 +840,7 @@ function AdminSidebar({
         {items.map(([label, href, count]) => (
           <a
             key={label}
-            className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-bold text-[#1F1F1F] hover:bg-[#EEF5F5]"
+            className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-bold text-[#1F1F1F] hover:bg-[#F6EDEA]"
             href={href}
           >
             <span>{label}</span>
@@ -850,7 +850,7 @@ function AdminSidebar({
           </a>
         ))}
       </nav>
-      <div className="mt-5 rounded-lg bg-[#EEF5F5] p-3 text-xs leading-5 text-[#566060]">
+      <div className="mt-5 rounded-lg bg-[#F6EDEA] p-3 text-xs leading-5 text-[#6E565A]">
         Flow: review call first, mark booking confirmed, then patient payment opens in dashboard.
       </div>
     </aside>
@@ -1397,7 +1397,7 @@ export function AdminPage({
                               </ul>
                             </div>
                           ) : (
-                            <p className="mt-3 rounded-lg bg-[#EEF5F5] p-4 text-sm text-[#566060]">
+                            <p className="mt-3 rounded-lg bg-[#F6EDEA] p-4 text-sm text-[#6E565A]">
                               No medical flags were submitted for this booking.
                             </p>
                           )}
@@ -1705,7 +1705,7 @@ export function ContactPage() {
               <div className="grid gap-1">
                 <p className="eyebrow">Email us</p>
                 <a
-                  className="text-lg font-semibold text-[#1F1F1F] underline decoration-[#A8B8A1] underline-offset-4"
+                  className="text-lg font-semibold text-[#1F1F1F] underline decoration-[#CAA6AD] underline-offset-4"
                   href={`mailto:${SUPPORT_EMAIL}`}
                 >
                   {SUPPORT_EMAIL}
@@ -1726,7 +1726,7 @@ export function ContactPage() {
                 <div className="grid gap-1">
                   <p className="eyebrow">WhatsApp</p>
                   <a
-                    className="text-lg font-semibold text-[#1F1F1F] underline decoration-[#A8B8A1] underline-offset-4"
+                    className="text-lg font-semibold text-[#1F1F1F] underline decoration-[#CAA6AD] underline-offset-4"
                     href={SUPPORT_WHATSAPP}
                     target="_blank"
                     rel="noreferrer"
@@ -1806,7 +1806,7 @@ function HowItWorksSection() {
         <div className="mt-8 grid gap-4 md:grid-cols-4">
           {howItWorksSteps.map((step, index) => (
             <article key={step.title} className="card p-5">
-              <step.icon className="h-5 w-5 text-[#4F5B55]" />
+              <step.icon className="h-5 w-5 text-[#8F5B67]" />
               <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
                 0{index + 1}
               </p>
@@ -1876,12 +1876,12 @@ function WhyBetterSelfSection() {
   return (
     <section className="px-5 py-14 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-lg border border-[#E6DFD5] bg-[#DDE8E8] p-8">
-          <Stethoscope className="h-8 w-8 text-[#4F5B55]" />
+        <div className="rounded-lg border border-[#E6DFD5] bg-[#ECDCDE] p-8">
+          <Stethoscope className="h-8 w-8 text-[#8F5B67]" />
           <h2 className="mt-8 font-serif text-5xl leading-tight text-[#1F1F1F]">
             Private care, medically guided.
           </h2>
-          <p className="mt-5 text-base leading-7 text-[#566060]">
+          <p className="mt-5 text-base leading-7 text-[#6E565A]">
             BetterSelf brings selected aesthetic treatments to your home through
             a structured, doctor-led process.
           </p>
@@ -1889,7 +1889,7 @@ function WhyBetterSelfSection() {
         <div className="grid gap-4 sm:grid-cols-2">
           {pillars.map(([title, text]) => (
             <article key={title} className="card p-5">
-              <Check className="h-5 w-5 text-[#4F5B55]" />
+              <Check className="h-5 w-5 text-[#8F5B67]" />
               <h3 className="mt-5 font-serif text-3xl text-[#1F1F1F]">{title}</h3>
               <p className="mt-3 text-sm leading-6 text-[#595550]">{text}</p>
             </article>

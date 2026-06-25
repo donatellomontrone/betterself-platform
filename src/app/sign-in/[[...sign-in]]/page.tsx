@@ -32,7 +32,7 @@ export default function SignInPage() {
         fallbackRedirectUrl="/dashboard"
         appearance={{
           variables: {
-            colorPrimary: "#4F5B55",
+            colorPrimary: "#8F5B67",
             borderRadius: "8px",
           },
         }}

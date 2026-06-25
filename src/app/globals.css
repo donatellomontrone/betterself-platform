@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf8f4;
+  --background: #faf6f1;
   --foreground: #1f1f1f;
-  /* Confident premium accent (deep sage) used for focus, links, active states. */
-  --accent: #3f5249;
-  --accent-strong: #2f3d36;
-  --accent-weak: #e9efea;
+  /* Feminine-premium accent (dusty rose) used for focus, links, active states. */
+  --accent: #8f5b67;
+  --accent-strong: #6e444e;
+  --accent-weak: #f4e8ea;
   /* Readable muted text (darkened from the old washed-out greys). */
   --muted: #4a4641;
   --muted-soft: #5c574f;
@@ -76,12 +76,12 @@ a {
 .btn-primary {
   background: var(--accent);
   color: #ffffff;
-  box-shadow: 0 1px 2px rgb(47 61 54 / 0.18), 0 8px 20px rgb(47 61 54 / 0.16);
+  box-shadow: 0 1px 2px rgb(110 68 78 / 0.18), 0 8px 20px rgb(110 68 78 / 0.16);
 }
 
 .btn-primary:hover {
   background: var(--accent-strong);
-  box-shadow: 0 2px 4px rgb(47 61 54 / 0.2), 0 12px 26px rgb(47 61 54 / 0.22);
+  box-shadow: 0 2px 4px rgb(110 68 78 / 0.2), 0 12px 26px rgb(110 68 78 / 0.22);
 }
 
 .btn-secondary {
@@ -127,7 +127,7 @@ a {
 
 .field:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgb(63 82 73 / 0.18);
+  box-shadow: 0 0 0 3px rgb(143 91 103 / 0.18);
 }
 
 .eyebrow {

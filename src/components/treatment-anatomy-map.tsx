@@ -204,7 +204,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                       key={view}
                       type="button"
                       className={`rounded-md px-4 py-2 transition ${
-                        activeView === view ? "bg-[#3F5249] text-white" : "text-[#4D4D4D] hover:bg-[#EEF5F5]"
+                        activeView === view ? "bg-[#8F5B67] text-white" : "text-[#4D4D4D] hover:bg-[#F6EDEA]"
                       }`}
                       onClick={() => chooseView(view)}
                     >
@@ -216,7 +216,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
 
               <div className="mt-6 grid gap-5 md:grid-cols-[0.95fr_1fr] md:items-center">
                 <div className="relative min-h-[520px] overflow-hidden rounded-lg border border-[#E6DFD5] bg-gradient-to-b from-white to-[#F1ECE4] p-4">
-                  <div className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-[#3F5249] shadow-sm">
+                  <div className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-[#8F5B67] shadow-sm">
                     <MousePointer2 className="h-3.5 w-3.5" />
                     Tap a point
                   </div>
@@ -238,20 +238,20 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                           type="button"
                           aria-label={`Show treatments for ${zone.label}`}
                           aria-pressed={isActive}
-                          className="absolute z-20 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3F5249]/20"
+                          className="absolute z-20 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#8F5B67]/20"
                           style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
                           onClick={() => setActiveZoneId(zone.id)}
                         >
                           <span
                             className={`grid place-items-center rounded-full border-2 border-white shadow-md transition ${
                               isActive
-                                ? "h-6 w-6 bg-[#3F5249] ring-2 ring-[#3F5249]/25"
-                                : "h-4 w-4 bg-white/90 ring-1 ring-[#CFE0DF] hover:bg-[#EEF5F5]"
+                                ? "h-6 w-6 bg-[#8F5B67] ring-2 ring-[#8F5B67]/25"
+                                : "h-4 w-4 bg-white/90 ring-1 ring-[#CFE0DF] hover:bg-[#F6EDEA]"
                             }`}
                           >
                             <span
                               className={`rounded-full ${
-                                isActive ? "h-1.5 w-1.5 bg-white" : "h-1.5 w-1.5 bg-[#3F5249]"
+                                isActive ? "h-1.5 w-1.5 bg-white" : "h-1.5 w-1.5 bg-[#8F5B67]"
                               }`}
                             />
                           </span>
@@ -271,12 +271,12 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                         type="button"
                         className={`rounded-lg border p-4 text-left transition ${
                           isActive
-                            ? "border-[#3F5249] bg-[#3F5249] text-white"
-                            : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#3F5249]"
+                            ? "border-[#8F5B67] bg-[#8F5B67] text-white"
+                            : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"
                         }`}
                         onClick={() => setActiveZoneId(zone.id)}
                       >
-                        <span className={isActive ? "text-xs font-bold uppercase tracking-[0.18em] text-white/72" : "text-xs font-bold uppercase tracking-[0.18em] text-[#3F5249]"}>
+                        <span className={isActive ? "text-xs font-bold uppercase tracking-[0.18em] text-white/72" : "text-xs font-bold uppercase tracking-[0.18em] text-[#8F5B67]"}>
                           {zone.tag}
                         </span>
                         <span className="mt-2 block font-serif text-2xl leading-tight">
@@ -300,14 +300,14 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                     {activeZone.description}
                   </p>
                 </div>
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#EEF5F5] text-[#3F5249]">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#F6EDEA] text-[#8F5B67]">
                   <Sparkles className="h-5 w-5" />
                 </span>
               </div>
 
-              <div className="mt-5 rounded-lg border border-[#DDE8E8] bg-[#EEF5F5] p-4">
-                <div className="flex gap-3 text-sm leading-6 text-[#566060]">
-                  <BadgeInfo className="mt-0.5 h-4 w-4 shrink-0 text-[#3F5249]" />
+              <div className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-4">
+                <div className="flex gap-3 text-sm leading-6 text-[#6E565A]">
+                  <BadgeInfo className="mt-0.5 h-4 w-4 shrink-0 text-[#8F5B67]" />
                   <p>
                     Area matches are a guide only. Injectable and procedural treatments still require medical intake and doctor assessment.
                   </p>
@@ -322,7 +322,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                         <p className="font-serif text-2xl leading-tight text-[#1F1F1F]">
                           {treatment.name}
                         </p>
-                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#3F5249]">
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#8F5B67]">
                           {treatment.category}
                         </p>
                       </div>
