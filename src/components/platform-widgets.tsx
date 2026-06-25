@@ -19,7 +19,6 @@ import {
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   consultationService,
-  formatPeso,
   getTreatmentById,
   treatments,
 } from "@/lib/treatments";
@@ -177,7 +176,6 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
   const progress = ((step + 1) / 5) * 100;
   const scheduleStatus = scheduleConfirmed ? "Calendly appointment selected" : "Not scheduled yet";
   const requiresAddress = isDirectTreatment;
-  const total = selectedService.price;
   const allConsented = consents.every(Boolean);
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
   const phoneValid = customer.phone.replace(/[^\d+]/g, "").length >= 10;
@@ -355,9 +353,11 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
         <div className="mb-5 flex items-center justify-between gap-3 rounded-lg bg-[#FAF8F4] px-4 py-3 lg:hidden">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5C574F]">
-              Estimated total
+              {isConsultation ? "Consultation fee" : "Starting price"}
             </p>
-            <p className="font-serif text-2xl text-[#1F1F1F]">{formatPeso(total)}</p>
+            <p className="font-serif text-2xl text-[#1F1F1F]">
+              {bookingIntent ? selectedService.priceLabel : "—"}
+            </p>
           </div>
           <p className="max-w-[55%] text-right text-xs text-[#595550]">
             {bookingIntent ? selectedService.name : "Choose booking path"}
@@ -827,11 +827,17 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
           </div>
           <div className="mt-5 rounded-lg bg-[#FAF8F4] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
-              Estimated total
+              {isConsultation ? "Consultation fee" : "Starting price"}
             </p>
             <p className="mt-1 font-serif text-3xl text-[#1F1F1F]">
-              {formatPeso(total)}
+              {bookingIntent ? selectedService.priceLabel : "—"}
             </p>
+            {!isConsultation && bookingIntent ? (
+              <p className="mt-2 text-xs leading-5 text-[#595550]">
+                Final amount depends on the units/areas the doctor assesses. No
+                charge until your booking is confirmed.
+              </p>
+            ) : null}
           </div>
         </section>
         <Notice title="Booking disclaimer">
