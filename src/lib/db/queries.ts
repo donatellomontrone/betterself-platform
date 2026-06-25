@@ -496,9 +496,11 @@ export async function updatePatientAdminProfile(input: {
   const sql = getSql();
   await sql`
     update public.user_profiles
-    set phone = ${input.phone ?? null}
+    set phone = coalesce(${input.phone ?? null}, phone)
     where id = ${input.userId}
   `;
+  // coalesce(excluded.*, existing) so saving a partial admin form never wipes
+  // previously stored fields (esp. allergies/medications/contraindications) with blanks.
   await sql`
     insert into public.patient_profiles
       (user_id, address, emergency_contact, allergies, medications, contraindications,
@@ -508,11 +510,11 @@ export async function updatePatientAdminProfile(input: {
        ${input.allergies ?? null}, ${input.medications ?? null},
        ${input.contraindications ?? null}, 'admin_reviewed', now())
     on conflict (user_id) do update set
-      address = excluded.address,
-      emergency_contact = excluded.emergency_contact,
-      allergies = excluded.allergies,
-      medications = excluded.medications,
-      contraindications = excluded.contraindications,
+      address = coalesce(excluded.address, public.patient_profiles.address),
+      emergency_contact = coalesce(excluded.emergency_contact, public.patient_profiles.emergency_contact),
+      allergies = coalesce(excluded.allergies, public.patient_profiles.allergies),
+      medications = coalesce(excluded.medications, public.patient_profiles.medications),
+      contraindications = coalesce(excluded.contraindications, public.patient_profiles.contraindications),
       profile_completion_status = excluded.profile_completion_status,
       updated_at = now()
   `;

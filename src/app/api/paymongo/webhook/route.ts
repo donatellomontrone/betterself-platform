@@ -14,14 +14,37 @@ function safeCompare(left: string, right: string) {
   return timingSafeEqual(leftBuffer, rightBuffer);
 }
 
-function hasValidSignature(rawBody: string, secret: string, signatureHeader: string) {
-  const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
-  const candidates = signatureHeader
-    .split(",")
-    .map((part) => part.trim())
-    .map((part) => (part.includes("=") ? part.split("=").at(-1) ?? "" : part));
+function parseSignatureHeader(header: string) {
+  const parts: Record<string, string> = {};
+  for (const segment of header.split(",")) {
+    const [key, ...rest] = segment.trim().split("=");
+    if (key && rest.length) {
+      parts[key] = rest.join("=");
+    }
+  }
+  return parts;
+}
 
-  return candidates.some((candidate) => safeCompare(expected, candidate));
+// PayMongo signs `${timestamp}.${rawBody}` with the webhook secret and sends it as
+// `Paymongo-Signature: t=<ts>,te=<test sig>,li=<live sig>`. We must hash the
+// timestamped payload (not the raw body alone) and reject stale events (replay).
+function hasValidSignature(rawBody: string, secret: string, signatureHeader: string) {
+  const parts = parseSignatureHeader(signatureHeader);
+  const timestamp = parts.t;
+  const eventSeconds = Number(timestamp);
+  if (!timestamp || !Number.isFinite(eventSeconds)) {
+    return false;
+  }
+
+  const ageSeconds = Math.abs(Date.now() / 1000 - eventSeconds);
+  if (ageSeconds > 5 * 60) {
+    return false;
+  }
+
+  const expected = createHmac("sha256", secret).update(`${timestamp}.${rawBody}`).digest("hex");
+  return [parts.te, parts.li]
+    .filter((value): value is string => Boolean(value))
+    .some((candidate) => safeCompare(expected, candidate));
 }
 
 export async function POST(request: NextRequest) {
@@ -31,10 +54,14 @@ export async function POST(request: NextRequest) {
     request.headers.get("paymongo-signature") ??
     request.headers.get("x-paymongo-signature");
 
-  if (webhookSecret) {
-    if (!signature || !hasValidSignature(rawBody, webhookSecret, signature)) {
-      return NextResponse.json({ message: "Invalid webhook signature." }, { status: 401 });
-    }
+  // Fail closed: never act on a payment event without a configured, valid signature.
+  // (Demo mode keys off PAYMONGO_SECRET_KEY and never reaches this webhook.)
+  if (!webhookSecret) {
+    console.error("[paymongo webhook] PAYMONGO_WEBHOOK_SECRET is not set — refusing to process.");
+    return NextResponse.json({ message: "Webhook is not configured." }, { status: 503 });
+  }
+  if (!signature || !hasValidSignature(rawBody, webhookSecret, signature)) {
+    return NextResponse.json({ message: "Invalid webhook signature." }, { status: 401 });
   }
 
   const event = JSON.parse(rawBody) as {
