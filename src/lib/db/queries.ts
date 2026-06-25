@@ -403,18 +403,26 @@ export async function getAllBookings(): Promise<AdminBookingView[]> {
   return rows;
 }
 
-/** Update a booking's review status (admin/doctor action). */
+/**
+ * Update a booking's review status (admin/doctor action). Uses id::text so a
+ * malformed id can't throw "invalid input syntax for type uuid", and refuses to
+ * move a patient-cancelled booking back to an active state (which would re-expose
+ * the "Pay now" button on a dead booking).
+ */
 export async function updateBookingStatus(bookingId: string, status: BookingStatus) {
   const sql = getSql();
   await sql`
-    update public.bookings set status = ${status}, updated_at = now() where id = ${bookingId}
+    update public.bookings
+    set status = ${status}, updated_at = now()
+    where id::text = ${bookingId}
+      and status <> 'cancelled'
   `;
 }
 
 export async function updateBookingNotes(bookingId: string, notes: string | null) {
   const sql = getSql();
   await sql`
-    update public.bookings set notes = ${notes}, updated_at = now() where id = ${bookingId}
+    update public.bookings set notes = ${notes}, updated_at = now() where id::text = ${bookingId}
   `;
 }
 
@@ -426,14 +434,14 @@ export async function updateBookingPaymentStatus(
   await sql`
     update public.bookings
     set payment_status = ${status}, updated_at = now()
-    where id = ${bookingId}
+    where id::text = ${bookingId}
   `;
   await sql`
     update public.payments
     set status = ${status}
     where id = (
       select id from public.payments
-      where booking_id = ${bookingId}
+      where booking_id::text = ${bookingId}
       order by created_at desc
       limit 1
     )
@@ -453,7 +461,7 @@ export async function updateMedicalIntakeReview(
         updated_at = now()
     where id = (
       select id from public.medical_intakes
-      where booking_id = ${bookingId}
+      where booking_id::text = ${bookingId}
       order by created_at desc
       limit 1
     )
