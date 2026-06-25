@@ -37,7 +37,7 @@ import {
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
 import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
-import { SUPPORT_EMAIL } from "@/lib/contact";
+import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
 import type { Json } from "@/lib/db/types";
 import {
   updateBookingNotesAction,
@@ -1701,18 +1701,44 @@ export function ContactPage() {
               Choose the treatment you want, complete medical intake, and keep
               the doctor involved before and after your home appointment.
             </p>
-            <div className="mt-6 grid gap-1">
-              <p className="eyebrow">Email us</p>
-              <a
-                className="font-serif text-2xl text-[#1F1F1F] underline decoration-[#A8B8A1] underline-offset-4"
-                href={`mailto:${SUPPORT_EMAIL}`}
-              >
-                {SUPPORT_EMAIL}
-              </a>
-              <p className="text-sm text-[#595550]">
-                We typically reply within one business day.
-              </p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-1">
+                <p className="eyebrow">Email us</p>
+                <a
+                  className="text-lg font-semibold text-[#1F1F1F] underline decoration-[#A8B8A1] underline-offset-4"
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                >
+                  {SUPPORT_EMAIL}
+                </a>
+              </div>
+              {SUPPORT_PHONE ? (
+                <div className="grid gap-1">
+                  <p className="eyebrow">Call or text</p>
+                  <a
+                    className="text-lg font-semibold text-[#1F1F1F]"
+                    href={`tel:${SUPPORT_PHONE.replace(/\s+/g, "")}`}
+                  >
+                    {SUPPORT_PHONE}
+                  </a>
+                </div>
+              ) : null}
+              {SUPPORT_WHATSAPP ? (
+                <div className="grid gap-1">
+                  <p className="eyebrow">WhatsApp</p>
+                  <a
+                    className="text-lg font-semibold text-[#1F1F1F] underline decoration-[#A8B8A1] underline-offset-4"
+                    href={SUPPORT_WHATSAPP}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Chat on WhatsApp
+                  </a>
+                </div>
+              ) : null}
             </div>
+            <p className="mt-3 text-sm text-[#595550]">
+              We typically reply within one business day.
+            </p>
             <Link className="btn btn-primary mt-8" href="/booking">
               Book Treatment
             </Link>

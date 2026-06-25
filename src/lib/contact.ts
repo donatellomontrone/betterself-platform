@@ -5,5 +5,7 @@
  */
 export const SUPPORT_EMAIL =
   process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() || "dr.swab.manila@gmail.com";
-export const SUPPORT_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE?.trim() || "";
-export const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_URL?.trim() || "";
+export const SUPPORT_PHONE =
+  process.env.NEXT_PUBLIC_SUPPORT_PHONE?.trim() || "+63 917 548 3579";
+export const SUPPORT_WHATSAPP =
+  process.env.NEXT_PUBLIC_WHATSAPP_URL?.trim() || "https://wa.me/639175483579";
