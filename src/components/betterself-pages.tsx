@@ -232,7 +232,7 @@ const howItWorksSteps = [
 const faqs = [
   [
     "Is BetterSelf a clinic?",
-    "BetterSelf provides doctor-led aesthetic care through private appointments. Some treatments may be available at home, while others may require clinic-based care depending on doctor assessment.",
+    "No — BetterSelf is a doctor-led home-visit service. Most treatments are done at your home. A few machine-based treatments are performed at one of our partner clinics, only in specific cases when that's clinically safer. The doctor will let you know if that applies to you.",
   ],
   [
     "Who performs the treatment?",
@@ -1755,10 +1755,12 @@ export function ContactPage() {
                 "Nearby Metro Manila areas subject to availability",
               ]}
             />
-            <Notice title="Support">
-              Once you&apos;ve booked, you can message the doctor anytime from your
-              patient dashboard.
-            </Notice>
+            <div className="mt-6 border-t border-[#E6DFD5] pt-6">
+              <Notice title="Support">
+                Once you&apos;ve booked, you can message the doctor anytime from your
+                patient dashboard.
+              </Notice>
+            </div>
           </section>
         </div>
       </section>

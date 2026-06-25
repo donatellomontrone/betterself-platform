@@ -736,7 +736,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
                 <p className="text-sm font-semibold text-[#1F1F1F]">Pay first, then pick your time</p>
                 <p className="mt-2 text-sm leading-6 text-[#595550]">
-                  Your ₱1,500 consultation is booked once payment clears. You&apos;ll get the
+                  Your ₱800 consultation is booked once payment clears. You&apos;ll get the
                   scheduling link to choose your call time immediately after paying.
                 </p>
               </div>
@@ -760,7 +760,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
             title={isConsultation ? "Review & pay for your consultation" : "Review treatment request"}
             text={
               isConsultation
-                ? "Review your details, then pay the ₱1,500 consultation fee to book your call."
+                ? "Review your details, then pay the ₱800 consultation fee to book your call."
                 : "Submit the treatment request. The doctor reviews you first, then you pay from the dashboard to confirm the service."
             }
           >
@@ -771,7 +771,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               </p>
               <p className="mt-2 text-sm leading-6 text-[#595550]">
                 {isConsultation
-                  ? "You'll pay the ₱1,500 consultation fee now via QR Ph. Your call is booked as soon as payment clears, and you'll pick your time right after."
+                  ? "You'll pay the ₱800 consultation fee now via QR Ph. Your call is booked as soon as payment clears, and you'll pick your time right after."
                   : "You will not pay at this step. After the doctor call, the dashboard will show Pay now when the service is ready to confirm."}
               </p>
             </div>

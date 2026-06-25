@@ -611,8 +611,8 @@ export const consultationService: Treatment = {
   description:
     "A paid doctor consultation for patients who want medical guidance before choosing a treatment.",
   duration: "30 min",
-  price: 1500,
-  priceLabel: "₱1,500",
+  price: 800,
+  priceLabel: "₱800",
   doctor: "BetterSelf Medical Doctor",
   concerns: ["Treatment planning", "Medical suitability", "Personalized advice"],
   mayHelpWith: [
