@@ -23,6 +23,7 @@ import {
   treatments,
 } from "@/lib/treatments";
 import { Notice, StatusBadge } from "@/components/site-shell";
+import { useUser } from "@clerk/nextjs";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 
 const directTreatmentAppointment = "Doctor review call";
@@ -121,6 +122,7 @@ declare global {
 }
 
 export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
+  const { isLoaded, isSignedIn } = useUser();
   const hasInitialTreatment = Boolean(
     initialTreatmentId && treatments.some((treatment) => treatment.id === initialTreatmentId),
   );
@@ -182,6 +184,11 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
 
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }));
+    // Clear the bottom error banner as soon as the patient starts correcting.
+    if (checkoutState === "error") {
+      setCheckoutState("idle");
+      setCheckoutNote("");
+    }
   }
 
   function resetScheduleSelection() {
@@ -348,7 +355,19 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+    <>
+      {isLoaded && !isSignedIn ? (
+        <div className="mb-6">
+          <Notice title="Sign in to submit your request">
+            You can fill this in, but you&apos;ll need a free BetterSelf account to send it —{" "}
+            <Link className="font-semibold text-[#2F3D36] underline" href="/sign-in?redirect_url=/booking">
+              sign in or create one
+            </Link>{" "}
+            first so you don&apos;t lose your progress.
+          </Notice>
+        </div>
+      ) : null}
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section className="card p-5 md:p-7">
         <div className="mb-5 flex items-center justify-between gap-3 rounded-lg bg-[#FAF8F4] px-4 py-3 lg:hidden">
           <div>
@@ -847,7 +866,8 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
             : "Your treatment request requires doctor review before payment and home-visit confirmation. Suitability, treatment plan, and expected outcomes depend on individual medical assessment."}
         </Notice>
       </aside>
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -117,19 +117,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await ensureUserProfile({
-    id: userId,
-    fullName,
-    email,
-    phone: body.customer?.phone ?? clerkPhone ?? null,
-  });
-  await upsertPatientProfile({
-    userId,
-    address: (body.location?.trim() || body.customer?.address) ?? null,
-    emergencyContact: body.customer?.emergencyContact ?? null,
-  });
+  try {
+    await ensureUserProfile({
+      id: userId,
+      fullName,
+      email,
+      phone: body.customer?.phone ?? clerkPhone ?? null,
+    });
+    await upsertPatientProfile({
+      userId,
+      address: (body.location?.trim() || body.customer?.address) ?? null,
+      emergencyContact: body.customer?.emergencyContact ?? null,
+    });
 
-  const notes = [
+    const notes = [
     `Booking flow: ${isConsultation ? "consultation call" : "doctor review call before payment"}`,
     "Payment is collected from the patient dashboard after doctor review/confirmation.",
     body.calendlyEventUri
@@ -171,12 +172,19 @@ export async function POST(request: NextRequest) {
     consentConfirmed: true,
   });
 
-  return NextResponse.json(
-    {
-      bookingId: booking.id,
-      dashboardUrl: "/dashboard?booking=submitted",
-      message: "Booking request submitted. The doctor will review it before payment.",
-    },
-    { status: 201 },
-  );
+    return NextResponse.json(
+      {
+        bookingId: booking.id,
+        dashboardUrl: "/dashboard?booking=submitted",
+        message: "Booking request submitted. The doctor will review it before payment.",
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error("[bookings] failed to create booking request:", error);
+    return NextResponse.json(
+      { message: "We couldn't submit your request just now. Please try again in a moment." },
+      { status: 500 },
+    );
+  }
 }
