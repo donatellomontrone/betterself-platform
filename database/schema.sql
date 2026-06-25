@@ -147,8 +147,8 @@ values
     'Others',
     'A paid doctor consultation for patients who want medical guidance before choosing a treatment.',
     '30 min',
-    1500,
-    '₱1,500',
+    800,
+    '₱800',
     false,
     array[
       'Prepare your main concerns and any questions for the doctor.',
