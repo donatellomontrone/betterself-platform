@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Treatment } from "@/lib/treatments";
 import { HeaderAuthControls } from "@/components/header-auth";
+import { MobileMenu } from "@/components/mobile-menu";
 import { MobileBottomCta } from "@/components/mobile-cta";
 import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
 
@@ -53,28 +54,15 @@ export function Header() {
             </p>
           </div>
         </Link>
-        <nav className="hidden items-center gap-7 text-sm font-medium text-[#4D4D4D] lg:flex">
+        <nav className="hidden items-center gap-7 text-sm font-medium text-[#4D4D4D] min-[900px]:flex">
           {primaryNav.map((item) => (
             <Link key={item.href} className="transition hover:text-[#1F1F1F]" href={item.href}>
               {item.label}
             </Link>
           ))}
         </nav>
-        <details className="relative lg:hidden">
-          <summary className="btn btn-secondary list-none cursor-pointer">Menu</summary>
-          <div className="absolute right-0 top-12 z-40 grid w-60 gap-2 rounded-lg border border-[#E6DFD5] bg-white p-3 shadow-xl">
-            {primaryNav.map((item) => (
-              <Link key={item.href} className="rounded-lg px-3 py-2 text-sm font-semibold text-[#4D4D4D]" href={item.href}>
-                {item.label}
-              </Link>
-            ))}
-            <HeaderAuthControls variant="mobile" />
-            <Link className="btn btn-primary mt-1 justify-center" href="/booking">
-              Book Treatment
-            </Link>
-          </div>
-        </details>
-        <div className="hidden items-center gap-3 lg:flex">
+        <MobileMenu items={primaryNav} />
+        <div className="hidden items-center gap-3 min-[900px]:flex">
           <HeaderAuthControls />
           <Link className="btn btn-primary" href="/booking">
             Book Treatment
@@ -230,18 +218,23 @@ export function SectionHeading({
   title,
   text,
   align = "left",
+  headingLevel = 2,
 }: {
   eyebrow?: string;
   title: string;
   text?: string;
   align?: "left" | "center";
+  headingLevel?: 1 | 2;
 }) {
+  const headingClass = "mt-3 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl";
   return (
     <div className={align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-3xl"}>
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      <h2 className="mt-3 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">
-        {title}
-      </h2>
+      {headingLevel === 1 ? (
+        <h1 className={headingClass}>{title}</h1>
+      ) : (
+        <h2 className={headingClass}>{title}</h2>
+      )}
       {text ? <p className="mt-4 text-base leading-7 text-[#595550]">{text}</p> : null}
     </div>
   );

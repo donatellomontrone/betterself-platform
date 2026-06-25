@@ -17,7 +17,7 @@ import {
   UserRound,
   WandSparkles,
 } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   consultationService,
   getTreatmentById,
@@ -277,7 +277,6 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
   }
 
   async function submitBookingRequest() {
-    setCheckoutState("loading");
     setCheckoutNote("");
 
     if (!isCustomerReady()) {
@@ -298,13 +297,8 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
       return;
     }
 
-    if (!allConsented) {
-      setCheckoutState("error");
-      setCheckoutNote("Please tick all the consent boxes before submitting.");
-      return;
-    }
-
     try {
+      setCheckoutState("loading");
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -406,7 +400,9 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               Step {step + 1} of 5 · {stepLabels[step]}
             </span>
             <span className="font-medium normal-case tracking-normal text-[#5C574F]">
-              Payment only after doctor confirmation
+              {isConsultation
+                ? "Consultation is paid up front"
+                : "Payment only after doctor confirmation"}
             </span>
           </div>
         </div>
@@ -826,7 +822,11 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
           <button
             className="btn btn-secondary"
             disabled={step === 0}
-            onClick={() => setStep((current) => Math.max(0, current - 1))}
+            onClick={() => {
+              setCheckoutState("idle");
+              setCheckoutNote("");
+              setStep((current) => Math.max(0, current - 1));
+            }}
           >
             <ArrowLeft className="h-4 w-4" />
             Previous
@@ -861,8 +861,14 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                 requiresAddress ? location || "Add your address" : "Online consultation"
               }
             />
-            <SummaryRow label="Calendar" value={scheduleStatus} />
-            <SummaryRow label="Payment" value="After doctor confirmation" />
+            <SummaryRow
+              label="Calendar"
+              value={isConsultation ? "Booked after payment" : scheduleStatus}
+            />
+            <SummaryRow
+              label="Payment"
+              value={isConsultation ? "Paid up front" : "After doctor confirmation"}
+            />
           </div>
           <div className="mt-5 rounded-lg bg-[#FAF8F4] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
@@ -1027,6 +1033,7 @@ function TextField({
   required?: boolean;
   error?: string;
 }) {
+  const errorId = useId();
   return (
     <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F]">
       <span>
@@ -1037,6 +1044,7 @@ function TextField({
         className="field"
         style={error ? { borderColor: "#B42318" } : undefined}
         aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
         placeholder={placeholder}
         required={required}
         type={type}
@@ -1044,7 +1052,9 @@ function TextField({
         onChange={(event) => onChange(event.target.value)}
       />
       {error ? (
-        <span className="text-xs font-medium text-[#B42318]">{error}</span>
+        <span id={errorId} className="text-xs font-medium text-[#B42318]">
+          {error}
+        </span>
       ) : null}
     </label>
   );
@@ -1151,18 +1161,22 @@ export function DoctorChat() {
           ))}
         </div>
         <form className="flex gap-3 border-t border-[#E6DFD5] p-4" onSubmit={sendMessage}>
-          <button
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-lg border border-[#E6DFD5] text-[#595550]"
-            type="button"
-            aria-label="Attach photo"
+          <a
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-lg border border-[#E6DFD5] text-[#595550] transition hover:border-[#8F5B67] hover:text-[#6E444E]"
+            href={SUPPORT_WHATSAPP || `mailto:${SUPPORT_EMAIL}`}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Send photos to the team on WhatsApp"
+            title="Photos can be sent on WhatsApp"
           >
             <Paperclip className="h-4 w-4" />
-          </button>
+          </a>
           <input
             className="field min-w-0 flex-1"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Type a message for the doctor"
+            aria-label="Type a message for the doctor"
           />
           <button className="btn btn-primary h-12" type="submit">
             <Send className="h-4 w-4" />

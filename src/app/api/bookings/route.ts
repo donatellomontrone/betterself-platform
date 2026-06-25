@@ -72,7 +72,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = (await request.json()) as BookingRequest;
+  const body = (await request.json().catch(() => null)) as BookingRequest | null;
+  if (!body) {
+    return NextResponse.json({ message: "Invalid request body." }, { status: 400 });
+  }
   const treatment = body.treatmentId ? getTreatmentById(body.treatmentId) : null;
 
   if (!treatment) {
@@ -164,13 +167,18 @@ export async function POST(request: NextRequest) {
       notes,
     });
 
-    await createPayment({
-      bookingId: booking.id,
-      patientId: userId,
-      amount: treatment.price,
-      paymentType: isConsultation ? "consultation" : "treatment",
-      transactionReference: referenceNumber,
-    });
+    // Only consultations are paid now, so only they get a payment row here. Treatments
+    // get their real payment row when the patient checks out from the dashboard
+    // (checkout/retry), avoiding a permanent NULL-reference orphan row per booking.
+    if (isConsultation) {
+      await createPayment({
+        bookingId: booking.id,
+        patientId: userId,
+        amount: treatment.price,
+        paymentType: "consultation",
+        transactionReference: referenceNumber,
+      });
+    }
 
     await createMedicalIntake({
       patientId: userId,
@@ -200,10 +208,12 @@ export async function POST(request: NextRequest) {
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
 
     if (!secretKey) {
+      // Demo mode: skip PayMongo but still land on the success page so the patient
+      // can reach the Calendly link to book the call (mirrors the real success_url).
       return NextResponse.json(
         {
           bookingId: booking.id,
-          checkoutUrl: `/checkout-preview?reference=${referenceNumber}&treatment=${treatment.id}`,
+          checkoutUrl: `/booking/success?reference=${referenceNumber}&book=call&demo=1`,
           message: "Demo checkout — add PAYMONGO_SECRET_KEY to take real consultation payments.",
         },
         { status: 201 },

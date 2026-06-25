@@ -248,7 +248,7 @@ const faqs = [
   ],
   [
     "Can I chat with the doctor?",
-    "Yes. Patients can message the doctor through the platform before or after appointments. This chat is not for emergencies.",
+    "Yes. You can reach the BetterSelf medical team before or after appointments via WhatsApp or email — that's the fastest way to get a reply. The in-app message box is for noting questions about your booking; it is not for emergencies.",
   ],
   [
     "What if I am not suitable for treatment?",
@@ -449,6 +449,7 @@ export function DashboardPage({
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <SectionHeading
+              headingLevel={1}
               eyebrow="Patient dashboard"
               title={viewerName ? `Welcome back, ${viewerName}.` : "Welcome back."}
               text="Your bookings, schedule, payments, and aftercare in one private place."
