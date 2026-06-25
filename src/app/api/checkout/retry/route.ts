@@ -8,10 +8,11 @@ import {
   updateBookingPaymentStatus,
 } from "@/lib/db/queries";
 
-// Card uses Payment Intents (re-payable); gcash/qrph use single-use sources that
-// throw "source has consumed status" if a QR is reopened after being scanned.
-// Offering card alongside QR Ph gives a reliable, retry-safe path.
-const paymentMethods = ["card", "gcash", "qrph"];
+// QR Ph only (business uses QR Ph, not cards/GCash). Each "Pay now" creates a
+// fresh single-use checkout session, so a new QR is generated every attempt.
+// "Source has consumed status" only happens if an already-scanned QR is reopened
+// — generate a new payment instead of reloading the old PayMongo page.
+const paymentMethods = ["qrph"];
 
 function dashboardRedirect(request: NextRequest, status: string) {
   return NextResponse.redirect(new URL(`/dashboard?payment=${status}`, request.url), 303);
