@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { consultationService, getTreatmentById, type Treatment } from "@/lib/treatments";
@@ -132,53 +133,140 @@ export async function POST(request: NextRequest) {
       emergencyContact: body.customer?.emergencyContact ?? null,
     });
 
+    // Consultations are paid up front (before the call is booked); treatments are
+    // requested first, reviewed by the doctor, then paid from the dashboard.
+    const referenceNumber = isConsultation
+      ? `BS-CONSULT-${Date.now()}-${randomUUID().slice(0, 8)}`
+      : null;
+
     const notes = [
-    `Booking flow: ${isConsultation ? "consultation call" : "doctor review call before payment"}`,
-    "Payment is collected from the patient dashboard after doctor review/confirmation.",
-    body.calendlyEventUri
-      ? `Calendly event: ${body.calendlyEventUri}`
-      : "Schedule NOT verified in Calendly — confirm the call with the patient.",
-    body.calendlyInviteeUri ? `Calendly invitee: ${body.calendlyInviteeUri}` : null,
-    patientConcern ? `Patient concern: ${patientConcern}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
+      isConsultation
+        ? "Consultation: paid up front; the patient books the call after payment."
+        : "Doctor review call before payment; payment is collected from the dashboard after review.",
+      body.calendlyEventUri ? `Calendly event: ${body.calendlyEventUri}` : null,
+      body.calendlyInviteeUri ? `Calendly invitee: ${body.calendlyInviteeUri}` : null,
+      patientConcern ? `Patient concern: ${patientConcern}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
-  const booking = await createBooking({
-    patientId: userId,
-    treatmentId: treatment.id,
-    appointmentType: asMetadataValue(body.appointmentType, "doctor_review_call"),
-    location: asMetadataValue(
-      body.location,
-      isConsultation ? "Online consultation" : "Metro Manila",
-    ),
-    notes,
-  });
+    const booking = await createBooking({
+      patientId: userId,
+      treatmentId: treatment.id,
+      appointmentType: asMetadataValue(
+        body.appointmentType,
+        isConsultation ? "online_consultation" : "doctor_review_call",
+      ),
+      location: asMetadataValue(
+        body.location,
+        isConsultation ? "Online consultation" : "Metro Manila",
+      ),
+      notes,
+    });
 
-  await createPayment({
-    bookingId: booking.id,
-    patientId: userId,
-    amount: treatment.price,
-    paymentType: isConsultation ? "consultation" : "treatment",
-  });
+    await createPayment({
+      bookingId: booking.id,
+      patientId: userId,
+      amount: treatment.price,
+      paymentType: isConsultation ? "consultation" : "treatment",
+      transactionReference: referenceNumber,
+    });
 
-  await createMedicalIntake({
-    patientId: userId,
-    bookingId: booking.id,
-    answers: {
-      flow: isConsultation ? "consultation_call" : "doctor_review_before_payment",
-      flagged: body.intake ?? [],
-      patientConcern: patientConcern || null,
-      consultationNotes: patientConcern || null,
-    },
-    consentConfirmed: true,
-  });
+    await createMedicalIntake({
+      patientId: userId,
+      bookingId: booking.id,
+      answers: {
+        flow: isConsultation ? "consultation_paid_upfront" : "doctor_review_before_payment",
+        flagged: body.intake ?? [],
+        patientConcern: patientConcern || null,
+      },
+      consentConfirmed: true,
+    });
+
+    // Treatment: request first, pay later from the dashboard once confirmed.
+    if (!isConsultation) {
+      return NextResponse.json(
+        {
+          bookingId: booking.id,
+          dashboardUrl: "/dashboard?booking=submitted",
+          message: "Booking request submitted. The doctor will review it before payment.",
+        },
+        { status: 201 },
+      );
+    }
+
+    // Consultation: take payment now; the call is booked after it clears.
+    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
+    const secretKey = process.env.PAYMONGO_SECRET_KEY;
+
+    if (!secretKey) {
+      return NextResponse.json(
+        {
+          bookingId: booking.id,
+          checkoutUrl: `/checkout-preview?reference=${referenceNumber}&treatment=${treatment.id}`,
+          message: "Demo checkout — add PAYMONGO_SECRET_KEY to take real consultation payments.",
+        },
+        { status: 201 },
+      );
+    }
+
+    const paymongo = await fetch("https://api.paymongo.com/v2/checkout_sessions", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": referenceNumber as string,
+      },
+      body: JSON.stringify({
+        data: {
+          attributes: {
+            description: "BetterSelf doctor consultation",
+            line_items: [
+              {
+                name: consultationService.name,
+                amount: treatment.price * 100,
+                currency: "PHP",
+                quantity: 1,
+                description: "Online doctor consultation to plan your treatment.",
+              },
+            ],
+            payment_method_types: ["qrph"],
+            success_url: `${origin}/booking/success?reference=${referenceNumber}&book=call`,
+            cancel_url: `${origin}/booking/cancelled?reference=${referenceNumber}`,
+            reference_number: referenceNumber,
+            send_email_receipt: true,
+            show_description: true,
+            show_line_items: true,
+            billing: {
+              name: fullName,
+              email,
+              phone: body.customer?.phone ?? clerkPhone ?? undefined,
+            },
+            metadata: {
+              booking_id: booking.id,
+              reference_number: referenceNumber as string,
+              booking_intent: "consultation",
+              care_model: "consultation",
+            },
+          },
+        },
+      }),
+    });
+
+    const payload = await paymongo.json();
+    if (!paymongo.ok || !payload.data?.attributes?.checkout_url) {
+      console.error("[bookings] consultation PayMongo failed:", payload);
+      return NextResponse.json(
+        { message: "We couldn't open the payment page. Please try again or contact us." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json(
       {
         bookingId: booking.id,
-        dashboardUrl: "/dashboard?booking=submitted",
-        message: "Booking request submitted. The doctor will review it before payment.",
+        checkoutUrl: payload.data.attributes.checkout_url,
+        message: "Redirecting to secure payment for your consultation.",
       },
       { status: 201 },
     );
