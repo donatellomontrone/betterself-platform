@@ -37,6 +37,7 @@ import {
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
 import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 import type { Json } from "@/lib/db/types";
 import {
   updateBookingNotesAction,
@@ -1700,6 +1701,18 @@ export function ContactPage() {
               Choose the treatment you want, complete medical intake, and keep
               the doctor involved before and after your home appointment.
             </p>
+            <div className="mt-6 grid gap-1">
+              <p className="eyebrow">Email us</p>
+              <a
+                className="font-serif text-2xl text-[#1F1F1F] underline decoration-[#A8B8A1] underline-offset-4"
+                href={`mailto:${SUPPORT_EMAIL}`}
+              >
+                {SUPPORT_EMAIL}
+              </a>
+              <p className="text-sm text-[#595550]">
+                We typically reply within one business day.
+              </p>
+            </div>
             <Link className="btn btn-primary mt-8" href="/booking">
               Book Treatment
             </Link>

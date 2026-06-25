@@ -15,6 +15,7 @@ import {
 import { Treatment } from "@/lib/treatments";
 import { HeaderAuthControls } from "@/components/header-auth";
 import { MobileBottomCta } from "@/components/mobile-cta";
+import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
 
 export const primaryNav = [
   { href: "/treatments", label: "Treatments" },
@@ -143,9 +144,9 @@ export function Footer() {
 }
 
 function FooterContact() {
-  const email = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim();
-  const phone = process.env.NEXT_PUBLIC_SUPPORT_PHONE?.trim();
-  const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_URL?.trim();
+  const email = SUPPORT_EMAIL;
+  const phone = SUPPORT_PHONE;
+  const whatsapp = SUPPORT_WHATSAPP;
   return (
     <div>
       <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#5C574F]">
