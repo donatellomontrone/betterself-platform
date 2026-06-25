@@ -774,10 +774,27 @@ function isVideoCallBooking(booking: BookingCallFields) {
   return appointment.includes("call") || appointment.includes("consultation") || location.includes("online");
 }
 
+// A confirmed booking still awaiting payment — the single source of truth for the
+// admin "Ready to pay" stat and the Payment queue (so they never disagree and
+// cancelled/refunded bookings don't linger).
+function isReadyToPay(booking: { status: string; payment_status: string }) {
+  return booking.status === "confirmed" && booking.payment_status === "pending";
+}
+
+// A joinable meeting URL — NOT a Calendly API resource URI
+// (https://api.calendly.com/scheduled_events/...), which returns JSON/401, not a call.
+function isJoinableMeetingUrl(url: string | null): url is string {
+  if (!url) return false;
+  if (/api\.calendly\.com/i.test(url)) return false;
+  return /^https?:\/\//i.test(url);
+}
+
 function getVideoCallLink(booking: BookingCallFields) {
-  const calendlyInvitee = extractNoteValue(booking.notes, "Calendly invitee");
-  const calendlyEvent = extractNoteValue(booking.notes, "Calendly event");
-  if (calendlyInvitee || calendlyEvent) return calendlyInvitee ?? calendlyEvent;
+  const stored = [
+    extractNoteValue(booking.notes, "Calendly invitee"),
+    extractNoteValue(booking.notes, "Calendly event"),
+  ].find(isJoinableMeetingUrl);
+  if (stored) return stored;
   if (isVideoCallBooking(booking) && defaultDoctorVideoCallUrl) return defaultDoctorVideoCallUrl;
   return null;
 }
@@ -926,9 +943,7 @@ export function AdminPage({
   ];
   const filteredBookings = bookings.filter((booking) => matchesAdminFilters(booking, filters));
   const uniquePatients = new Set(bookings.map((booking) => booking.patient_id)).size;
-  const paymentsReady = bookings.filter(
-    (booking) => booking.status === "confirmed" && booking.payment_status === "pending",
-  ).length;
+  const paymentsReady = bookings.filter(isReadyToPay).length;
   const confirmedBookings = bookings.filter((booking) => booking.status === "confirmed");
   const confirmedVideoCalls = confirmedBookings.filter(isVideoCallBooking);
   const confirmedHomeVisits = confirmedBookings.filter((booking) => !isVideoCallBooking(booking));
@@ -1139,9 +1154,9 @@ export function AdminPage({
 
             <AdminPanel id="payments" eyebrow="Payments" title="Payment queue">
               <div className="grid gap-3">
-                {bookings.filter((booking) => booking.payment_status !== "paid").length > 0 ? (
+                {bookings.filter(isReadyToPay).length > 0 ? (
                   bookings
-                    .filter((booking) => booking.payment_status !== "paid")
+                    .filter(isReadyToPay)
                     .slice(0, 8)
                     .map((booking) => (
                       <article
