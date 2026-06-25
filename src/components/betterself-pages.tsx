@@ -420,7 +420,9 @@ export function DashboardPage({
   paymentStatus?: string;
   bookingStatus?: string;
 }) {
-  const upcoming = bookings[0];
+  const upcoming =
+    bookings.find((b) => b.status !== "cancelled" && b.status !== "completed") ??
+    bookings[0];
   const upcomingCallLink = upcoming ? getVideoCallLink(upcoming) : null;
   const hasCompleted = bookings.some((b) => b.status === "completed");
   const paymentRetryMessage = paymentStatus ? paymentRetryMessages[paymentStatus] : undefined;

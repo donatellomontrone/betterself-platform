@@ -31,8 +31,10 @@ type BookingRequest = {
   };
 };
 
-function isConsultationBooking(treatment: Treatment, body: BookingRequest) {
-  return body.bookingIntent === "consultation" || treatment.id === consultationService.id;
+function isConsultationBooking(treatment: Treatment) {
+  // Derive from the treatment itself, never the client-sent bookingIntent — otherwise
+  // a client could label a real injectable a "consultation" and skip the address rule.
+  return treatment.id === consultationService.id;
 }
 
 function getPatientConcern(body: BookingRequest) {
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isConsultation = isConsultationBooking(treatment, body);
+  const isConsultation = isConsultationBooking(treatment);
   const patientConcern = getPatientConcern(body);
 
   if (!body.consentConfirmed) {

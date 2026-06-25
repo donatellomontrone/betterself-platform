@@ -528,6 +528,7 @@ export async function markPaidByReference(referenceNumber: string): Promise<numb
     update public.payments
     set status = 'paid'
     where transaction_reference = ${referenceNumber}
+      and status = 'pending'
     returning booking_id
   `) as unknown as { booking_id: string }[];
 

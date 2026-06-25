@@ -307,8 +307,8 @@ async function getTreatmentRecommendation(
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as { concern?: string };
-  const concern = body.concern?.trim() ?? "";
+  const body = (await request.json().catch(() => null)) as { concern?: string } | null;
+  const concern = body?.concern?.trim() ?? "";
 
   if (concern.length < 8) {
     return NextResponse.json(
