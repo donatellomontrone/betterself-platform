@@ -155,7 +155,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                   <span className="sr-only">Search treatments</span>
                   <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#5C574F]" />
                   <input
-                    className="h-14 w-full rounded-lg border border-[#E6DFD5] bg-white py-0 pl-12 pr-4 text-base text-[#1F1F1F] outline-none transition placeholder:text-[#8A847B] focus:border-[#3F5249] focus:shadow-[0_0_0_3px_rgb(63_82_73_/_0.18)] sm:h-12 sm:text-sm"
+                    className="h-14 w-full rounded-lg border border-[#E6DFD5] bg-white py-0 pl-12 pr-4 text-base text-[#1F1F1F] outline-none transition placeholder:text-[#5C574F] focus:border-[#3F5249] focus:shadow-[0_0_0_3px_rgb(63_82_73_/_0.18)] sm:h-12 sm:text-sm"
                     value={query}
                     placeholder="Search treatment, concern, or price"
                     onChange={(event) => setQuery(event.target.value)}

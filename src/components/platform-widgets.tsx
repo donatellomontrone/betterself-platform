@@ -381,7 +381,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
             <span>
               Step {step + 1} of 5 · {stepLabels[step]}
             </span>
-            <span className="font-medium normal-case tracking-normal text-[#8A847B]">
+            <span className="font-medium normal-case tracking-normal text-[#5C574F]">
               Payment only after doctor confirmation
             </span>
           </div>
@@ -677,7 +677,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               {intakeQuestions.map((question, index) => (
                 <label key={question} className="flex items-start gap-3 rounded-lg border border-[#E6DFD5] bg-white p-4 text-sm text-[#4D4D4D]">
                   <input
-                    className="mt-1"
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-[#3F5249]"
                     type="checkbox"
                     checked={intake[index]}
                     onChange={(event) =>
@@ -745,8 +745,9 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               <p className="text-sm font-semibold text-[#1F1F1F]">Consent required</p>
               <div className="mt-3 grid gap-3">
                 {consentItems.map((item, index) => (
-                  <label key={item} className="flex gap-3 text-sm text-[#4D4D4D]">
+                  <label key={item} className="flex items-start gap-3 text-sm text-[#4D4D4D]">
                     <input
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-[#3F5249]"
                       type="checkbox"
                       checked={consents[index]}
                       onChange={(event) =>
@@ -963,7 +964,7 @@ function BookingStep({
 }) {
   return (
     <div>
-      <h1 className="font-serif text-4xl leading-tight text-[#1F1F1F]">{title}</h1>
+      <h2 className="font-serif text-4xl leading-tight text-[#1F1F1F]">{title}</h2>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-[#595550]">{text}</p>
       <div className="mt-6">{children}</div>
     </div>
