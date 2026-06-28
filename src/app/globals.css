@@ -142,3 +142,15 @@ a {
 .font-serif {
   letter-spacing: -0.01em;
 }
+
+/* Respect reduced-motion: drop animations, transitions, and smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

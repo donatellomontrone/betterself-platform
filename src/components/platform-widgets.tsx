@@ -1163,7 +1163,7 @@ export function DoctorChat() {
               }`}
             >
               <p>{message.text}</p>
-              <p className="mt-2 text-xs opacity-70">{message.time}</p>
+              <p className="mt-2 text-xs opacity-90">{message.time}</p>
             </div>
           ))}
         </div>

@@ -238,7 +238,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                           type="button"
                           aria-label={`Show treatments for ${zone.label}`}
                           aria-pressed={isActive}
-                          className="absolute z-20 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#8F5B67]/20"
+                          className="absolute z-20 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-[#6E444E] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                           style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
                           onClick={() => setActiveZoneId(zone.id)}
                         >
@@ -246,7 +246,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                             className={`grid place-items-center rounded-full border-2 border-white shadow-md transition ${
                               isActive
                                 ? "h-6 w-6 bg-[#8F5B67] ring-2 ring-[#8F5B67]/25"
-                                : "h-4 w-4 bg-white/90 ring-1 ring-[#CFE0DF] hover:bg-[#F6EDEA]"
+                                : "h-4 w-4 bg-white/90 ring-1 ring-[#ECDCDE] hover:bg-[#F6EDEA]"
                             }`}
                           >
                             <span
@@ -276,7 +276,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                         }`}
                         onClick={() => setActiveZoneId(zone.id)}
                       >
-                        <span className={isActive ? "text-xs font-bold uppercase tracking-[0.18em] text-white/72" : "text-xs font-bold uppercase tracking-[0.18em] text-[#8F5B67]"}>
+                        <span className={isActive ? "text-xs font-bold uppercase tracking-[0.18em] text-white" : "text-xs font-bold uppercase tracking-[0.18em] text-[#8F5B67]"}>
                           {zone.tag}
                         </span>
                         <span className="mt-2 block font-serif text-2xl leading-tight">

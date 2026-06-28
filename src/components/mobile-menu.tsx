@@ -21,12 +21,12 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
 
   return (
     <details ref={ref} className="relative min-[900px]:hidden">
-      <summary className="btn btn-secondary list-none cursor-pointer">Menu</summary>
+      <summary className="btn btn-secondary list-none min-h-[44px] cursor-pointer">Menu</summary>
       <div className="absolute right-0 top-12 z-40 grid w-60 gap-2 rounded-lg border border-[#E6DFD5] bg-white p-3 shadow-xl">
         {items.map((item) => (
           <Link
             key={item.href}
-            className="rounded-lg px-3 py-2 text-sm font-semibold text-[#4D4D4D]"
+            className="flex min-h-[44px] items-center rounded-lg px-3 py-2 text-sm font-semibold text-[#4D4D4D]"
             href={item.href}
             onClick={close}
           >

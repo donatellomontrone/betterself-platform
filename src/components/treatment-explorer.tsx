@@ -109,7 +109,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
               </div>
               <div
                 className="mt-2 flex min-w-0 gap-2 overflow-x-auto pb-1 lg:grid lg:overflow-visible lg:pb-0"
-                role="tablist"
+                role="group"
                 aria-label="Treatment sections"
               >
                 {categories.map((category) => {
@@ -119,17 +119,20 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                     <button
                       key={category}
                       type="button"
-                      role="tab"
-                      aria-selected={isActive}
+                      aria-pressed={isActive}
                       className={`min-w-[11rem] rounded-lg border px-4 py-3 text-left transition lg:min-w-0 ${
                         isActive
                           ? "border-[#8F5B67] bg-[#8F5B67] text-white shadow-sm"
                           : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"
                       }`}
-                      onClick={() => setActiveCategory(category)}
+                      onClick={() => {
+                        setActiveCategory(category);
+                        // Reset the concern filter so switching sections never lands on empty results.
+                        setActiveConcern("");
+                      }}
                     >
                       <span className="block font-serif text-2xl leading-none">{category}</span>
-                      <span className={isActive ? "mt-2 block text-xs text-white/78" : "mt-2 block text-xs text-[#5C574F]"}>
+                      <span className={isActive ? "mt-2 block text-xs text-white/90" : "mt-2 block text-xs text-[#5C574F]"}>
                         {categoryCounts[category]} treatments
                       </span>
                     </button>

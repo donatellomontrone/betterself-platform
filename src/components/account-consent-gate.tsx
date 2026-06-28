@@ -106,7 +106,7 @@ export function AccountConsentGate({ children }: { children: ReactNode }) {
         ))}
       </div>
 
-      <div className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-4 text-sm leading-6 text-[#4A5A55]">
+      <div className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-4 text-sm leading-6 text-[#6E444E]">
         Review the full{" "}
         <Link className="font-bold underline" href="/terms">
           Terms
