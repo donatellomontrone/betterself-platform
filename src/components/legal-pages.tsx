@@ -100,8 +100,8 @@ export function PrivacyPolicyPage() {
           Account details (name, email, phone); booking details (the treatment you choose,
           your home-visit address, and appointment schedule); health information from your
           medical-intake answers and your consent records; messages you send us; and the
-          status of your payments. We never receive or store your full card or bank details —
-          those are handled directly by our payment partner.
+          status of your payments. Payments are made via QR Ph through our payment partner;
+          we never receive or store your full payment or bank details.
         </p>
       </Clause>
       <Clause title="How we use your information & legal basis">
