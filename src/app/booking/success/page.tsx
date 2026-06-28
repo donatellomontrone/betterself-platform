@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from "@/lib/contact";
 
 export default async function BookingSuccess({
   searchParams,
@@ -19,7 +20,9 @@ export default async function BookingSuccess({
         </h1>
         <p className="mt-4 leading-7 text-[#595550]">
           {bookCall
-            ? "Your consultation is confirmed once payment clears. Pick a time that works for you and the doctor will call you then. It also appears in your dashboard."
+            ? calendlyUrl
+              ? "Your consultation is confirmed once payment clears. Pick a time that works for you and the doctor will call you then. It also appears in your dashboard."
+              : "Your consultation is confirmed once payment clears. Message us and we'll set your call time — the doctor will call you then. It also appears in your dashboard."
             : "We've received your payment. You can track your booking from your dashboard, and we'll be in touch about next steps."}
         </p>
         {demo ? (
@@ -37,6 +40,16 @@ export default async function BookingSuccess({
               rel="noreferrer"
             >
               Book your call time
+            </a>
+          ) : null}
+          {bookCall && !calendlyUrl ? (
+            <a
+              className="btn btn-primary justify-center"
+              href={SUPPORT_WHATSAPP || `mailto:${SUPPORT_EMAIL}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Message us to schedule
             </a>
           ) : null}
           <Link className="btn btn-secondary justify-center" href="/dashboard">

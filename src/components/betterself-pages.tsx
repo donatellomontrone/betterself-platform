@@ -415,11 +415,13 @@ export function DashboardPage({
   bookings = [],
   paymentStatus,
   bookingStatus,
+  loadFailed = false,
 }: {
   viewerName?: string;
   bookings?: PatientBookingView[];
   paymentStatus?: string;
   bookingStatus?: string;
+  loadFailed?: boolean;
 }) {
   const upcoming =
     bookings.find((b) => b.status !== "cancelled" && b.status !== "completed") ??
@@ -458,6 +460,12 @@ export function DashboardPage({
               Book Appointment
             </Link>
           </div>
+          {loadFailed ? (
+            <div className="mt-6 rounded-lg border border-[#E7C6C2] bg-[#FBEDEB] p-4 text-sm leading-6 text-[#9B2C2C]">
+              We couldn&apos;t load your bookings just now — this is a temporary glitch, not lost
+              data. Please refresh in a moment.
+            </div>
+          ) : null}
           {paymentRetryMessage ? (
             <div className="mt-6">
               <Notice title={paymentRetryMessage.title}>{paymentRetryMessage.text}</Notice>

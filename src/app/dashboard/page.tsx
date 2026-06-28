@@ -23,11 +23,13 @@ export default async function Dashboard({
   )?.emailAddress;
 
   let bookings: PatientBookingView[] = [];
+  let loadFailed = false;
   if (user && isDatabaseConfigured()) {
     try {
       bookings = await getPatientBookings(user.id);
     } catch (error) {
       console.error("[dashboard] failed to load bookings:", error);
+      loadFailed = true;
     }
   }
 
@@ -37,6 +39,7 @@ export default async function Dashboard({
       bookings={bookings}
       paymentStatus={paymentStatus}
       bookingStatus={bookingStatus}
+      loadFailed={loadFailed}
     />
   );
 }
