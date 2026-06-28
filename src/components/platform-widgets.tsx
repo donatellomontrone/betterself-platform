@@ -742,8 +742,10 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                 location={requiresAddress ? location : "Online consultation"}
                 treatmentName={selectedService.name}
                 onScheduled={(payload) => {
-                  setCalendlyEventUri(payload.event?.uri ?? "");
-                  setCalendlyInviteeUri(payload.invitee?.uri ?? "");
+                  // Preserve URIs captured from the embed; the manual-confirm button sends an
+                  // empty payload and must not wipe a real Calendly event/invitee.
+                  if (payload.event?.uri) setCalendlyEventUri(payload.event.uri);
+                  if (payload.invitee?.uri) setCalendlyInviteeUri(payload.invitee.uri);
                   setScheduleConfirmed(true);
                 }}
               />
@@ -910,6 +912,11 @@ function CalendlyScheduler({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
   const [manualConfirmation, setManualConfirmation] = useState(false);
+  const onScheduledRef = useRef(onScheduled);
+
+  useEffect(() => {
+    onScheduledRef.current = onScheduled;
+  });
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
@@ -920,13 +927,13 @@ function CalendlyScheduler({
       const data = event.data as { event?: string; payload?: CalendlyPayload };
 
       if (data.event === "calendly.event_scheduled") {
-        onScheduled(data.payload ?? {});
+        onScheduledRef.current(data.payload ?? {});
       }
     }
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [onScheduled]);
+  }, []);
 
   useEffect(() => {
     if (!calendlyUrl || !scriptReady || !containerRef.current || !window.Calendly) {
@@ -989,7 +996,7 @@ function CalendlyScheduler({
         }`}
         onClick={() => {
           setManualConfirmation(true);
-          onScheduled({});
+          onScheduledRef.current({});
         }}
       >
         I scheduled the doctor call and want to continue

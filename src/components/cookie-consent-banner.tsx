@@ -88,3 +88,26 @@ function getCookieConsentSnapshot() {
 function getServerCookieConsentSnapshot() {
   return false;
 }
+
+function getOptionalCookiesSnapshot() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    return (JSON.parse(raw) as { choice?: CookieChoice }).choice === "accepted";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Reactive hook: true once the user has accepted optional cookies. Gate optional
+ * third-party embeds (e.g. Google Places search) on this so the stored choice is
+ * authoritative, not decorative.
+ */
+export function useOptionalCookiesAccepted() {
+  return useSyncExternalStore(
+    subscribeToConsentChanges,
+    getOptionalCookiesSnapshot,
+    () => false,
+  );
+}

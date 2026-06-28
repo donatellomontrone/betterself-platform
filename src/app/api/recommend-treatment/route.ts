@@ -317,6 +317,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Hard cap before forwarding to the paid AI API (abuse / cost control on this
+  // unauthenticated route).
+  if (concern.length > 1000) {
+    return NextResponse.json(
+      { message: "Please shorten your description to 1000 characters or fewer." },
+      { status: 400 },
+    );
+  }
+
   const { recommendation, source } = await getTreatmentRecommendation(concern);
   const treatment = findService(recommendation.recommendedTreatmentId);
   const alternatives = recommendation.alternativeTreatmentIds

@@ -6,7 +6,10 @@ import { getAllBookings } from "@/lib/db/queries";
 
 function csvCell(value: unknown) {
   const text = value == null ? "" : String(value);
-  return `"${text.replaceAll('"', '""')}"`;
+  // Neutralize spreadsheet formula injection: a leading =, +, -, @, tab or CR makes
+  // Excel/Sheets execute patient-controlled text as a formula. Prefix a single quote.
+  const guarded = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+  return `"${guarded.replaceAll('"', '""')}"`;
 }
 
 export async function GET() {
@@ -20,6 +23,10 @@ export async function GET() {
   }
 
   const bookings = isDatabaseConfigured() ? await getAllBookings() : [];
+  // Audit trail: this export dumps full patient PII (email, phone, address, emergency contact).
+  console.warn(
+    `[admin export] CSV export by ${email ?? "unknown"} at ${new Date().toISOString()} — ${bookings.length} rows`,
+  );
   const headers = [
     "created_at",
     "patient_name",

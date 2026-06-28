@@ -38,8 +38,28 @@ function isConsultationBooking(treatment: Treatment) {
   return treatment.id === consultationService.id;
 }
 
+// Server-side copy of the booking-flow intake questions. Client-supplied intake
+// flags are whitelisted against this so arbitrary text can't be persisted to jsonb.
+const INTAKE_QUESTIONS = [
+  "Are you pregnant or breastfeeding?",
+  "Do you have any allergies?",
+  "Are you taking any medication?",
+  "Do you have any autoimmune condition?",
+  "Do you have any bleeding disorder?",
+  "Have you had Botox, fillers, or skin boosters before?",
+  "Have you had any adverse reaction before?",
+];
+
 function getPatientConcern(body: BookingRequest) {
-  return body.patientConcern?.trim() || body.consultationNotes?.trim() || "";
+  // Cap length so a huge free-text concern can't bloat the jsonb record or notes.
+  return (body.patientConcern?.trim() || body.consultationNotes?.trim() || "").slice(0, 2000);
+}
+
+function sanitizeIntake(intake: unknown): string[] {
+  if (!Array.isArray(intake)) return [];
+  return intake.filter(
+    (item): item is string => typeof item === "string" && INTAKE_QUESTIONS.includes(item),
+  );
 }
 
 function asMetadataValue(value: string | undefined, fallback = "not_provided") {
@@ -185,7 +205,7 @@ export async function POST(request: NextRequest) {
       bookingId: booking.id,
       answers: {
         flow: isConsultation ? "consultation_paid_upfront" : "doctor_review_before_payment",
-        flagged: body.intake ?? [],
+        flagged: sanitizeIntake(body.intake),
         patientConcern: patientConcern || null,
       },
       consentConfirmed: true,

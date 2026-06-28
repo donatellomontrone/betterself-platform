@@ -76,7 +76,7 @@ export async function recordAccountConsent(input: RecordAccountConsentInput) {
       (user_id, consent_version, accepted_at, accepted_items, user_agent)
     values
       (${input.userId}, ${input.consentVersion},
-       ${input.acceptedAt ?? null}::timestamptz,
+       coalesce(${input.acceptedAt ?? null}::timestamptz, now()),
        ${JSON.stringify(input.acceptedItems)}::jsonb,
        ${input.userAgent ?? null})
   `;
@@ -452,13 +452,15 @@ export async function updateBookingPaymentStatus(
     set payment_status = ${status}, updated_at = now()
     where id::text = ${bookingId}
   `;
+  // Target the newest still-PENDING payment row first (a stale resolved row may be
+  // newer), falling back to the newest row, so admin "mark paid" hits the real one.
   await sql`
     update public.payments
     set status = ${status}
     where id = (
       select id from public.payments
       where booking_id::text = ${bookingId}
-      order by created_at desc
+      order by (status = 'pending') desc, created_at desc
       limit 1
     )
   `;
@@ -535,11 +537,21 @@ export async function markPaidByReference(referenceNumber: string): Promise<numb
   `) as unknown as { booking_id: string }[];
 
   for (const row of updated) {
-    await sql`
+    // Never resurrect a cancelled booking to paid. If money was captured against a
+    // cancelled booking, the payment row is still marked paid above — log it so the
+    // booking can be reconciled/refunded manually.
+    const bookingUpdated = (await sql`
       update public.bookings
       set payment_status = 'paid', updated_at = now()
       where id = ${row.booking_id}
-    `;
+        and status <> 'cancelled'
+      returning id
+    `) as unknown as { id: string }[];
+    if (bookingUpdated.length === 0) {
+      console.error(
+        `[markPaidByReference] payment captured (ref ${referenceNumber}) for booking ${row.booking_id}, but it is cancelled — needs manual reconciliation/refund.`,
+      );
+    }
   }
   return updated.length;
 }

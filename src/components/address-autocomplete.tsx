@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useOptionalCookiesAccepted } from "@/components/cookie-consent-banner";
 
 /**
  * Google Places address search, restricted to Metro Manila.
@@ -47,7 +48,12 @@ function loadGoogleMaps(apiKey: string) {
         apiKey,
       )}&libraries=places&loading=async&callback=${callbackName}`;
       script.async = true;
-      script.onerror = () => reject(new Error("Google Maps failed to load"));
+      script.onerror = () => {
+        // Don't cache a rejected promise — otherwise address search stays dead until a
+        // full reload even after a transient network failure.
+        mapsPromise = null;
+        reject(new Error("Google Maps failed to load"));
+      };
       document.head.appendChild(script);
     });
   }
@@ -65,6 +71,7 @@ function isUsableManualAddress(address: string) {
 
 export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
+  const optionalCookiesAccepted = useOptionalCookiesAccepted();
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   const [ready, setReady] = useState(false);
@@ -75,7 +82,9 @@ export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProp
   });
 
   useEffect(() => {
-    if (!apiKey || !containerRef.current) return;
+    // Gate the third-party Google Places embed on optional-cookie consent; the manual
+    // address input below always works regardless.
+    if (!apiKey || !optionalCookiesAccepted || !containerRef.current) return;
     const host = containerRef.current;
     let element: HTMLElement | null = null;
     let cancelled = false;
@@ -130,7 +139,7 @@ export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProp
       cancelled = true;
       element?.remove();
     };
-  }, [apiKey]);
+  }, [apiKey, optionalCookiesAccepted]);
 
   // No key configured → plain input so the form still works end to end.
   if (!apiKey) {
@@ -163,10 +172,17 @@ export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProp
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#5C574F]">
           Search Google Places (optional)
         </p>
-        <div ref={containerRef} />
+        {optionalCookiesAccepted ? (
+          <div ref={containerRef} />
+        ) : (
+          <p className="text-sm leading-6 text-[#6E565A]">
+            Accept optional cookies to enable Google address search. You can still type your
+            full address above.
+          </p>
+        )}
       </div>
-      {!ready && !error ? (
-        <p className="mt-2 text-xs text-[#7A746E]">Loading address search…</p>
+      {optionalCookiesAccepted && !ready && !error ? (
+        <p className="mt-2 text-xs text-[#6E565A]">Loading address search…</p>
       ) : null}
       {value ? (
         <p className="text-sm text-[#4D4D4D]">Address for this booking: {value}</p>
