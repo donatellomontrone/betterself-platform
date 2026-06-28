@@ -154,6 +154,15 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
   const [intake, setIntake] = useState(() => intakeQuestions.map(() => false));
   const [consents, setConsents] = useState(() => consentItems.map(() => false));
   const [triedDetails, setTriedDetails] = useState(false);
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountChecking, setDiscountChecking] = useState(false);
+  const [discountInfo, setDiscountInfo] = useState<{
+    valid: boolean;
+    label?: string;
+    kind?: "percent" | "amount";
+    value?: number;
+    message?: string;
+  } | null>(null);
 
   const selectedTreatment = useMemo(
     () => getTreatmentById(treatmentId) ?? treatments[0],
@@ -272,6 +281,37 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
     }
   }
 
+  // Preview only — the server re-validates and applies the discount at checkout.
+  async function applyDiscountCode() {
+    const code = discountCode.trim();
+    if (!code) {
+      setDiscountInfo(null);
+      return;
+    }
+    setDiscountChecking(true);
+    try {
+      const response = await fetch("/api/discounts/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      setDiscountInfo(await response.json());
+    } catch {
+      setDiscountInfo({ valid: false, message: "Couldn't check that code. Please try again." });
+    } finally {
+      setDiscountChecking(false);
+    }
+  }
+
+  const consultBasePrice = consultationService.price;
+  const consultDiscountAmount =
+    isConsultation && discountInfo?.valid
+      ? discountInfo.kind === "percent"
+        ? Math.round((consultBasePrice * (discountInfo.value ?? 0)) / 100)
+        : Math.min(discountInfo.value ?? 0, consultBasePrice)
+      : 0;
+  const consultTotal = Math.max(0, consultBasePrice - consultDiscountAmount);
+
   async function submitBookingRequest() {
     setCheckoutNote("");
 
@@ -307,6 +347,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
           calendlyInviteeUri,
           patientConcern: patientConcern.trim() || undefined,
           intake: intakeQuestions.filter((_, index) => intake[index]),
+          discountCode: isConsultation ? discountCode.trim() || undefined : undefined,
           consentConfirmed: allConsented,
           customer: {
             name: customer.name,
@@ -789,6 +830,47 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                 ))}
               </div>
             </div>
+            {isConsultation ? (
+              <div className="mt-6 rounded-lg border border-[#E6DFD5] p-4">
+                <p className="text-sm font-semibold text-[#1F1F1F]">Discount code</p>
+                <div className="mt-3 flex gap-2">
+                  <input
+                    className="field h-11 flex-1 text-sm uppercase"
+                    type="text"
+                    value={discountCode}
+                    placeholder="Have a code? (optional)"
+                    aria-label="Discount code"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    onChange={(event) => {
+                      setDiscountCode(event.target.value);
+                      setDiscountInfo(null);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary h-11"
+                    disabled={discountChecking || !discountCode.trim()}
+                    onClick={applyDiscountCode}
+                  >
+                    {discountChecking ? "Checking..." : "Apply"}
+                  </button>
+                </div>
+                {discountInfo ? (
+                  discountInfo.valid ? (
+                    <p className="mt-2 text-sm font-medium text-[#2F5135]">
+                      {discountInfo.label} applied — you&apos;ll pay ₱
+                      {consultTotal.toLocaleString("en-PH")} (was ₱
+                      {consultBasePrice.toLocaleString("en-PH")}).
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm text-[#9B2C20]">
+                      {discountInfo.message ?? "That code isn't valid."}
+                    </p>
+                  )
+                ) : null}
+              </div>
+            ) : null}
             <button
               className="btn btn-primary mt-6 h-12 w-full justify-center"
               disabled={checkoutState === "loading" || !allConsented}
@@ -873,8 +955,24 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
               {isConsultation ? "Consultation fee" : "Starting price"}
             </p>
             <p className="mt-1 font-serif text-3xl text-[#1F1F1F]">
-              {bookingIntent ? selectedService.priceLabel : "—"}
+              {isConsultation && discountInfo?.valid ? (
+                <>
+                  <span className="mr-2 text-xl text-[#9A8F86] line-through">
+                    {selectedService.priceLabel}
+                  </span>
+                  ₱{consultTotal.toLocaleString("en-PH")}
+                </>
+              ) : bookingIntent ? (
+                selectedService.priceLabel
+              ) : (
+                "—"
+              )}
             </p>
+            {isConsultation && discountInfo?.valid ? (
+              <p className="mt-2 text-xs font-medium text-[#2F5135]">
+                {discountInfo.label} applied with {discountCode.trim().toUpperCase()}.
+              </p>
+            ) : null}
             {!isConsultation && bookingIntent ? (
               <p className="mt-2 text-xs leading-5 text-[#595550]">
                 Final amount depends on the units/areas the doctor assesses. No

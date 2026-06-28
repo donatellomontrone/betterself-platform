@@ -7,6 +7,7 @@ import {
   getRetryableBookingForCheckout,
   updateBookingPaymentStatus,
 } from "@/lib/db/queries";
+import { applyDiscount } from "@/lib/discounts";
 
 // QR Ph only (business uses QR Ph, not cards/GCash). Each "Pay now" creates a
 // fresh single-use checkout session, so a new QR is generated every attempt.
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData();
   const bookingId = String(formData.get("bookingId") ?? "");
+  const discountCode = String(formData.get("discountCode") ?? "");
   if (!bookingId) {
     return dashboardRedirect(request, "retry_missing");
   }
@@ -50,6 +52,9 @@ export async function POST(request: NextRequest) {
   if (booking.status !== "confirmed") {
     return dashboardRedirect(request, "not_confirmed");
   }
+
+  // Validate any discount code server-side against the booking's amount.
+  const applied = applyDiscount(booking.amount, discountCode);
 
   const referenceNumber = `BS-RETRY-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
@@ -77,10 +82,12 @@ export async function POST(request: NextRequest) {
           line_items: [
             {
               name: booking.treatment_name,
-              amount: booking.amount * 100,
+              amount: applied.total * 100,
               currency: "PHP",
               quantity: 1,
-              description: booking.treatment_description,
+              description: applied.code
+                ? `${booking.treatment_description} (${applied.code}: ${applied.label})`
+                : booking.treatment_description,
             },
           ],
           payment_method_types: paymentMethods,
@@ -113,6 +120,8 @@ export async function POST(request: NextRequest) {
             payment_mode: "paymongo_qrph_retry",
             care_model:
               booking.payment_type === "consultation" ? "consultation" : "home_treatment",
+            discount_code: applied.code ?? "",
+            discount_amount: String(applied.discount),
           },
         },
       },
@@ -129,7 +138,7 @@ export async function POST(request: NextRequest) {
   await createPayment({
     bookingId: booking.id,
     patientId: user.id,
-    amount: booking.amount,
+    amount: applied.total,
     paymentType: booking.payment_type,
     transactionReference: referenceNumber,
     paymongoCheckoutId: payload.data.id,

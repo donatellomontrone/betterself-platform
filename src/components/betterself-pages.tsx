@@ -107,8 +107,17 @@ function RetryPaymentButton({
   compact?: boolean;
 }) {
   return (
-    <form action="/api/checkout/retry" method="post">
+    <form action="/api/checkout/retry" method="post" className="grid gap-2">
       <input type="hidden" name="bookingId" value={bookingId} />
+      <input
+        className="field h-10 text-sm"
+        type="text"
+        name="discountCode"
+        placeholder="Discount code (optional)"
+        aria-label="Discount code"
+        autoCapitalize="characters"
+        autoComplete="off"
+      />
       <button className={compact ? "btn btn-primary h-10" : "btn btn-primary"} type="submit">
         {label}
       </button>

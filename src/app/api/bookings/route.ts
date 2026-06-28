@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { consultationService, getTreatmentById, type Treatment } from "@/lib/treatments";
+import { applyDiscount } from "@/lib/discounts";
 import { hasValidClerkServerKeys } from "@/lib/clerk-env";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import {
@@ -22,6 +23,7 @@ type BookingRequest = {
   patientConcern?: string;
   consultationNotes?: string;
   intake?: string[];
+  discountCode?: string;
   consentConfirmed?: boolean;
   customer?: {
     name?: string;
@@ -162,6 +164,11 @@ export async function POST(request: NextRequest) {
       ? `BS-CONSULT-${Date.now()}-${randomUUID().slice(0, 8)}`
       : null;
 
+    // Consultations are charged now — validate any discount code server-side.
+    const consultDiscount = isConsultation
+      ? applyDiscount(treatment.price, body.discountCode)
+      : null;
+
     const notes = [
       isConsultation
         ? "Consultation: paid up front; the patient books the call after payment."
@@ -169,6 +176,9 @@ export async function POST(request: NextRequest) {
       body.calendlyEventUri ? `Calendly event: ${body.calendlyEventUri}` : null,
       body.calendlyInviteeUri ? `Calendly invitee: ${body.calendlyInviteeUri}` : null,
       patientConcern ? `Patient concern: ${patientConcern}` : null,
+      consultDiscount?.code
+        ? `Discount: ${consultDiscount.code} (${consultDiscount.label}, -₱${consultDiscount.discount})`
+        : null,
     ]
       .filter(Boolean)
       .join("\n");
@@ -194,7 +204,7 @@ export async function POST(request: NextRequest) {
       await createPayment({
         bookingId: booking.id,
         patientId: userId,
-        amount: treatment.price,
+        amount: consultDiscount?.total ?? treatment.price,
         paymentType: "consultation",
         transactionReference: referenceNumber,
       });
@@ -254,10 +264,12 @@ export async function POST(request: NextRequest) {
             line_items: [
               {
                 name: consultationService.name,
-                amount: treatment.price * 100,
+                amount: (consultDiscount?.total ?? treatment.price) * 100,
                 currency: "PHP",
                 quantity: 1,
-                description: "Online doctor consultation to plan your treatment.",
+                description: consultDiscount?.code
+                  ? `Online doctor consultation (${consultDiscount.code}: ${consultDiscount.label}).`
+                  : "Online doctor consultation to plan your treatment.",
               },
             ],
             payment_method_types: ["qrph"],
@@ -277,6 +289,8 @@ export async function POST(request: NextRequest) {
               reference_number: referenceNumber as string,
               booking_intent: "consultation",
               care_model: "consultation",
+              discount_code: consultDiscount?.code ?? "",
+              discount_amount: String(consultDiscount?.discount ?? 0),
             },
           },
         },
