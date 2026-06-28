@@ -64,29 +64,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Invalid webhook signature." }, { status: 401 });
   }
 
+  // Real PayMongo envelope: data.type is the literal "event"; the actual event type
+  // is data.attributes.type, and the resource is data.attributes.data.attributes.
+  // (e.g. reference_number lives at data.attributes.data.attributes.reference_number.)
   const event = JSON.parse(rawBody) as {
     data?: {
       id?: string;
       type?: string;
       attributes?: {
-        reference_number?: string;
-        status?: string;
-      };
-      data?: {
-        id?: string;
         type?: string;
-        attributes?: {
-          reference_number?: string;
-          status?: string;
-          metadata?: Record<string, string>;
+        livemode?: boolean;
+        data?: {
+          id?: string;
+          type?: string;
+          attributes?: {
+            reference_number?: string;
+            status?: string;
+            metadata?: Record<string, string>;
+          };
         };
       };
     };
   };
 
-  if (event.data?.type === "checkout_session.payment.paid") {
-    const checkoutSession = event.data.data ?? event.data;
-    const referenceNumber = checkoutSession.attributes?.reference_number;
+  const eventType = event.data?.attributes?.type;
+  const resource = event.data?.attributes?.data;
+
+  if (eventType === "checkout_session.payment.paid") {
+    const referenceNumber = resource?.attributes?.reference_number;
 
     let bookingsMarkedPaid = 0;
     if (referenceNumber && isDatabaseConfigured()) {
@@ -110,6 +115,6 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     received: true,
     action: "ignored",
-    eventType: event.data?.type ?? "unknown",
+    eventType: eventType ?? "unknown",
   });
 }
