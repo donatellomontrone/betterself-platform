@@ -6,6 +6,9 @@ import { getAllBookings, type AdminBookingView } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 
+// Private route — keep it out of search indexes.
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function Admin({
   searchParams,
 }: {

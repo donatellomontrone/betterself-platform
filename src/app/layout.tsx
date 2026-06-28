@@ -22,10 +22,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://betterself-platform-mu.vercel.app";
+const SITE_DESCRIPTION =
+  "Private doctor-led aesthetic treatments — Botox, fillers, and skin boosters — with medical intake, consent, and home visits across Metro Manila.";
+
 export const metadata: Metadata = {
-  title: "BetterSelf | Doctor-led aesthetic care at your doorstep",
-  description:
-    "Private doctor-led aesthetic treatments, medical intake, home visits, booking, payments, and patient-doctor messaging in Metro Manila.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "BetterSelf | Doctor-led aesthetic care at your doorstep",
+    template: "%s | BetterSelf",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: "BetterSelf",
+  icons: { icon: "/betterself-mark.png", apple: "/betterself-mark.png" },
+  openGraph: {
+    type: "website",
+    siteName: "BetterSelf",
+    title: "BetterSelf | Doctor-led aesthetic care at your doorstep",
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    locale: "en_PH",
+    images: [{ url: "/betterself-hero-home.jpg", width: 1200, height: 630, alt: "BetterSelf" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BetterSelf | Doctor-led aesthetic care at your doorstep",
+    description: SITE_DESCRIPTION,
+    images: ["/betterself-hero-home.jpg"],
+  },
 };
 
 export default function RootLayout({

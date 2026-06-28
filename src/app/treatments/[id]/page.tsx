@@ -9,6 +9,13 @@ export function generateStaticParams() {
   return getStaticTreatmentIds();
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const treatment = getTreatmentById(id);
+  if (!treatment) return { title: "Treatment not found" };
+  return { title: treatment.name, description: treatment.description };
+}
+
 export default async function TreatmentDetail({
   params,
 }: {

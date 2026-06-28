@@ -6,6 +6,9 @@ import { getPatientBookings, type PatientBookingView } from "@/lib/db/queries";
 // Per-patient data — never statically cached or shared between users.
 export const dynamic = "force-dynamic";
 
+// Private route — keep it out of search indexes.
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function Dashboard({
   searchParams,
 }: {
