@@ -16,7 +16,12 @@ export function HeaderAuthControls({
 }: {
   variant?: "desktop" | "mobile";
 }) {
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
+
+  // Until Clerk resolves, render nothing so signed-in users don't flash "Login".
+  if (!isLoaded) {
+    return null;
+  }
 
   if (variant === "mobile") {
     if (isSignedIn) {

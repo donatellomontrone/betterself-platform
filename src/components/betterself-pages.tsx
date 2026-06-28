@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import {
   categories,
+  consultationService,
   featuredTreatmentIds,
   getFeaturedTreatments,
   getTreatmentById,
@@ -331,6 +332,7 @@ export function TreatmentsPage() {
 }
 
 export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
+  const isConsultation = treatment.id === consultationService.id;
   return (
     <PageShell>
       <section className="px-5 py-10 lg:px-8 lg:py-14">
@@ -362,18 +364,27 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
           </article>
           <aside className="lg:sticky lg:top-28 lg:self-start">
             <section className="card p-5">
-              <p className="eyebrow">Book this treatment</p>
+              <p className="eyebrow">{isConsultation ? "Book this consultation" : "Book this treatment"}</p>
               <p className="mt-2 font-serif text-4xl text-[#1F1F1F]">
                 {treatment.priceLabel}
               </p>
               <div className="mt-5 grid gap-3 text-sm">
                 <Summary label="Duration" value={treatment.duration} />
-                <Summary label="Home visit" value="Available when suitable" />
-                <Summary label="Requirement" value="Doctor assessment required" />
+                {isConsultation ? (
+                  <>
+                    <Summary label="Format" value="Online doctor call" />
+                    <Summary label="Payment" value="Paid up front to book" />
+                  </>
+                ) : (
+                  <>
+                    <Summary label="Home visit" value="Available when suitable" />
+                    <Summary label="Requirement" value="Doctor assessment required" />
+                  </>
+                )}
               </div>
               <div className="mt-5 grid gap-2">
                 <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}`}>
-                  Book Treatment
+                  {isConsultation ? "Book consultation" : "Book Treatment"}
                 </Link>
                 <Link className="btn btn-secondary justify-center" href="/messages">
                   Ask Doctor
@@ -1127,7 +1138,7 @@ export function AdminPage({
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Link className="btn btn-secondary h-10" href={`/messages?booking=${booking.id}`}>
+                        <Link className="btn btn-secondary h-10" href="/messages">
                           Open chat
                         </Link>
                         <a
@@ -1218,7 +1229,7 @@ export function AdminPage({
                     <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr_auto] lg:items-start">
                       <div>
                         <p className="font-serif text-2xl text-[#1F1F1F]">{b.patient_name}</p>
-                        <p className="mt-1 text-sm text-[#595550]">
+                        <p className="mt-1 break-words text-sm text-[#595550]">
                           {b.patient_email} · {b.patient_phone || "No phone"}
                         </p>
                         <p className="mt-2 text-sm font-semibold text-[#1F1F1F]">
@@ -1400,8 +1411,8 @@ export function AdminPage({
                             <div className="mt-3 rounded-lg border border-[#F6D7A7] bg-[#FFF8E7] p-4">
                               <p className="text-sm font-bold text-[#1F1F1F]">Flagged answers</p>
                               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#5C574F]">
-                                {flagged.map((item) => (
-                                  <li key={item}>{item}</li>
+                                {flagged.map((item, index) => (
+                                  <li key={`${index}-${item}`}>{item}</li>
                                 ))}
                               </ul>
                             </div>
@@ -1668,9 +1679,8 @@ export function LoginPage({ status }: { status?: string }) {
               </Link>
             </div>
             <Notice title="Your account is private">
-              Your dashboard and messages are private to you. You can request a
-              treatment without an account, then sign in to track it and pay once
-              the doctor confirms.
+              Your dashboard and messages are private to you. Sign in (or create a free
+              account) to request a treatment, track it, and pay once the doctor confirms.
             </Notice>
           </section>
         </div>

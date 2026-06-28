@@ -2,14 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
-  CalendarDays,
   Check,
   FileText,
-  HeartPulse,
   LockKeyhole,
-  MessageCircle,
   ShieldCheck,
-  Sparkles,
   Stethoscope,
 } from "lucide-react";
 import { Treatment } from "@/lib/treatments";
@@ -351,43 +347,6 @@ export function DoctorLedStrip() {
   );
 }
 
-export function BookingPreviewCard() {
-  return (
-    <div className="card bg-white p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="eyebrow">Private appointment</p>
-          <h3 className="mt-2 font-serif text-3xl text-[#1F1F1F]">
-            Treatment booking preview
-          </h3>
-        </div>
-        <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#ECDCDE] text-[#8F5B67]">
-          <CalendarDays className="h-5 w-5" />
-        </span>
-      </div>
-      <div className="mt-5 grid gap-3">
-        {[
-          ["Requested treatment", "Home treatment request"],
-          ["Appointment type", "Home treatment visit or online doctor review"],
-          ["Location", "BGC, Makati, Rockwell, Alabang, Ortigas"],
-          ["Status", "Pending doctor review"],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-[#E6DFD5] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
-              {label}
-            </p>
-            <p className="mt-1 text-sm font-semibold text-[#1F1F1F]">{value}</p>
-          </div>
-        ))}
-      </div>
-      <Notice title="Trust line">
-        Medical intake required. Doctor assessment before treatment. Private
-        home appointments available.
-      </Notice>
-    </div>
-  );
-}
-
 export type StatusTone = "default" | "positive" | "warning" | "danger" | "neutral";
 
 export function StatusBadge({
@@ -412,33 +371,6 @@ export function StatusBadge({
     </span>
   );
 }
-
-export const patientDashboardCards = [
-  {
-    icon: CalendarDays,
-    title: "Upcoming Appointment",
-    text: "Skin Booster Treatment with BetterSelf Medical Doctor, tomorrow at 10:00 AM in BGC.",
-    status: "Pending doctor review",
-  },
-  {
-    icon: Sparkles,
-    title: "Treatment Plan",
-    text: "Current concern: skin quality and hydration. Next suggested review after two weeks.",
-    status: "Plan draft",
-  },
-  {
-    icon: MessageCircle,
-    title: "Messages",
-    text: "Doctor requested allergy and medication details before confirming the appointment.",
-    status: "Needs reply",
-  },
-  {
-    icon: HeartPulse,
-    title: "Aftercare",
-    text: "Latest aftercare instructions will appear here after completed treatments.",
-    status: "Not yet sent",
-  },
-];
 
 export function ArrowLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (

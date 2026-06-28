@@ -26,14 +26,6 @@ export type Treatment = {
   detailNote?: string;
 };
 
-export type DiscountCategory = {
-  category: TreatmentCategory;
-  tiers: {
-    name: "Office Employee" | "Regenesys Employee" | "Regenesys Medical Team";
-    discount: string;
-  }[];
-};
-
 const defaultAvoidIf = [
   "Pregnant or breastfeeding, unless cleared by the doctor",
   "Active infection or open wounds in the treatment area",
@@ -638,58 +630,6 @@ export const consultationService: Treatment = {
   requiresDoctorApproval: false,
   homeVisitAvailable: false,
 };
-
-export const discountTiers: DiscountCategory[] = [
-  {
-    category: "Toxin-Based",
-    tiers: [
-      { name: "Office Employee", discount: "10% off" },
-      { name: "Regenesys Employee", discount: "20% off" },
-      { name: "Regenesys Medical Team", discount: "30% off" },
-    ],
-  },
-  {
-    category: "Skin Boosters",
-    tiers: [
-      { name: "Office Employee", discount: "5% off" },
-      { name: "Regenesys Employee", discount: "10% off" },
-      { name: "Regenesys Medical Team", discount: "20% off" },
-    ],
-  },
-  {
-    category: "Acne Scars",
-    tiers: [
-      { name: "Office Employee", discount: "10% off" },
-      { name: "Regenesys Employee", discount: "20% off" },
-      { name: "Regenesys Medical Team", discount: "30% off" },
-    ],
-  },
-  {
-    category: "Others",
-    tiers: [
-      { name: "Office Employee", discount: "10% off" },
-      { name: "Regenesys Employee", discount: "20% off" },
-      { name: "Regenesys Medical Team", discount: "30% off" },
-    ],
-  },
-];
-
-export const referralPromos = [
-  {
-    title: "Refer 5 paying patients",
-    detail: "Get 50% off your next treatment.",
-  },
-  {
-    title: "Refer 10 paying patients",
-    detail:
-      "Get 1 free treatment: wart removal (1 area), neurotoxin (face), 3-in-1 scar treatment, mesolipo (face), or keloid injection.",
-  },
-  {
-    title: "Get 3 treatments in 1 day",
-    detail:
-      "Get 1 free treatment: wart removal (1 area) or undereye rejuvenation.",
-  },
-];
 
 export function getTreatmentById(id: string) {
   return treatments.find((treatment) => treatment.id === id) ??

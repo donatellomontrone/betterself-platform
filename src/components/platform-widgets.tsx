@@ -5,16 +5,12 @@ import Script from "next/script";
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarDays,
   Check,
   CreditCard,
-  MapPin,
-  MessageCircle,
   Paperclip,
   Send,
   ShieldCheck,
   SquareArrowOutUpRight,
-  UserRound,
   WandSparkles,
 } from "lucide-react";
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -1195,86 +1191,3 @@ export function DoctorChat() {
   );
 }
 
-export function LoginRegisterPreview() {
-  return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-      <section className="card p-7">
-        <p className="eyebrow">Patient access</p>
-        <h1 className="mt-3 font-serif text-5xl leading-tight text-[#1F1F1F]">
-          Sign in to manage private care.
-        </h1>
-        <p className="mt-4 text-base leading-7 text-[#595550]">
-          The first version prepares account access for bookings, intake forms,
-          doctor messaging, treatment history, payments, and aftercare.
-        </p>
-        <div className="mt-7 grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F]">
-            Email
-            <input className="field" defaultValue="mia@example.com" />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-[#1F1F1F]">
-            Password
-            <input className="field" type="password" defaultValue="betterself" />
-          </label>
-        </div>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link className="btn btn-primary" href="/dashboard">
-            <UserRound className="h-4 w-4" />
-            Login as Patient
-          </Link>
-          <Link className="btn btn-secondary" href="/admin">
-            <ShieldCheck className="h-4 w-4" />
-            Doctor/Admin Preview
-          </Link>
-        </div>
-      </section>
-      <section className="card bg-[#F6EDEA] p-7">
-        <p className="eyebrow">Account structure</p>
-        <div className="mt-5 grid gap-4">
-          {[
-            "Patient profile and contact details",
-            "Medical intake and consent records",
-            "Bookings and payment history",
-            "Treatment history and aftercare",
-            "Doctor-patient messages and photo uploads",
-          ].map((item) => (
-            <div key={item} className="flex gap-3 text-sm text-[#4D4D4D]">
-              <Check className="mt-0.5 h-4 w-4 text-[#8F5B67]" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-export function ConfirmationSummary() {
-  return (
-    <section className="card p-7">
-      <p className="eyebrow">Confirmation page structure</p>
-      <h2 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
-        Treatment booking request received
-      </h2>
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {[
-          [CalendarDays, "Date and time", "Selected in Calendly"],
-          [MessageCircle, "Doctor", "BetterSelf Medical Doctor"],
-          [MapPin, "Address", "BGC, Taguig, Metro Manila"],
-          [Check, "Preparation", "Complete intake and avoid active skin irritation."],
-        ].map(([Icon, label, value]) => (
-          <div key={label as string} className="rounded-lg border border-[#E6DFD5] p-4">
-            <Icon className="h-5 w-5 text-[#8F5B67]" />
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
-              {label as string}
-            </p>
-            <p className="mt-1 text-sm font-semibold text-[#1F1F1F]">{value as string}</p>
-          </div>
-        ))}
-      </div>
-      <Link className="btn btn-primary mt-6" href="/messages">
-        Chat with doctor
-      </Link>
-    </section>
-  );
-}

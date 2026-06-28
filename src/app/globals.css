@@ -7,9 +7,6 @@
   --accent: #8f5b67;
   --accent-strong: #6e444e;
   --accent-weak: #f4e8ea;
-  /* Readable muted text (darkened from the old washed-out greys). */
-  --muted: #4a4641;
-  --muted-soft: #6e565a;
 }
 
 @theme inline {
