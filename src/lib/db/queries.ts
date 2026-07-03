@@ -166,6 +166,8 @@ export type PatientBookingView = {
   payment_status: PaymentStatus;
   notes: string | null;
   amount: number | null;
+  confirmed_amount: number | null;
+  treatment_price_label: string;
   created_at: string;
 };
 
@@ -202,6 +204,8 @@ export async function getPatientBookings(patientId: string): Promise<PatientBook
       b.status,
       b.payment_status,
       b.notes,
+      b.confirmed_amount,
+      t.price_label as treatment_price_label,
       (
         select p.amount from public.payments p
         where p.booking_id = b.id
@@ -233,7 +237,7 @@ export async function getRetryableBookingForCheckout(
       b.location,
       b.status,
       b.payment_status,
-      coalesce(p.amount, t.starting_price) as amount,
+      coalesce(p.amount, b.confirmed_amount, t.starting_price) as amount,
       coalesce(
         p.payment_type,
         case when b.treatment_id = 'doctor-consultation' then 'consultation' else 'treatment' end
@@ -258,6 +262,20 @@ export async function getRetryableBookingForCheckout(
     limit 1
   `) as unknown as RetryableBookingCheckout[];
   return rows[0] ?? null;
+}
+
+/**
+ * Doctor sets the assessed total (pesos) on a booking — used for unit/area-priced
+ * treatments so the patient is charged the real amount, not the base starting price.
+ * Pass null to clear it.
+ */
+export async function setBookingConfirmedAmount(bookingId: string, amount: number | null) {
+  const sql = getSql();
+  await sql`
+    update public.bookings
+    set confirmed_amount = ${amount}, updated_at = now()
+    where id::text = ${bookingId}
+  `;
 }
 
 /**
@@ -306,6 +324,7 @@ export type AdminBookingView = {
   status: BookingStatus;
   payment_status: PaymentStatus;
   amount: number | null;
+  confirmed_amount: number | null;
   payment_currency: string | null;
   payment_type: string | null;
   transaction_reference: string | null;
@@ -352,6 +371,7 @@ export async function getAllBookings(): Promise<AdminBookingView[]> {
       b.status,
       b.payment_status,
       p.amount,
+      b.confirmed_amount,
       p.currency as payment_currency,
       p.payment_type,
       p.transaction_reference,

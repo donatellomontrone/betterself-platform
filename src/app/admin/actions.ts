@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { isAdminEmail } from "@/lib/admin";
 import {
+  setBookingConfirmedAmount,
   updateBookingNotes,
   updateBookingPaymentStatus,
   updateBookingSchedule,
@@ -89,6 +90,25 @@ export async function updateBookingScheduleAction(formData: FormData) {
     cleanText(formData.get("appointmentDate")),
     cleanText(formData.get("appointmentTime")),
   );
+  revalidatePath("/admin");
+}
+
+export async function setBookingAmountAction(formData: FormData) {
+  if (!(await assertAdmin())) return;
+
+  const bookingId = String(formData.get("bookingId") ?? "");
+  if (!bookingId) return;
+
+  // Blank clears the assessed amount; otherwise store a sane non-negative peso integer.
+  const raw = cleanText(formData.get("confirmedAmount"));
+  let amount: number | null = null;
+  if (raw !== null) {
+    const parsed = Math.round(Number(raw));
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1_000_000) return;
+    amount = parsed;
+  }
+
+  await setBookingConfirmedAmount(bookingId, amount);
   revalidatePath("/admin");
 }
 

@@ -41,6 +41,7 @@ import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
 import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
 import type { Json } from "@/lib/db/types";
 import {
+  setBookingAmountAction,
   updateBookingNotesAction,
   updateBookingPaymentStatusAction,
   updateBookingScheduleAction,
@@ -85,11 +86,32 @@ function paymentStatusTone(status: string): StatusTone {
   return "neutral";
 }
 
+function isUnitOrAreaPriced(priceLabel: string) {
+  return /\/(unit|area)/i.test(priceLabel);
+}
+
 function canRetryPayment(booking: PatientBookingView) {
+  // Payable if a payment row exists, the doctor set an assessed amount, or it's a
+  // fixed-price treatment (base price is the real price). Unit/area treatments need
+  // the doctor's assessed amount first.
+  const hasPayableAmount =
+    booking.amount != null ||
+    booking.confirmed_amount != null ||
+    !isUnitOrAreaPriced(booking.treatment_price_label);
   return (
-    booking.amount != null &&
+    hasPayableAmount &&
     booking.status === "confirmed" &&
     (booking.payment_status === "pending" || booking.payment_status === "refunded")
+  );
+}
+
+function isAwaitingAssessedPrice(booking: PatientBookingView) {
+  return (
+    booking.status === "confirmed" &&
+    (booking.payment_status === "pending" || booking.payment_status === "refunded") &&
+    booking.amount == null &&
+    booking.confirmed_amount == null &&
+    isUnitOrAreaPriced(booking.treatment_price_label)
   );
 }
 
@@ -530,6 +552,10 @@ export function DashboardPage({
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                     {canRetryPayment(upcoming) ? (
                       <RetryPaymentButton bookingId={upcoming.id} />
+                    ) : isAwaitingAssessedPrice(upcoming) ? (
+                      <span className="btn btn-secondary cursor-default justify-center opacity-80">
+                        Awaiting the doctor&apos;s assessed price
+                      </span>
                     ) : isAwaitingDoctorConfirmation(upcoming) ? (
                       <span className="btn btn-secondary cursor-default justify-center opacity-80">
                         Payment after doctor call
@@ -651,6 +677,8 @@ export function DashboardPage({
                             label="Retry payment"
                             compact
                           />
+                        ) : isAwaitingAssessedPrice(booking) ? (
+                          <StatusBadge tone="neutral">Awaiting assessed price</StatusBadge>
                         ) : isAwaitingDoctorConfirmation(booking) ? (
                           <StatusBadge tone="neutral">Payment after doctor call</StatusBadge>
                         ) : null}
@@ -1493,6 +1521,31 @@ export function AdminPage({
                               Update payment
                             </button>
                           </form>
+                          <form
+                            action={setBookingAmountAction}
+                            className="mt-3 flex flex-wrap items-end gap-3"
+                          >
+                            <input type="hidden" name="bookingId" value={b.id} />
+                            <AdminField label="Doctor-assessed amount (₱)">
+                              <input
+                                className="field min-w-56"
+                                type="number"
+                                name="confirmedAmount"
+                                min="0"
+                                step="1"
+                                placeholder="e.g. 13500"
+                                defaultValue={b.confirmed_amount ?? ""}
+                              />
+                            </AdminField>
+                            <button className="btn btn-secondary h-12" type="submit">
+                              Save amount
+                            </button>
+                          </form>
+                          <p className="mt-2 text-xs text-[#6E565A]">
+                            For unit/area treatments ({b.treatment_price_label}), set the total
+                            the patient pays before they check out. Leave blank to use the base
+                            price.
+                          </p>
                         </section>
 
                         <section>

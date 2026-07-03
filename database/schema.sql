@@ -79,6 +79,8 @@ create table public.bookings (
   appointment_time text,
   status public.booking_status not null default 'pending_doctor_review',
   payment_status public.payment_status not null default 'pending',
+  -- Doctor-assessed total (pesos) for unit/area-priced treatments; set at confirmation.
+  confirmed_amount integer,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
