@@ -167,6 +167,10 @@ export type PatientBookingView = {
   notes: string | null;
   amount: number | null;
   confirmed_amount: number | null;
+  payment_type: string | null;
+  transaction_reference: string | null;
+  paymongo_checkout_id: string | null;
+  payment_created_at: string | null;
   treatment_price_label: string;
   created_at: string;
 };
@@ -206,15 +210,21 @@ export async function getPatientBookings(patientId: string): Promise<PatientBook
       b.notes,
       b.confirmed_amount,
       t.price_label as treatment_price_label,
-      (
-        select p.amount from public.payments p
-        where p.booking_id = b.id
-        order by p.created_at desc
-        limit 1
-      ) as amount,
+      p.amount,
+      p.payment_type,
+      p.transaction_reference,
+      p.paymongo_checkout_id,
+      p.created_at as payment_created_at,
       b.created_at
     from public.bookings b
     join public.treatments t on t.id = b.treatment_id
+    left join lateral (
+      select *
+      from public.payments p
+      where p.booking_id = b.id
+      order by p.created_at desc
+      limit 1
+    ) p on true
     where b.patient_id = ${patientId}
     order by b.created_at desc
   `) as unknown as PatientBookingView[];

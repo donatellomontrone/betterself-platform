@@ -118,6 +118,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.info("[paymongo webhook] checkout paid", {
+      referenceNumber,
+      bookingsMarkedPaid,
+    });
+
     return NextResponse.json({
       received: true,
       action: "booking_payment_confirmed",
@@ -125,6 +130,10 @@ export async function POST(request: NextRequest) {
       bookingsMarkedPaid,
     });
   }
+
+  console.info("[paymongo webhook] ignored event", {
+    eventType: eventType ?? "unknown",
+  });
 
   return NextResponse.json({
     received: true,

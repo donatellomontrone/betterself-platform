@@ -119,6 +119,92 @@ function isAwaitingDoctorConfirmation(booking: PatientBookingView) {
   return booking.payment_status === "pending" && booking.status === "pending_doctor_review";
 }
 
+function isConsultationBooking(booking: Pick<PatientBookingView, "treatment_id">) {
+  return booking.treatment_id === consultationService.id || booking.treatment_id === "doctor-consultation";
+}
+
+function hasPayMongoAttempt(
+  booking: Pick<PatientBookingView, "paymongo_checkout_id" | "transaction_reference">,
+) {
+  return Boolean(booking.paymongo_checkout_id || booking.transaction_reference);
+}
+
+function getDisplayAmount(booking: Pick<PatientBookingView, "amount" | "confirmed_amount">) {
+  return booking.amount ?? booking.confirmed_amount ?? null;
+}
+
+function getPatientNextStep(booking: PatientBookingView) {
+  if (booking.status === "cancelled") {
+    return {
+      eyebrow: "Cancelled",
+      title: "This request was cancelled.",
+      text: "It stays here for your records. You can start a new request whenever you are ready.",
+    };
+  }
+
+  if (booking.status === "completed") {
+    return {
+      eyebrow: "Completed",
+      title: "Treatment completed.",
+      text: "Your aftercare guidance and follow-up support remain available from BetterSelf.",
+    };
+  }
+
+  if (isConsultationBooking(booking)) {
+    if (booking.payment_status === "paid") {
+      return {
+        eyebrow: "Consultation",
+        title: "Consultation paid. Next step: doctor call.",
+        text: "If you already picked a Calendly slot, keep that appointment. Until Calendly sync is added, the doctor can update the exact time in the admin calendar.",
+      };
+    }
+
+    if (hasPayMongoAttempt(booking)) {
+      return {
+        eyebrow: "PayMongo confirmation",
+        title: "We are waiting for PayMongo to confirm the payment.",
+        text: "If you just paid by QR Ph, this can take a moment. Your Calendly slot is still useful; BetterSelf can reconcile the payment from PayMongo if the webhook is delayed.",
+      };
+    }
+
+    return {
+      eyebrow: "Consultation",
+      title: "Consultation request started.",
+      text: "Complete payment first, then choose your doctor-call slot.",
+    };
+  }
+
+  if (isAwaitingAssessedPrice(booking)) {
+    return {
+      eyebrow: "Doctor pricing",
+      title: "The doctor is setting the final amount.",
+      text: "Unit or area-based treatments need a confirmed total before the payment button opens.",
+    };
+  }
+
+  if (canRetryPayment(booking)) {
+    return {
+      eyebrow: "Ready to pay",
+      title: "Doctor review is complete. Pay to confirm.",
+      text: "Once you pay from here, BetterSelf can confirm the home treatment schedule.",
+    };
+  }
+
+  if (booking.payment_status === "paid") {
+    return {
+      eyebrow: "Paid treatment",
+      title: "Payment received. Home visit next.",
+      text: "The doctor will confirm the visit time and aftercare details around your appointment.",
+    };
+  }
+
+  return {
+    eyebrow: "Doctor review",
+    title: "Doctor call/review happens before payment.",
+    text: "BetterSelf reviews your intake first. When the service is confirmed, the payment button appears in this dashboard.",
+  };
+}
+
 function RetryPaymentButton({
   bookingId,
   label = "Pay now",
@@ -148,6 +234,14 @@ function RetryPaymentButton({
 }
 
 function canCancelBooking(booking: PatientBookingView) {
+  if (
+    isConsultationBooking(booking) &&
+    booking.payment_status === "pending" &&
+    hasPayMongoAttempt(booking)
+  ) {
+    return false;
+  }
+
   return (
     booking.payment_status !== "paid" &&
     booking.status !== "completed" &&
@@ -465,22 +559,25 @@ export function DashboardPage({
   bookingStatus?: string;
   loadFailed?: boolean;
 }) {
-  const upcoming =
-    bookings.find((b) => b.status !== "cancelled" && b.status !== "completed") ??
-    bookings[0];
-  const upcomingCallLink = upcoming ? getVideoCallLink(upcoming) : null;
+  const activeBookings = bookings.filter((b) => b.status !== "cancelled" && b.status !== "completed");
+  const currentBooking = activeBookings[0] ?? bookings[0];
+  const currentCallLink = currentBooking ? getVideoCallLink(currentBooking) : null;
+  const currentStep = currentBooking ? getPatientNextStep(currentBooking) : null;
+  const consultationBookings = bookings.filter(isConsultationBooking);
+  const treatmentBookings = bookings.filter((booking) => !isConsultationBooking(booking));
+  const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
   const hasCompleted = bookings.some((b) => b.status === "completed");
   const paymentRetryMessage = paymentStatus ? paymentRetryMessages[paymentStatus] : undefined;
   const bookingRequestMessage = bookingStatus ? bookingRequestMessages[bookingStatus] : undefined;
   const stats = [
-    { label: "Total bookings", value: bookings.length },
+    { label: "Consultations", value: consultationBookings.length },
     {
-      label: "Awaiting doctor review",
-      value: bookings.filter((b) => b.status === "pending_doctor_review").length,
+      label: "Treatment requests",
+      value: treatmentBookings.length,
     },
     {
-      label: "Confirmed",
-      value: bookings.filter((b) => b.status === "confirmed").length,
+      label: "Ready to pay",
+      value: bookings.filter(canRetryPayment).length,
     },
     {
       label: "Paid",
@@ -528,37 +625,70 @@ export function DashboardPage({
           </div>
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <section className="card p-6">
-              <p className="eyebrow">{upcoming ? "Latest appointment" : "Upcoming appointment"}</p>
-              {upcoming ? (
+              <p className="eyebrow">{currentStep?.eyebrow ?? "Next step"}</p>
+              {currentBooking && currentStep ? (
                 <>
                   <h2 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
-                    {upcoming.treatment_name}
+                    {currentStep.title}
                   </h2>
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-[#595550]">
+                    {currentStep.text}
+                  </p>
+                  {currentBooking.payment_status === "pending" &&
+                  hasPayMongoAttempt(currentBooking) ? (
+                    <div className="mt-4 rounded-lg border border-[#F6D7A7] bg-[#FFF8E7] p-4 text-sm leading-6 text-[#6E565A]">
+                      PayMongo checkout was created for this booking. If you already paid,
+                      do not pay again yet — BetterSelf should verify the webhook/payment
+                      status first.
+                    </div>
+                  ) : null}
                   <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                    <Summary label="Doctor" value="BetterSelf Medical Doctor" />
-                    <Summary label="Booked on" value={formatBookingDate(upcoming.created_at)} />
-                    <Summary label="Appointment" value={upcoming.appointment_type} />
-                    <Summary label="Location" value={upcoming.location} />
-                    <Summary label="Status" value={formatBookingStatus(upcoming.status)} />
+                    <Summary label="Booking" value={currentBooking.treatment_name} />
+                    <Summary label="Booked on" value={formatBookingDate(currentBooking.created_at)} />
+                    <Summary label="Appointment" value={currentBooking.appointment_type} />
+                    <Summary
+                      label="Calendar"
+                      value={
+                        currentBooking.appointment_date || currentBooking.appointment_time
+                          ? getScheduleLabel(currentBooking)
+                          : isConsultationBooking(currentBooking)
+                            ? "Calendly manages the call slot"
+                            : "Doctor confirms after review"
+                      }
+                    />
+                    <Summary label="Status" value={formatBookingStatus(currentBooking.status)} />
                     <Summary
                       label="Payment"
                       value={
-                        upcoming.amount != null
-                          ? `${formatPaymentStatus(upcoming.payment_status)} · ${formatPeso(upcoming.amount)}`
-                          : formatPaymentStatus(upcoming.payment_status)
+                        getDisplayAmount(currentBooking) != null
+                          ? `${formatPaymentStatus(currentBooking.payment_status)} · ${formatPeso(
+                              getDisplayAmount(currentBooking),
+                            )}`
+                          : formatPaymentStatus(currentBooking.payment_status)
                       }
                     />
                   </div>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    {canRetryPayment(upcoming) ? (
-                      <RetryPaymentButton bookingId={upcoming.id} />
-                    ) : isAwaitingAssessedPrice(upcoming) ? (
+                    {canRetryPayment(currentBooking) ? (
+                      <RetryPaymentButton bookingId={currentBooking.id} />
+                    ) : isConsultationBooking(currentBooking) &&
+                      currentBooking.payment_status === "paid" &&
+                      calendlyUrl ? (
+                      <a
+                        className="btn btn-primary"
+                        href={calendlyUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Open Calendly
+                      </a>
+                    ) : isAwaitingAssessedPrice(currentBooking) ? (
                       <span className="btn btn-secondary cursor-default justify-center opacity-80">
                         Awaiting the doctor&apos;s assessed price
                       </span>
-                    ) : isAwaitingDoctorConfirmation(upcoming) ? (
+                    ) : isAwaitingDoctorConfirmation(currentBooking) ? (
                       <span className="btn btn-secondary cursor-default justify-center opacity-80">
-                        Payment after doctor call
+                        Doctor review first
                       </span>
                     ) : (
                       <Link className="btn btn-secondary" href="/booking">
@@ -566,23 +696,23 @@ export function DashboardPage({
                       </Link>
                     )}
                     <Link
-                      className={canRetryPayment(upcoming) ? "btn btn-secondary" : "btn btn-primary"}
+                      className={canRetryPayment(currentBooking) ? "btn btn-secondary" : "btn btn-primary"}
                       href="/messages"
                     >
                       Message Doctor
                     </Link>
-                    {upcomingCallLink ? (
+                    {currentCallLink ? (
                       <a
                         className="btn btn-secondary"
-                        href={upcomingCallLink}
+                        href={currentCallLink}
                         rel="noreferrer"
                         target="_blank"
                       >
                         Join video call
                       </a>
                     ) : null}
-                    {canCancelBooking(upcoming) ? (
-                      <CancelRequestButton bookingId={upcoming.id} />
+                    {canCancelBooking(currentBooking) ? (
+                      <CancelRequestButton bookingId={currentBooking.id} />
                     ) : null}
                   </div>
                 </>
@@ -604,7 +734,7 @@ export function DashboardPage({
               )}
             </section>
             <section id="aftercare" className="card bg-[#F6EDEA] p-6">
-              <p className="eyebrow">Aftercare</p>
+              <p className="eyebrow">Flow</p>
               {hasCompleted ? (
                 <>
                   <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
@@ -621,80 +751,136 @@ export function DashboardPage({
               ) : (
                 <>
                   <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
-                    Aftercare guidance
+                    What happens next
                   </h2>
-                  <p className="mt-3 text-sm leading-6 text-[#595550]">
-                    After your treatment, your doctor&apos;s personalised aftercare
-                    instructions will appear here.
-                  </p>
+                  <ol className="mt-4 grid gap-3 text-sm leading-6 text-[#595550]">
+                    <li>
+                      <span className="font-semibold text-[#1F1F1F]">Consultation:</span>{" "}
+                      pay ₱800, pick a Calendly slot, then speak with the doctor.
+                    </li>
+                    <li>
+                      <span className="font-semibold text-[#1F1F1F]">Treatment:</span>{" "}
+                      submit intake first; the doctor confirms suitability and final price.
+                    </li>
+                    <li>
+                      <span className="font-semibold text-[#1F1F1F]">Payment:</span>{" "}
+                      treatment payment opens here after the doctor confirms the plan.
+                    </li>
+                  </ol>
                 </>
               )}
             </section>
           </div>
           {bookings.length > 0 ? (
-            <section className="mt-8">
-              <p className="eyebrow">Treatment history</p>
-              <div className="mt-4 grid gap-3">
-                {bookings.map((booking) => {
-                  const callLink = getVideoCallLink(booking);
-                  return (
-                    <article
-                      key={booking.id}
-                      className="card grid gap-4 p-5 lg:grid-cols-[1.4fr_1fr_auto] lg:items-center"
-                    >
-                      <div>
-                        <p className="font-serif text-2xl text-[#1F1F1F]">
-                          {booking.treatment_name}
-                        </p>
-                        <p className="mt-1 text-sm text-[#595550]">
-                          {booking.appointment_type} · {booking.location}
-                        </p>
-                      </div>
-                      <div className="text-sm text-[#4D4D4D]">
-                        <p>Booked {formatBookingDate(booking.created_at)}</p>
-                        <p>{formatPeso(booking.amount)}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <StatusBadge tone={bookingStatusTone(booking.status)}>
-                          {formatBookingStatus(booking.status)}
-                        </StatusBadge>
-                        <StatusBadge tone={paymentStatusTone(booking.payment_status)}>
-                          {formatPaymentStatus(booking.payment_status)}
-                        </StatusBadge>
-                        {callLink ? (
-                          <a
-                            className="btn btn-secondary h-10"
-                            href={callLink}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            Video call
-                          </a>
-                        ) : null}
-                        {canRetryPayment(booking) ? (
-                          <RetryPaymentButton
-                            bookingId={booking.id}
-                            label="Retry payment"
-                            compact
-                          />
-                        ) : isAwaitingAssessedPrice(booking) ? (
-                          <StatusBadge tone="neutral">Awaiting assessed price</StatusBadge>
-                        ) : isAwaitingDoctorConfirmation(booking) ? (
-                          <StatusBadge tone="neutral">Payment after doctor call</StatusBadge>
-                        ) : null}
-                        {canCancelBooking(booking) ? (
-                          <CancelRequestButton bookingId={booking.id} compact />
-                        ) : null}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
+            <div className="mt-8 grid gap-8">
+              <DashboardBookingSection
+                title="Consultations"
+                emptyText="No consultation bookings yet."
+                bookings={consultationBookings}
+                calendlyUrl={calendlyUrl}
+              />
+              <DashboardBookingSection
+                title="Treatment requests"
+                emptyText="No treatment requests yet."
+                bookings={treatmentBookings}
+                calendlyUrl={calendlyUrl}
+              />
+            </div>
           ) : null}
         </div>
       </section>
     </PageShell>
+  );
+}
+
+function DashboardBookingSection({
+  title,
+  emptyText,
+  bookings,
+  calendlyUrl,
+}: {
+  title: string;
+  emptyText: string;
+  bookings: PatientBookingView[];
+  calendlyUrl: string;
+}) {
+  return (
+    <section>
+      <p className="eyebrow">{title}</p>
+      <div className="mt-4 grid gap-3">
+        {bookings.length > 0 ? (
+          bookings.map((booking) => (
+            <DashboardBookingCard
+              key={booking.id}
+              booking={booking}
+              calendlyUrl={calendlyUrl}
+            />
+          ))
+        ) : (
+          <p className="rounded-lg border border-[#E6DFD5] bg-white p-5 text-sm text-[#595550]">
+            {emptyText}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function DashboardBookingCard({
+  booking,
+  calendlyUrl,
+}: {
+  booking: PatientBookingView;
+  calendlyUrl: string;
+}) {
+  const callLink = getVideoCallLink(booking);
+  const amount = getDisplayAmount(booking);
+  const nextStep = getPatientNextStep(booking);
+  const isConsultation = isConsultationBooking(booking);
+  const paymentInProgress =
+    isConsultation && booking.payment_status === "pending" && hasPayMongoAttempt(booking);
+
+  return (
+    <article className="card grid gap-4 p-5 lg:grid-cols-[1.25fr_1fr_auto] lg:items-center">
+      <div>
+        <p className="font-serif text-2xl text-[#1F1F1F]">{booking.treatment_name}</p>
+        <p className="mt-1 text-sm text-[#595550]">
+          {booking.appointment_type} · {booking.location}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-[#595550]">{nextStep.text}</p>
+      </div>
+      <div className="grid gap-2 text-sm text-[#4D4D4D]">
+        <p>Booked {formatBookingDate(booking.created_at)}</p>
+        <p>{amount != null ? formatPeso(amount) : booking.treatment_price_label}</p>
+        <p>{getScheduleLabel(booking)}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <StatusBadge tone={bookingStatusTone(booking.status)}>
+          {formatBookingStatus(booking.status)}
+        </StatusBadge>
+        <StatusBadge tone={paymentStatusTone(booking.payment_status)}>
+          {paymentInProgress ? "Payment confirming" : formatPaymentStatus(booking.payment_status)}
+        </StatusBadge>
+        {callLink ? (
+          <a className="btn btn-secondary h-10" href={callLink} rel="noreferrer" target="_blank">
+            Video call
+          </a>
+        ) : null}
+        {isConsultation && booking.payment_status === "paid" && calendlyUrl ? (
+          <a className="btn btn-secondary h-10" href={calendlyUrl} rel="noreferrer" target="_blank">
+            Calendly
+          </a>
+        ) : null}
+        {canRetryPayment(booking) ? (
+          <RetryPaymentButton bookingId={booking.id} label="Pay now" compact />
+        ) : isAwaitingAssessedPrice(booking) ? (
+          <StatusBadge tone="neutral">Awaiting assessed price</StatusBadge>
+        ) : isAwaitingDoctorConfirmation(booking) && !isConsultation ? (
+          <StatusBadge tone="neutral">Doctor review first</StatusBadge>
+        ) : null}
+        {canCancelBooking(booking) ? <CancelRequestButton bookingId={booking.id} compact /> : null}
+      </div>
+    </article>
   );
 }
 
