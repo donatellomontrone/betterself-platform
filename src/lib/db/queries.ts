@@ -193,6 +193,15 @@ export type RetryableBookingCheckout = {
   patient_address: string | null;
 };
 
+export type PaymentReconciliationTarget = {
+  booking_id: string;
+  patient_id: string;
+  booking_payment_status: PaymentStatus;
+  payment_status: PaymentStatus | null;
+  transaction_reference: string | null;
+  paymongo_checkout_id: string | null;
+};
+
 /** All of a patient's bookings, newest first, with treatment name and latest payment amount. */
 export async function getPatientBookings(patientId: string): Promise<PatientBookingView[]> {
   const sql = getSql();
@@ -271,6 +280,34 @@ export async function getRetryableBookingForCheckout(
       and b.patient_id = ${patientId}
     limit 1
   `) as unknown as RetryableBookingCheckout[];
+  return rows[0] ?? null;
+}
+
+export async function getPaymentReconciliationTarget(
+  patientId: string,
+  bookingId: string,
+): Promise<PaymentReconciliationTarget | null> {
+  const sql = getSql();
+  const rows = (await sql`
+    select
+      b.id as booking_id,
+      b.patient_id,
+      b.payment_status as booking_payment_status,
+      p.status as payment_status,
+      p.transaction_reference,
+      p.paymongo_checkout_id
+    from public.bookings b
+    left join lateral (
+      select *
+      from public.payments p
+      where p.booking_id = b.id
+      order by p.created_at desc
+      limit 1
+    ) p on true
+    where b.id::text = ${bookingId}
+      and b.patient_id = ${patientId}
+    limit 1
+  `) as unknown as PaymentReconciliationTarget[];
   return rows[0] ?? null;
 }
 

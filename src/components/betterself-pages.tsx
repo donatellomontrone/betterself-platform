@@ -266,6 +266,23 @@ function CancelRequestButton({
   );
 }
 
+function ReconcilePaymentButton({
+  bookingId,
+  compact = false,
+}: {
+  bookingId: string;
+  compact?: boolean;
+}) {
+  return (
+    <form action="/api/paymongo/reconcile" method="post">
+      <input type="hidden" name="bookingId" value={bookingId} />
+      <button className={compact ? "btn btn-secondary h-10" : "btn btn-secondary"} type="submit">
+        Refresh payment status
+      </button>
+    </form>
+  );
+}
+
 const paymentRetryMessages: Record<string, { title: string; text: string }> = {
   retry_failed: {
     title: "Payment could not be reopened",
@@ -286,6 +303,26 @@ const paymentRetryMessages: Record<string, { title: string; text: string }> = {
   not_confirmed: {
     title: "Doctor confirmation required",
     text: "Payment opens here after the doctor call/review confirms the service.",
+  },
+  synced: {
+    title: "Payment confirmed",
+    text: "PayMongo confirmed the payment and your dashboard has been updated.",
+  },
+  sync_pending: {
+    title: "Payment still pending",
+    text: "PayMongo does not show this checkout as paid yet. If you already paid, wait a minute and refresh again, or message the doctor.",
+  },
+  sync_failed: {
+    title: "Payment check failed",
+    text: "We could not verify this checkout with PayMongo just now. Please try again or message the doctor.",
+  },
+  sync_missing: {
+    title: "Payment session missing",
+    text: "This booking does not have a PayMongo checkout session to verify.",
+  },
+  sync_unavailable: {
+    title: "Payment check unavailable",
+    text: "The payment verification service is not available right now. Please try again shortly.",
   },
 };
 
@@ -669,7 +706,10 @@ export function DashboardPage({
                     />
                   </div>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    {canRetryPayment(currentBooking) ? (
+                    {currentBooking.payment_status === "pending" &&
+                    hasPayMongoAttempt(currentBooking) ? (
+                      <ReconcilePaymentButton bookingId={currentBooking.id} />
+                    ) : canRetryPayment(currentBooking) ? (
                       <RetryPaymentButton bookingId={currentBooking.id} />
                     ) : isConsultationBooking(currentBooking) &&
                       currentBooking.payment_status === "paid" &&
@@ -871,7 +911,9 @@ function DashboardBookingCard({
             Calendly
           </a>
         ) : null}
-        {canRetryPayment(booking) ? (
+        {paymentInProgress ? (
+          <ReconcilePaymentButton bookingId={booking.id} compact />
+        ) : canRetryPayment(booking) ? (
           <RetryPaymentButton bookingId={booking.id} label="Pay now" compact />
         ) : isAwaitingAssessedPrice(booking) ? (
           <StatusBadge tone="neutral">Awaiting assessed price</StatusBadge>
