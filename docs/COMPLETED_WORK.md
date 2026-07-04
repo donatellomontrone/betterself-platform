@@ -1,85 +1,104 @@
 # BetterSelf Completed Work
 
-Last updated: 2026-06-25
+Last updated: 2026-07-04
 
-This is the handoff list of the work completed so far for BetterSelf Home Aesthetics.
+This is the concise list of work completed so far on BetterSelf Home Aesthetics.
 
-## Customer Website
+## Public website
 
-- Built the public BetterSelf website with home, treatments, how it works, safety, about, contact, privacy, terms, and consent pages.
-- Replaced the membership concept with per-treatment pricing.
-- Added real service categories and pricing from the provided BetterSelf rate cards.
-- Added direct treatment booking and doctor-consultation booking as two separate paths.
-- Added a calmer hero and brand direction using the BetterSelf logo and provided treatment imagery.
-- Added interactive treatment discovery for patient concerns, including face/body visual maps.
-- Added a patient concern prompt so users can describe the problem they want to address before booking.
-- Added cookie consent on site entry.
-- Added legal/medical disclaimer language across the site.
+- Built public pages: Home, Treatments, How it works, Safety, About, Contact,
+  FAQ, Privacy, Terms, and Consent.
+- Removed the membership model; BetterSelf is priced per consultation/treatment.
+- Added real treatment categories and service rates from the BetterSelf rate cards.
+- Added direct treatment booking and doctor-consultation booking paths.
+- Added BetterSelf branding, calmer visual direction, logo usage, and treatment
+  imagery.
+- Added treatment discovery with search, filters, concern chips, and interactive
+  face/body maps.
+- Added concern-first UX: patients describe what problem they want to address.
+- Added cookie consent.
+- Added legal and medical disclaimer language across the site.
+- Added SEO metadata, sitemap, robots, Open Graph, and noindex for private areas.
 
-## Booking Flow
+## Booking flow
 
-- Built a 5-step booking wizard with treatment/consultation selection, location, patient details, medical intake, Calendly, and payment handoff.
-- Updated the flow so treatment requests are reviewed by the doctor first, then payment becomes available from the patient dashboard after confirmation.
-- Added consultation booking at ₱1,500 for patients who need help choosing a treatment.
-- Added Google address search for home visits, with Metro Manila context and fallback behavior.
-- Added required patient details, medical intake questions, consent gates, and validation before booking can be submitted.
+- Built a five-step booking wizard.
+- Split business logic into two flows:
+  - consultation: PHP 800 paid up front, then schedule the doctor call;
+  - treatment: request first, doctor review, then pay from dashboard.
+- Added patient details, medical intake, consent gates, validation, and summary.
 - Added logged-in user prefill for name, email, and phone.
-- Added dashboard support for retrying payment when payment is pending or failed.
+- Added address capture for home visits and hid address for online consults.
+- Added Google Places address search gated behind optional-cookie acceptance.
+- Added Calendly embed/fallback link for doctor-call scheduling.
+- Added discount codes validated server-side.
 - Added cancellation for pending unpaid bookings.
 
-## Patient Dashboard
+## Patient dashboard
 
-- Built a real patient dashboard backed by the database.
-- Shows upcoming/current booking, status, payment status, address/location, treatment history, and aftercare guidance.
-- Shows "Payment after doctor call" until the doctor confirms the request.
-- Shows retry-payment actions when payment is available and not complete.
-- Shows cancel actions for unpaid pending requests.
-- Added video-call link display when a booking has a Calendly link or fallback doctor call URL.
-- Added message-doctor entry points from active bookings.
+- Built a real database-backed dashboard.
+- Shows current booking, treatment history, payment state, location/address,
+  appointment type, and status badges.
+- Shows payment only when the doctor has confirmed the treatment and the booking
+  is payable.
+- Supports payment retry with a new PayMongo QR Ph checkout session.
+- Supports cancelling pending unpaid bookings.
+- Shows video-call links when Calendly/fallback doctor call URL is available.
+- Added message-doctor entry points.
 
-## Doctor / Admin Platform
+## Doctor/admin platform
 
-- Created `/admin` as a protected doctor/admin dashboard using Clerk plus `ADMIN_EMAILS`.
-- Added admin footer access so the doctor can find the admin area.
-- Added booking statistics: total bookings, awaiting review, confirmed, paid, patients, ready to pay, flagged intakes, and filtered results.
-- Added booking filters by search, booking status, payment status, and intake status.
-- Added CSV export.
-- Added patient profile editing from admin: phone, address, emergency contact, allergies, medications, contraindications.
+- Created protected `/admin` dashboard gated by Clerk and `ADMIN_EMAILS`.
+- Added footer access to admin.
+- Added left-side doctor navigation.
+- Added stats: total bookings, awaiting review, confirmed, paid, patients, ready
+  to pay, flagged intakes, and filtered count.
+- Added booking filters by search, status, payment, and intake.
+- Added patient quick view and patient profile editing.
 - Added intake review controls and medical flag visibility.
-- Added booking status updates: pending review, needs more information, confirmed, completed, cancelled.
-- Added a left-side doctor menu for quick navigation.
-- Added admin calendar sections for confirmed video calls and confirmed home visits.
-- Added doctor-side message/thread overview with links to chat and email.
-- Added patient quick-list cards with patient contact and spend data.
-- Added payment queue so the doctor can see which confirmed bookings still need payment.
-- Added video-call access inside admin booking details and calendar cards.
+- Added booking status updates and notes.
+- Added doctor-assessed amount field for unit/area treatment pricing.
+- Added payment queue.
+- Added calendar sections for confirmed video calls and confirmed home visits.
+- Added doctor-side message/thread overview and video-call context.
+- Added CSV export with formula-injection guard and console audit log.
 
 ## Payments
 
-- Integrated PayMongo Hosted Checkout through `/api/checkout`.
-- Added webhook handling for PayMongo payment confirmation.
-- Added PayMongo env variables in Vercel docs and `.env.example`.
-- Added support for retrying payment from the dashboard.
+- Integrated PayMongo Hosted Checkout for QR Ph.
+- Consultation payments happen up front.
+- Treatment payments happen after doctor confirmation.
+- Added retry payment from dashboard with fresh QR checkout sessions.
 - Added payment states in patient and admin views.
-- Added operational guidance: QR Ph / PayMongo methods depend on merchant activation in the PayMongo dashboard.
+- Hardened PayMongo webhook:
+  - HMAC verification;
+  - timestamp replay window;
+  - support for wrapper/direct event payload shapes;
+  - reference-based payment matching;
+  - no cancelled-booking resurrection.
+- Added demo retry completion when no PayMongo secret is configured locally.
 
-## Auth, Data, And Backend
+## Auth, data, and backend
 
 - Integrated Clerk authentication.
 - Integrated Neon Postgres data layer.
-- Added real database-backed bookings, profiles, payments, intake answers, and admin views.
-- Added server-side admin email gating with `ADMIN_EMAILS`.
-- Added environment variable documentation for Clerk, Neon, Calendly, PayMongo, Google Maps, OpenAI, support contacts, and doctor video-call fallback.
+- Added real bookings, profiles, payments, intake answers, admin views, and
+  dashboard views.
+- Added admin email allowlist.
+- Added server-side validation and protected routes.
+- Added profile updates that preserve existing medical fields.
+- Fixed Clerk proxy matching for protected CSV export.
 
-## AI / Concern Matching
+## AI / concern matching
 
-- Added OpenAI-ready treatment suggestion support using `OPENAI_API_KEY` and `OPENAI_MODEL`.
-- Added local fallback behavior so the booking flow still works if the AI key is not configured.
-- The patient describes the concern first, then the platform can suggest relevant treatments instead of relying only on manual category browsing.
+- Added OpenAI-ready treatment suggestion endpoint.
+- Added strict schema output and local fallback.
+- Added red-flag/uncertain concern handling to steer toward consultation.
+- Added input-length cap before calling OpenAI.
 
-## Operational Notes
+## Documentation
 
-- Set `NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL` in Vercel only if the doctor wants a shared fallback video-call room.
-- Keep `PAYMONGO_SECRET_KEY`, `PAYMONGO_WEBHOOK_SECRET`, `CLERK_SECRET_KEY`, `DATABASE_URL`, `OPENAI_API_KEY`, and `ADMIN_EMAILS` server-side or sensitive where possible.
-- For PayMongo live payments, complete business verification and enable payment channels in PayMongo.
-- For a custom domain, update `NEXT_PUBLIC_SITE_URL`, Clerk redirect URLs, PayMongo webhook URL, and Google Maps restrictions after the domain is connected.
+- Updated feature list.
+- Updated audit remediation status.
+- Updated handoff and to-do files.
+- Added/maintained stack setup guidance.
