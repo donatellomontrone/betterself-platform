@@ -20,7 +20,7 @@ create type public.intake_review_status as enum (
 create table public.user_profiles (
   id text primary key,
   full_name text not null,
-  email text not null unique,
+  email text not null,
   phone text,
   role public.user_role not null default 'patient',
   created_at timestamptz not null default now()
@@ -132,6 +132,7 @@ create table public.aftercare_instructions (
 );
 
 create index bookings_patient_idx on public.bookings(patient_id);
+create index if not exists user_profiles_email_idx on public.user_profiles(email);
 create index account_consents_user_idx on public.account_consents(user_id, accepted_at desc);
 create index bookings_doctor_idx on public.bookings(doctor_id);
 create index bookings_status_idx on public.bookings(status);
