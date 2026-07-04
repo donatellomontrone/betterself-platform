@@ -334,7 +334,6 @@ export type AdminBookingView = {
   intake_consent_confirmed: boolean | null;
   intake_review_status: string | null;
   intake_doctor_notes: string | null;
-  intake_photo_uploads: string[] | null;
   notes: string | null;
   patient_total_bookings: number;
   patient_paid_bookings: number;
@@ -381,7 +380,6 @@ export async function getAllBookings(): Promise<AdminBookingView[]> {
       mi.consent_confirmed as intake_consent_confirmed,
       mi.doctor_review_status as intake_review_status,
       mi.doctor_notes as intake_doctor_notes,
-      mi.photo_uploads as intake_photo_uploads,
       b.notes,
       (
         select count(*)::int from public.bookings patient_bookings
@@ -562,7 +560,13 @@ export async function markPaidByReference(referenceNumber: string): Promise<numb
     // booking can be reconciled/refunded manually.
     const bookingUpdated = (await sql`
       update public.bookings
-      set payment_status = 'paid', updated_at = now()
+      set payment_status = 'paid',
+          status = case
+            when treatment_id = 'doctor-consultation' and status = 'pending_doctor_review'
+              then 'confirmed'::public.booking_status
+            else status
+          end,
+          updated_at = now()
       where id = ${row.booking_id}
         and status <> 'cancelled'
       returning id

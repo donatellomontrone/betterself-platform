@@ -26,12 +26,17 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json().catch(() => null)) as AccountConsentRequest | null;
-  if (
-    !body ||
-    body.consentVersion !== CONSENT_VERSION ||
-    !Array.isArray(body.acceptedItems) ||
-    body.acceptedItems.length < 5
-  ) {
+
+  // Only accept non-empty strings, each bounded, capped to a sane count — so arbitrary
+  // objects/huge payloads can't be persisted to the consent jsonb.
+  const acceptedItems = Array.isArray(body?.acceptedItems)
+    ? body.acceptedItems
+        .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+        .map((item) => item.trim().slice(0, 300))
+        .slice(0, 20)
+    : [];
+
+  if (!body || body.consentVersion !== CONSENT_VERSION || acceptedItems.length < 5) {
     return NextResponse.json({ ok: false, error: "Invalid consent payload." }, { status: 400 });
   }
 
@@ -63,7 +68,7 @@ export async function POST(request: NextRequest) {
       userId,
       consentVersion: body.consentVersion,
       acceptedAt: body.acceptedAt ?? null,
-      acceptedItems: body.acceptedItems,
+      acceptedItems,
       userAgent: request.headers.get("user-agent"),
     });
 
