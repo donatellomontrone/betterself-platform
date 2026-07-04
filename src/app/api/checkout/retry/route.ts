@@ -5,6 +5,7 @@ import { isDatabaseConfigured } from "@/lib/db/client";
 import {
   createPayment,
   getRetryableBookingForCheckout,
+  markPaidByReference,
   updateBookingPaymentStatus,
 } from "@/lib/db/queries";
 import { applyDiscount } from "@/lib/discounts";
@@ -61,11 +62,21 @@ export async function POST(request: NextRequest) {
   const secretKey = process.env.PAYMONGO_SECRET_KEY;
 
   if (!secretKey) {
-    const checkoutUrl = new URL(
-      `/checkout-preview?reference=${referenceNumber}&treatment=${booking.treatment_id}`,
-      request.url,
+    // Demo mode (no PayMongo): record + mark the payment paid so the flow actually
+    // completes and the dashboard 'Pay now' clears, then land on the success page —
+    // instead of dead-ending on /checkout-preview and looping forever.
+    await createPayment({
+      bookingId: booking.id,
+      patientId: user.id,
+      amount: applied.total,
+      paymentType: booking.payment_type,
+      transactionReference: referenceNumber,
+    });
+    await markPaidByReference(referenceNumber);
+    return NextResponse.redirect(
+      new URL(`/booking/success?reference=${referenceNumber}&demo=1`, request.url),
+      303,
     );
-    return NextResponse.redirect(checkoutUrl, 303);
   }
 
   const response = await fetch("https://api.paymongo.com/v2/checkout_sessions", {

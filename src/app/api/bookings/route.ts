@@ -197,19 +197,9 @@ export async function POST(request: NextRequest) {
       notes,
     });
 
-    // Only consultations are paid now, so only they get a payment row here. Treatments
-    // get their real payment row when the patient checks out from the dashboard
-    // (checkout/retry), avoiding a permanent NULL-reference orphan row per booking.
-    if (isConsultation) {
-      await createPayment({
-        bookingId: booking.id,
-        patientId: userId,
-        amount: consultDiscount?.total ?? treatment.price,
-        paymentType: "consultation",
-        transactionReference: referenceNumber,
-      });
-    }
-
+    // The consultation payment row is created below only once a checkout exists (demo
+    // or a successful PayMongo session) — never on a PayMongo failure — so a 502 leaves
+    // no orphan payment row. Treatments get their payment row at dashboard checkout.
     await createMedicalIntake({
       patientId: userId,
       bookingId: booking.id,
@@ -240,6 +230,13 @@ export async function POST(request: NextRequest) {
     if (!secretKey) {
       // Demo mode: skip PayMongo but still land on the success page so the patient
       // can reach the Calendly link to book the call (mirrors the real success_url).
+      await createPayment({
+        bookingId: booking.id,
+        patientId: userId,
+        amount: consultDiscount?.total ?? treatment.price,
+        paymentType: "consultation",
+        transactionReference: referenceNumber,
+      });
       return NextResponse.json(
         {
           bookingId: booking.id,
@@ -300,11 +297,21 @@ export async function POST(request: NextRequest) {
     const payload = await paymongo.json();
     if (!paymongo.ok || !payload.data?.attributes?.checkout_url) {
       console.error("[bookings] consultation PayMongo failed:", payload);
+      // No payment row was created, so a failed session leaves no orphan behind.
       return NextResponse.json(
         { message: "We couldn't open the payment page. Please try again or contact us." },
         { status: 502 },
       );
     }
+
+    await createPayment({
+      bookingId: booking.id,
+      patientId: userId,
+      amount: consultDiscount?.total ?? treatment.price,
+      paymentType: "consultation",
+      transactionReference: referenceNumber,
+      paymongoCheckoutId: payload.data.id,
+    });
 
     return NextResponse.json(
       {
