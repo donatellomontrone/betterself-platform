@@ -69,8 +69,19 @@ export async function POST(request: NextRequest) {
       id?: string;
       type?: string;
       attributes?: {
+        type?: string;
+        livemode?: boolean;
         reference_number?: string;
         status?: string;
+        data?: {
+          id?: string;
+          type?: string;
+          attributes?: {
+            reference_number?: string;
+            status?: string;
+            metadata?: Record<string, string>;
+          };
+        };
       };
       data?: {
         id?: string;
@@ -84,9 +95,17 @@ export async function POST(request: NextRequest) {
     };
   };
 
-  if (event.data?.type === "checkout_session.payment.paid") {
-    const checkoutSession = event.data.data ?? event.data;
-    const referenceNumber = checkoutSession.attributes?.reference_number;
+  // PayMongo's Hosted Checkout docs currently send the event type at data.type
+  // and the checkout session at data.data. Some dashboard/webhook fixtures wrap
+  // the event type at data.attributes.type with the resource at attributes.data.
+  // Support both envelopes so payment reconciliation does not depend on one shape.
+  const eventType =
+    event.data?.type === "event" ? event.data.attributes?.type : event.data?.type;
+  const checkoutSession =
+    event.data?.data ?? event.data?.attributes?.data ?? event.data;
+
+  if (eventType === "checkout_session.payment.paid") {
+    const referenceNumber = checkoutSession?.attributes?.reference_number;
 
     let bookingsMarkedPaid = 0;
     if (referenceNumber && isDatabaseConfigured()) {
@@ -110,6 +129,6 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     received: true,
     action: "ignored",
-    eventType: event.data?.type ?? "unknown",
+    eventType: eventType ?? "unknown",
   });
 }
