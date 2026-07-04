@@ -1,8 +1,10 @@
 import { SignIn } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { hasValidClerkPublishableKey } from "@/lib/clerk-env";
 
-export default function SignInPage() {
+export default async function SignInPage() {
   if (!hasValidClerkPublishableKey()) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 py-10">
@@ -23,6 +25,13 @@ export default function SignInPage() {
         </section>
       </main>
     );
+  }
+
+  // Already signed in? Skip the form and go to the dashboard — prevents a blank <SignIn>
+  // when the post-sign-up/sign-in redirect briefly lands here before the client settles.
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/dashboard");
   }
 
   return (
