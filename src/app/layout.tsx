@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://betterself-platform-mu.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://betterself.health";
 const SITE_DESCRIPTION =
   "Private doctor-led aesthetic treatments — Botox, fillers, and skin boosters — with medical intake, consent, and home visits across Metro Manila.";
 
