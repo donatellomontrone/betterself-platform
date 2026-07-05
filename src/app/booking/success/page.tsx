@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buildCalendlySchedulingUrl } from "@/lib/calendly";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from "@/lib/contact";
 
 export default async function BookingSuccess({
@@ -9,7 +10,12 @@ export default async function BookingSuccess({
   const params = await searchParams;
   const bookCall = (Array.isArray(params.book) ? params.book[0] : params.book) === "call";
   const demo = (Array.isArray(params.demo) ? params.demo[0] : params.demo) === "1";
+  const reference = Array.isArray(params.reference) ? params.reference[0] : params.reference;
   const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
+  const schedulingUrl = buildCalendlySchedulingUrl(calendlyUrl, {
+    referenceNumber: reference,
+    source: "paymongo_success",
+  });
 
   return (
     <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 text-[#1F1F1F]">
@@ -38,10 +44,10 @@ export default async function BookingSuccess({
           </p>
         ) : null}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          {bookCall && calendlyUrl ? (
+          {bookCall && schedulingUrl ? (
             <a
               className="btn btn-primary justify-center"
-              href={calendlyUrl}
+              href={schedulingUrl}
               target="_blank"
               rel="noreferrer"
             >

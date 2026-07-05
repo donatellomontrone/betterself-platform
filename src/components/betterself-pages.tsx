@@ -38,6 +38,7 @@ import {
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
 import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
+import { buildCalendlySchedulingUrl } from "@/lib/calendly";
 import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
 import type { Json } from "@/lib/db/types";
 import {
@@ -603,6 +604,12 @@ export function DashboardPage({
   const consultationBookings = bookings.filter(isConsultationBooking);
   const treatmentBookings = bookings.filter((booking) => !isConsultationBooking(booking));
   const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
+  const currentCalendlyUrl = currentBooking
+    ? buildCalendlySchedulingUrl(calendlyUrl, {
+        referenceNumber: currentBooking.transaction_reference,
+        source: "patient_dashboard_primary",
+      })
+    : "";
   const hasCompleted = bookings.some((b) => b.status === "completed");
   const paymentRetryMessage = paymentStatus ? paymentRetryMessages[paymentStatus] : undefined;
   const bookingRequestMessage = bookingStatus ? bookingRequestMessages[bookingStatus] : undefined;
@@ -713,10 +720,10 @@ export function DashboardPage({
                       <RetryPaymentButton bookingId={currentBooking.id} />
                     ) : isConsultationBooking(currentBooking) &&
                       currentBooking.payment_status === "paid" &&
-                      calendlyUrl ? (
+                      currentCalendlyUrl ? (
                       <a
                         className="btn btn-primary"
-                        href={calendlyUrl}
+                        href={currentCalendlyUrl}
                         rel="noreferrer"
                         target="_blank"
                       >
@@ -879,6 +886,10 @@ function DashboardBookingCard({
   const isConsultation = isConsultationBooking(booking);
   const paymentInProgress =
     isConsultation && booking.payment_status === "pending" && hasPayMongoAttempt(booking);
+  const calendlyBookingUrl = buildCalendlySchedulingUrl(calendlyUrl, {
+    referenceNumber: booking.transaction_reference,
+    source: "patient_dashboard",
+  });
 
   return (
     <article className="card grid gap-4 p-5 lg:grid-cols-[1.25fr_1fr_auto] lg:items-center">
@@ -906,8 +917,8 @@ function DashboardBookingCard({
             Video call
           </a>
         ) : null}
-        {isConsultation && booking.payment_status === "paid" && calendlyUrl ? (
-          <a className="btn btn-secondary h-10" href={calendlyUrl} rel="noreferrer" target="_blank">
+        {isConsultation && booking.payment_status === "paid" && calendlyBookingUrl ? (
+          <a className="btn btn-secondary h-10" href={calendlyBookingUrl} rel="noreferrer" target="_blank">
             Calendly
           </a>
         ) : null}
@@ -1080,6 +1091,7 @@ function isJoinableMeetingUrl(url: string | null): url is string {
 
 function getVideoCallLink(booking: BookingCallFields) {
   const stored = [
+    extractNoteValue(booking.notes, "Video call"),
     extractNoteValue(booking.notes, "Calendly invitee"),
     extractNoteValue(booking.notes, "Calendly event"),
   ].find(isJoinableMeetingUrl);

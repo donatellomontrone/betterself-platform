@@ -104,14 +104,33 @@ Set:
 
 ```bash
 NEXT_PUBLIC_CALENDLY_URL=https://calendly.com/<account>/<event-type>
+CALENDLY_WEBHOOK_SIGNING_KEY=
 ```
 
 Recommended Calendly questions:
 
+- BetterSelf booking reference (optional but useful; the app also sends it via
+  `utm_content` automatically).
 - Treatment or consultation requested.
 - Patient concern.
 - Phone number.
 - Home address/access notes for home visits.
+
+Webhook URL:
+
+```text
+https://betterself.health/api/calendly/webhook
+```
+
+Required events:
+
+```text
+invitee.created
+invitee.canceled
+```
+
+The webhook saves the confirmed call date/time to Neon by matching Calendly's
+`utm_content` value to the BetterSelf payment reference.
 
 If Calendly does not expose a per-booking meeting URL, set:
 

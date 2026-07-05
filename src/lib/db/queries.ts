@@ -507,6 +507,110 @@ export async function updateBookingNotes(bookingId: string, notes: string | null
   `;
 }
 
+function mergeBookingNotes(
+  existing: string | null,
+  replacements: Record<string, string | null | undefined>,
+) {
+  const prefixes = Object.keys(replacements).map((label) => `${label}:`);
+  const kept = (existing ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !prefixes.some((prefix) => line.startsWith(prefix)));
+  const added = Object.entries(replacements)
+    .filter(([, value]) => Boolean(value))
+    .map(([label, value]) => `${label}: ${value}`);
+  const merged = [...kept, ...added].join("\n");
+  return merged || null;
+}
+
+export type CalendlyBookingScheduleInput = {
+  referenceNumber: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  eventUri?: string | null;
+  inviteeUri?: string | null;
+  videoCallUrl?: string | null;
+  timezone?: string | null;
+  eventName?: string | null;
+};
+
+export async function updateBookingScheduleByPaymentReference(
+  input: CalendlyBookingScheduleInput,
+): Promise<number> {
+  const sql = getSql();
+  const rows = (await sql`
+    select b.id, b.notes
+    from public.bookings b
+    join public.payments p on p.booking_id = b.id
+    where p.transaction_reference = ${input.referenceNumber}
+    order by p.created_at desc
+    limit 1
+  `) as unknown as { id: string; notes: string | null }[];
+
+  const booking = rows[0];
+  if (!booking) return 0;
+
+  const notes = mergeBookingNotes(booking.notes, {
+    "Calendly event": input.eventUri,
+    "Calendly invitee": input.inviteeUri,
+    "Video call": input.videoCallUrl,
+    "Calendly timezone": input.timezone,
+    "Calendly event name": input.eventName,
+  });
+
+  const updated = (await sql`
+    update public.bookings
+    set appointment_date = ${input.appointmentDate}::date,
+        appointment_time = ${input.appointmentTime},
+        notes = ${notes},
+        updated_at = now()
+    where id = ${booking.id}
+    returning id
+  `) as unknown as { id: string }[];
+
+  return updated.length;
+}
+
+export async function clearBookingScheduleByPaymentReference(
+  referenceNumber: string,
+  cancelledAt: string | null,
+): Promise<number> {
+  const sql = getSql();
+  const rows = (await sql`
+    select b.id, b.notes
+    from public.bookings b
+    join public.payments p on p.booking_id = b.id
+    where p.transaction_reference = ${referenceNumber}
+    order by p.created_at desc
+    limit 1
+  `) as unknown as { id: string; notes: string | null }[];
+
+  const booking = rows[0];
+  if (!booking) return 0;
+
+  const notes = mergeBookingNotes(booking.notes, {
+    "Calendly event": null,
+    "Calendly invitee": null,
+    "Video call": null,
+    "Calendly timezone": null,
+    "Calendly event name": null,
+    "Calendly canceled": cancelledAt ?? new Date().toISOString(),
+  });
+
+  const updated = (await sql`
+    update public.bookings
+    set appointment_date = null,
+        appointment_time = null,
+        notes = ${notes},
+        updated_at = now()
+    where id = ${booking.id}
+    returning id
+  `) as unknown as { id: string }[];
+
+  return updated.length;
+}
+
 export async function updateBookingPaymentStatus(
   bookingId: string,
   status: PaymentStatus,
