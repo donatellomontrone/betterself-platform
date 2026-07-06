@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { Menu } from "lucide-react";
 import { HeaderAuthControls } from "@/components/header-auth";
 
 type NavItem = { href: string; label: string };
@@ -21,12 +22,15 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
 
   return (
     <details ref={ref} className="relative min-[900px]:hidden">
-      <summary className="btn btn-secondary list-none min-h-[44px] cursor-pointer">Menu</summary>
-      <div className="absolute right-0 top-12 z-40 grid w-60 gap-2 rounded-lg border border-[#E6DFD5] bg-white p-3 shadow-xl">
+      <summary className="inline-flex min-h-[44px] cursor-pointer list-none items-center gap-2 rounded-full border border-white/70 bg-white/70 px-4 text-sm font-bold text-[#3A2F2B] shadow-[0_14px_30px_rgb(80_64_53_/_0.10)] backdrop-blur-xl">
+        <Menu className="h-4 w-4" />
+        Menu
+      </summary>
+      <div className="absolute right-0 top-14 z-40 grid w-72 gap-2 rounded-2xl border border-white/70 bg-[#FFFDF9]/95 p-3 shadow-[0_28px_80px_rgb(80_64_53_/_0.18)] backdrop-blur-xl">
         {items.map((item) => (
           <Link
             key={item.href}
-            className="flex min-h-[44px] items-center rounded-lg px-3 py-2 text-sm font-semibold text-[#4D4D4D]"
+            className="flex min-h-[44px] items-center rounded-xl px-4 py-2 text-sm font-semibold text-[#4D4D4D] transition hover:bg-[#F6EDEA] hover:text-[#6E444E]"
             href={item.href}
             onClick={close}
           >
@@ -34,7 +38,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
           </Link>
         ))}
         <HeaderAuthControls variant="mobile" />
-        <Link className="btn btn-primary mt-1 justify-center" href="/booking" onClick={close}>
+        <Link className="premium-cta mt-1 justify-center" href="/booking" onClick={close}>
           Book Treatment
         </Link>
       </div>

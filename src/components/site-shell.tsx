@@ -30,37 +30,42 @@ export const patientNav = [
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-30 border-b border-[#E6DFD5] bg-[#FAF8F4]/92 backdrop-blur-xl">
-      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link className="flex items-center gap-4" href="/" aria-label="BetterSelf home">
-          <Image
-            src="/betterself-mark.png"
-            alt="BetterSelf Home Aesthetics"
-            width={96}
-            height={96}
-            priority
-            className="h-16 w-16 rounded-full border border-[#E6DFD5] bg-[#F7EBDD] object-cover shadow-sm sm:h-20 sm:w-20"
-          />
-          <div>
-            <p className="font-serif text-3xl leading-none text-[#1F1F1F] sm:text-4xl">
+    <header className="premium-header sticky top-0 z-30">
+      <div className="mx-auto flex min-h-[88px] max-w-7xl items-center justify-between gap-5 px-5 py-3 lg:px-8">
+        <Link className="group flex items-center gap-3 sm:gap-4" href="/" aria-label="BetterSelf home">
+          <span className="premium-logo-shell">
+            <Image
+              src="/betterself-mark.png"
+              alt="BetterSelf Home Aesthetics"
+              width={96}
+              height={96}
+              priority
+              className="h-14 w-14 rounded-full object-cover sm:h-16 sm:w-16"
+            />
+          </span>
+          <div className="min-w-0">
+            <p className="font-serif text-[2rem] leading-none text-[#1F1F1F] sm:text-[2.55rem]">
               BetterSelf
             </p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-[#5C574F] sm:text-xs">
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.28em] text-[#756A61] sm:text-[11px]">
               Home Aesthetics
             </p>
           </div>
         </Link>
-        <nav className="hidden items-center gap-7 text-sm font-medium text-[#4D4D4D] min-[900px]:flex">
+        <nav
+          className="premium-nav hidden items-center gap-1 text-sm font-semibold text-[#4D4D4D] min-[900px]:flex"
+          aria-label="Primary navigation"
+        >
           {primaryNav.map((item) => (
-            <Link key={item.href} className="transition hover:text-[#1F1F1F]" href={item.href}>
+            <Link key={item.href} className="premium-nav-link" href={item.href}>
               {item.label}
             </Link>
           ))}
         </nav>
         <MobileMenu items={primaryNav} />
-        <div className="hidden items-center gap-3 min-[900px]:flex">
+        <div className="hidden items-center gap-2 rounded-full border border-white/70 bg-white/54 p-1.5 shadow-[0_18px_40px_rgb(80_64_53_/_0.08)] backdrop-blur-xl min-[900px]:flex">
           <HeaderAuthControls />
-          <Link className="btn btn-primary" href="/booking">
+          <Link className="premium-cta" href="/booking">
             Book Treatment
           </Link>
         </div>
