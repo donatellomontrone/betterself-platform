@@ -35,6 +35,7 @@ import {
   DoctorChat,
   type BookingPrefill,
 } from "@/components/platform-widgets";
+import { FormSubmitButton } from "@/components/form-submit-button";
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
 import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
@@ -88,7 +89,7 @@ function paymentStatusTone(status: string): StatusTone {
 }
 
 function isUnitOrAreaPriced(priceLabel: string) {
-  return /\/(unit|area)/i.test(priceLabel);
+  return /\/(unit|area|piece)/i.test(priceLabel);
 }
 
 function canRetryPayment(booking: PatientBookingView) {
@@ -227,9 +228,12 @@ function RetryPaymentButton({
         autoCapitalize="characters"
         autoComplete="off"
       />
-      <button className={compact ? "btn btn-primary h-10" : "btn btn-primary"} type="submit">
+      <FormSubmitButton
+        className={compact ? "btn btn-primary h-10" : "btn btn-primary"}
+        pendingLabel="Opening payment..."
+      >
         {label}
-      </button>
+      </FormSubmitButton>
     </form>
   );
 }
@@ -260,9 +264,12 @@ function CancelRequestButton({
   return (
     <form action="/api/bookings/cancel" method="post">
       <input type="hidden" name="bookingId" value={bookingId} />
-      <button className={compact ? "btn btn-ghost h-10" : "btn btn-ghost"} type="submit">
+      <FormSubmitButton
+        className={compact ? "btn btn-ghost h-10" : "btn btn-ghost"}
+        pendingLabel="Cancelling..."
+      >
         Cancel request
-      </button>
+      </FormSubmitButton>
     </form>
   );
 }
@@ -277,9 +284,12 @@ function ReconcilePaymentButton({
   return (
     <form action="/api/paymongo/reconcile" method="post">
       <input type="hidden" name="bookingId" value={bookingId} />
-      <button className={compact ? "btn btn-secondary h-10" : "btn btn-secondary"} type="submit">
+      <FormSubmitButton
+        className={compact ? "btn btn-secondary h-10" : "btn btn-secondary"}
+        pendingLabel="Checking..."
+      >
         Refresh payment status
-      </button>
+      </FormSubmitButton>
     </form>
   );
 }

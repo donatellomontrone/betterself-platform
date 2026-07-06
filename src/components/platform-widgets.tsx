@@ -750,12 +750,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 </label>
               ))}
             </div>
-            {isDirectTreatment ? (
-              <label className="mt-4 flex items-center gap-3 rounded-lg border border-dashed border-[#C8B89F] bg-[#FAF8F4] p-4 text-sm text-[#595550]">
-                <Paperclip className="h-4 w-4" />
-                Optional photo upload structure
-              </label>
-            ) : null}
           </BookingStep>
         ) : null}
 
@@ -924,6 +918,11 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
             </button>
           ) : null}
         </div>
+        {checkoutNote && step !== 0 && !(step === 1 && isConsultation) && step !== 4 ? (
+          <p className="mt-3 text-sm font-medium text-[#B42318]" role="alert" aria-live="polite">
+            {checkoutNote}
+          </p>
+        ) : null}
       </section>
 
       <aside className="grid content-start gap-4">
@@ -1291,4 +1290,3 @@ export function DoctorChat() {
     </div>
   );
 }
-

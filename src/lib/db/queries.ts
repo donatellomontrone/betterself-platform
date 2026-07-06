@@ -577,6 +577,7 @@ export type CalendlyEmailBookingScheduleInput = Omit<
   "referenceNumber"
 > & {
   inviteeEmail: string;
+  scheduledStartAt: string;
 };
 
 export async function updateLatestPaidConsultationScheduleByPatientEmail(
@@ -592,6 +593,7 @@ export async function updateLatestPaidConsultationScheduleByPatientEmail(
       and b.payment_status = 'paid'
       and b.status <> 'cancelled'
       and b.appointment_date is null
+      and b.created_at <= ${input.scheduledStartAt}::timestamptz
     order by b.created_at desc
     limit 1
   `) as unknown as { id: string; notes: string | null }[];
@@ -619,6 +621,42 @@ export async function updateLatestPaidConsultationScheduleByPatientEmail(
   `) as unknown as { id: string }[];
 
   return updated.length;
+}
+
+export async function clearInvalidEmailMatchedCalendlySchedules(): Promise<number> {
+  const sql = getSql();
+  const rows = (await sql`
+    select id, notes
+    from public.bookings
+    where notes like '%Calendly matched by: invitee email%'
+      and appointment_date is not null
+      and appointment_date < created_at::date
+  `) as unknown as { id: string; notes: string | null }[];
+
+  let cleared = 0;
+  for (const booking of rows) {
+    const notes = mergeBookingNotes(booking.notes, {
+      "Calendly event": null,
+      "Calendly invitee": null,
+      "Video call": null,
+      "Calendly timezone": null,
+      "Calendly event name": null,
+      "Calendly matched by": null,
+    });
+
+    const updated = (await sql`
+      update public.bookings
+      set appointment_date = null,
+          appointment_time = null,
+          notes = ${notes},
+          updated_at = now()
+      where id = ${booking.id}
+      returning id
+    `) as unknown as { id: string }[];
+    cleared += updated.length;
+  }
+
+  return cleared;
 }
 
 export async function clearBookingScheduleByPaymentReference(

@@ -1,5 +1,6 @@
 import { isDatabaseConfigured } from "@/lib/db/client";
 import {
+  clearInvalidEmailMatchedCalendlySchedules,
   clearBookingScheduleByPaymentReference,
   updateLatestPaidConsultationScheduleByPatientEmail,
   updateBookingScheduleByPaymentReference,
@@ -57,6 +58,7 @@ type CalendlySyncResult = {
   inviteesScanned: number;
   schedulesUpdated: number;
   schedulesCleared: number;
+  invalidEmailMatchesCleared: number;
   emailFallbacksUsed: number;
 };
 
@@ -146,6 +148,7 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
     inviteesScanned: 0,
     schedulesUpdated: 0,
     schedulesCleared: 0,
+    invalidEmailMatchesCleared: 0,
     emailFallbacksUsed: 0,
   };
   const token = process.env.CALENDLY_ACCESS_TOKEN?.trim();
@@ -161,6 +164,7 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
   }
 
   result.skipped = false;
+  result.invalidEmailMatchesCleared = await clearInvalidEmailMatchedCalendlySchedules();
   const minStart = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
   const firstEventsUrl = new URL("https://api.calendly.com/scheduled_events");
   firstEventsUrl.searchParams.set("user", userUri);
@@ -214,6 +218,7 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
       if (invitee.email) {
         const updated = await updateLatestPaidConsultationScheduleByPatientEmail({
           inviteeEmail: invitee.email,
+          scheduledStartAt: event.start_time,
           ...scheduleInput,
         });
         result.schedulesUpdated += updated;
