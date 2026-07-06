@@ -111,3 +111,11 @@ export function useOptionalCookiesAccepted() {
     () => false,
   );
 }
+
+export function useCookieConsentVisible() {
+  return useSyncExternalStore(
+    subscribeToConsentChanges,
+    getCookieConsentSnapshot,
+    getServerCookieConsentSnapshot,
+  );
+}

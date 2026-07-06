@@ -406,9 +406,9 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
           </Notice>
         </div>
       ) : null}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-      <section className="card p-5 md:p-7">
-        <div className="mb-5 flex items-center justify-between gap-3 rounded-lg bg-[#FAF8F4] px-4 py-3 lg:hidden">
+      <div className="booking-flow-shell grid gap-6 lg:grid-cols-[minmax(0,1fr)_390px]">
+      <section className="booking-main-panel p-5 md:p-7">
+        <div className="booking-mobile-summary mb-5 flex items-center justify-between gap-3 px-4 py-3 lg:hidden">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5C574F]">
               {isConsultation ? "Consultation fee" : "Starting price"}
@@ -423,7 +423,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
         </div>
         <div className="mb-6">
           <div
-            className="h-2 overflow-hidden rounded-full bg-[#F1ECE4]"
+            className="booking-progress h-2 overflow-hidden rounded-full"
             role="progressbar"
             aria-valuenow={step + 1}
             aria-valuemin={1}
@@ -431,7 +431,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
             aria-label={`Booking step ${step + 1} of 5: ${stepLabels[step]}`}
           >
             <div
-              className="h-full rounded-full bg-[#8F5B67] transition-all"
+              className="booking-progress-fill h-full rounded-full transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -454,10 +454,10 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
           >
             <div className="grid gap-4 md:grid-cols-2">
               <button
-                className={`rounded-lg border p-5 text-left transition ${
+                className={`booking-choice-card text-left ${
                   bookingIntent === "treatment"
-                    ? "border-[#1F1F1F] bg-[#FAF8F4]"
-                    : "border-[#E6DFD5] bg-white hover:border-[#CAA6AD]"
+                    ? "is-selected"
+                    : ""
                 }`}
                 type="button"
                 onClick={() => {
@@ -481,10 +481,10 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 </p>
               </button>
               <button
-                className={`rounded-lg border p-5 text-left transition ${
+                className={`booking-choice-card text-left ${
                   bookingIntent === "consultation"
-                    ? "border-[#1F1F1F] bg-[#FAF8F4]"
-                    : "border-[#E6DFD5] bg-white hover:border-[#CAA6AD]"
+                    ? "is-selected"
+                    : ""
                 }`}
                 type="button"
                 onClick={() => {
@@ -522,10 +522,10 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
               {treatments.map((treatment) => (
                 <button
                   key={treatment.id}
-                  className={`rounded-lg border p-4 text-left transition ${
+                  className={`booking-treatment-card text-left ${
                     treatmentId === treatment.id
-                      ? "border-[#1F1F1F] bg-[#FAF8F4]"
-                      : "border-[#E6DFD5] bg-white hover:border-[#CAA6AD]"
+                      ? "is-selected"
+                      : ""
                   }`}
                   onClick={() => {
                     setTreatmentId(treatment.id);
@@ -552,7 +552,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
             title="What problem would you like to address?"
             text="Tell us what you'd like to address, in your own words. BetterSelf can suggest the closest treatment option, and the doctor still confirms suitability."
           >
-            <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
+            <div className="booking-soft-panel p-5">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8F5B67]">
                 Consultation request
               </p>
@@ -600,7 +600,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
               </p>
             ) : null}
             {recommendation ? (
-              <div className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-5">
+              <div className="booking-recommendation-panel mt-5 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8F5B67]">
@@ -735,7 +735,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
             </div>
             <div className="mt-6 grid gap-3">
               {intakeQuestions.map((question, index) => (
-                <label key={question} className="flex items-start gap-3 rounded-lg border border-[#E6DFD5] bg-white p-4 text-sm text-[#4D4D4D]">
+                <label key={question} className="booking-checkbox-row flex items-start gap-3 p-4 text-sm text-[#4D4D4D]">
                   <input
                     className="mt-0.5 h-5 w-5 shrink-0 accent-[#8F5B67]"
                     type="checkbox"
@@ -763,7 +763,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
             }
           >
             {isConsultation ? (
-              <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
+              <div className="booking-soft-panel p-5">
                 <p className="text-sm font-semibold text-[#1F1F1F]">Pay first, then pick your time</p>
                 <p className="mt-2 text-sm leading-6 text-[#595550]">
                   Your ₱800 consultation is booked once payment clears. You&apos;ll get the
@@ -796,7 +796,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 : "Submit the treatment request. The doctor reviews you first, then you pay from the dashboard to confirm the service."
             }
           >
-            <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4">
+            <div className="booking-soft-panel p-4">
               <p className="flex items-center gap-2 text-sm font-semibold text-[#1F1F1F]">
                 <ShieldCheck className="h-4 w-4 text-[#8F5B67]" />
                 {isConsultation ? "Secure payment via PayMongo" : "Doctor review before payment"}
@@ -807,7 +807,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                   : "You will not pay at this step. After the doctor call, the dashboard will show Pay now when the service is ready to confirm."}
               </p>
             </div>
-            <div className="mt-6 rounded-lg border border-[#E6DFD5] p-4">
+            <div className="booking-soft-panel mt-6 p-4">
               <p className="text-sm font-semibold text-[#1F1F1F]">Consent required</p>
               <div className="mt-3 grid gap-3">
                 {consentItems.map((item, index) => (
@@ -828,7 +828,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
               </div>
             </div>
             {isConsultation ? (
-              <div className="mt-6 rounded-lg border border-[#E6DFD5] p-4">
+              <div className="booking-soft-panel mt-6 p-4">
                 <p className="text-sm font-semibold text-[#1F1F1F]">Discount code</p>
                 <div className="mt-3 flex gap-2">
                   <input
@@ -926,7 +926,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       </section>
 
       <aside className="grid content-start gap-4">
-        <section className="card p-5">
+        <section className="booking-summary-panel p-5">
           <p className="eyebrow">Booking summary</p>
           <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
             {bookingIntent ? selectedService.name : "Choose a path"}
@@ -952,7 +952,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
               value={isConsultation ? "Paid up front" : "After doctor confirmation"}
             />
           </div>
-          <div className="mt-5 rounded-lg bg-[#FAF8F4] p-4">
+          <div className="booking-total-panel mt-5 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
               {isConsultation ? "Consultation fee" : "Starting price"}
             </p>
@@ -1085,10 +1085,10 @@ function CalendlyScheduler({
         onLoad={() => setScriptReady(true)}
         onReady={() => setScriptReady(true)}
       />
-      <div ref={containerRef} className="min-h-[720px] overflow-hidden rounded-lg border border-[#E6DFD5] bg-white" />
+      <div ref={containerRef} className="booking-calendly-frame min-h-[720px] overflow-hidden bg-white" />
       <button
-        className={`rounded-lg border p-4 text-left text-sm font-semibold ${
-          manualConfirmation ? "border-[#1F1F1F] bg-[#FAF8F4]" : "border-[#E6DFD5] bg-white"
+        className={`booking-manual-schedule p-4 text-left text-sm font-semibold ${
+          manualConfirmation ? "is-selected" : ""
         }`}
         onClick={() => {
           setManualConfirmation(true);
@@ -1111,8 +1111,8 @@ function BookingStep({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <h2 className="font-serif text-4xl leading-tight text-[#1F1F1F]">{title}</h2>
+    <div className="booking-step-content">
+      <h2 className="font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">{title}</h2>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-[#595550]">{text}</p>
       <div className="mt-6">{children}</div>
     </div>

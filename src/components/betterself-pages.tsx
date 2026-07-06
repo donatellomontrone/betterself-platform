@@ -722,20 +722,32 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
   const isConsultation = treatment.id === consultationService.id;
   return (
     <PageShell>
-      <section className="px-5 py-10 lg:px-8 lg:py-14">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_380px]">
-          <article className="card p-6 md:p-8">
-            <Badge>{treatment.category}</Badge>
-            <h1 className="mt-5 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
-              {treatment.name}
-            </h1>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-[#595550]">
-              {treatment.description}
-            </p>
-            {treatment.detailNote ? (
-              <p className="mt-3 text-sm italic text-[#5C574F]">{treatment.detailNote}</p>
-            ) : null}
-            <div className="mt-8 grid gap-8">
+      <section className="treatment-detail-section px-5 py-10 lg:px-8 lg:py-16">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_390px]">
+          <article className="treatment-detail-editorial">
+            <div className="treatment-detail-hero">
+              <div>
+                <Badge>{treatment.category}</Badge>
+                <h1 className="mt-5 font-serif text-5xl leading-[0.95] text-[#1F1F1F] md:text-7xl">
+                  {treatment.name}
+                </h1>
+                <p className="mt-5 max-w-3xl text-lg leading-8 text-[#595550]">
+                  {treatment.description}
+                </p>
+                {treatment.detailNote ? (
+                  <p className="mt-3 max-w-2xl text-sm italic leading-6 text-[#6E565A]">
+                    {treatment.detailNote}
+                  </p>
+                ) : null}
+              </div>
+              <div className="treatment-detail-mini">
+                <span>Doctor reviewed</span>
+                <span>Home visit eligible</span>
+                <span>Private intake</span>
+              </div>
+            </div>
+
+            <div className="treatment-detail-grid">
               <DetailBlock title="What it may help with" items={treatment.mayHelpWith} />
               <DetailBlock title="Who it may be suitable for" items={treatment.suitableFor} />
               <DetailBlock title="Who should avoid it or seek further review" items={treatment.avoidIf} />
@@ -743,19 +755,21 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
               <DetailBlock title="Before treatment" items={treatment.beforecare} />
               <DetailBlock title="Aftercare" items={treatment.aftercare} />
             </div>
-            <Notice title="Treatment disclaimer">
-              Suitability, treatment plan, and expected outcomes depend on
-              individual medical assessment. Results vary per patient. Medical
-              intake and doctor confirmation are required before treatment.
-            </Notice>
+            <div className="treatment-detail-notice">
+              <Notice title="Treatment disclaimer">
+                Suitability, treatment plan, and expected outcomes depend on
+                individual medical assessment. Results vary per patient. Medical
+                intake and doctor confirmation are required before treatment.
+              </Notice>
+            </div>
           </article>
           <aside className="lg:sticky lg:top-28 lg:self-start">
-            <section className="card p-5">
+            <section className="treatment-booking-panel">
               <p className="eyebrow">{isConsultation ? "Book this consultation" : "Book this treatment"}</p>
-              <p className="mt-2 font-serif text-4xl text-[#1F1F1F]">
+              <p className="mt-3 font-serif text-5xl leading-none text-[#1F1F1F]">
                 {treatment.priceLabel}
               </p>
-              <div className="mt-5 grid gap-3 text-sm">
+              <div className="mt-6 grid gap-3 text-sm">
                 <Summary label="Duration" value={treatment.duration} />
                 {isConsultation ? (
                   <>
@@ -769,14 +783,17 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
                   </>
                 )}
               </div>
-              <div className="mt-5 grid gap-2">
-                <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}&direct=1`}>
+              <div className="mt-6 grid gap-2">
+                <Link className="premium-cta min-h-12 justify-center" href={`/booking?treatment=${treatment.id}&direct=1`}>
                   {isConsultation ? "Book consultation" : "Book Treatment"}
                 </Link>
-                <Link className="btn btn-secondary justify-center" href="/messages">
+                <Link className="btn btn-secondary justify-center rounded-full" href="/messages">
                   Ask Doctor
                 </Link>
               </div>
+              <p className="mt-5 text-xs leading-5 text-[#756A61]">
+                The doctor reviews medical answers before confirming any in-home treatment.
+              </p>
             </section>
           </aside>
         </div>
@@ -2409,8 +2426,8 @@ function FinalCta() {
 
 function DetailBlock({ title, items }: { title: string; items: string[] }) {
   return (
-    <section>
-      <h2 className="font-serif text-3xl text-[#1F1F1F]">{title}</h2>
+    <section className="treatment-detail-block">
+      <h2 className="font-serif text-3xl leading-tight text-[#1F1F1F]">{title}</h2>
       <div className="mt-4">
         <SafetyChecklist items={items} />
       </div>

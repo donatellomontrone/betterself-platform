@@ -76,15 +76,24 @@ export function Header() {
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#E6DFD5] bg-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-10 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr] lg:px-8">
+    <footer className="premium-footer">
+      <div className="premium-footer-inner mx-auto grid max-w-7xl gap-10 px-5 py-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr] lg:px-8">
         <div>
-          <p className="font-serif text-3xl text-[#1F1F1F]">BetterSelf</p>
+          <Link className="inline-flex items-center gap-2 text-[#1F1F1F]" href="/">
+            <Image
+              src="/betterself-mark-transparent.png"
+              alt=""
+              width={58}
+              height={58}
+              className="h-14 w-14 object-contain opacity-75 mix-blend-multiply"
+            />
+            <span className="font-serif text-4xl leading-none">BetterSelf</span>
+          </Link>
           <p className="mt-3 max-w-sm text-sm leading-6 text-[#595550]">
             Doctor-led aesthetic services. Private home appointments in selected
             Metro Manila areas, subject to medical suitability and availability.
           </p>
-          <p className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-4 text-xs leading-5 text-[#6E565A]">
+          <p className="premium-footer-note mt-5 text-xs leading-5 text-[#6E565A]">
             BetterSelf provides doctor-led aesthetic services. All treatments are
             subject to medical assessment. Results vary per patient. This website
             is not a substitute for medical advice, diagnosis, or emergency care.
@@ -111,7 +120,7 @@ export function Footer() {
         />
         <FooterContact />
       </div>
-      <div className="border-t border-[#E6DFD5]">
+      <div className="premium-footer-bottom">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-5 text-xs text-[#5C574F] sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <p>© 2026 BetterSelf. Doctor-led aesthetic care, Metro Manila.</p>
           <div className="flex flex-wrap gap-4">

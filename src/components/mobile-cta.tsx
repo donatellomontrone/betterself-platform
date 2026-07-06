@@ -2,22 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ArrowRight } from "lucide-react";
+import { useCookieConsentVisible } from "@/components/cookie-consent-banner";
 
 // Pages where a fixed "Book" bar would cover the real primary action.
 const HIDDEN_ON = ["/booking", "/messages", "/dashboard"];
 
 export function MobileBottomCta() {
   const pathname = usePathname();
+  const cookieConsentVisible = useCookieConsentVisible();
   if (HIDDEN_ON.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return null;
+  }
+  if (cookieConsentVisible) {
     return null;
   }
   return (
     <div
-      className="fixed inset-x-3 bottom-3 z-40 md:hidden"
+      className="mobile-floating-cta fixed inset-x-3 bottom-3 z-40 md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <Link className="btn btn-primary flex h-12 items-center justify-center shadow-lg" href="/booking">
-        Book Treatment
+      <Link className="mobile-floating-cta-link" href="/booking">
+        <span>Book Treatment</span>
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </Link>
     </div>
   );
