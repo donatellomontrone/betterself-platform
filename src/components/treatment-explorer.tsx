@@ -237,7 +237,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                     <TreatmentStat label="From" value={spotlight.priceLabel} />
                   </div>
                   <div className="mt-5 grid gap-2">
-                    <Link className="btn btn-primary justify-center" href={`/booking?treatment=${spotlight.id}`}>
+                    <Link className="btn btn-primary justify-center" href={`/booking?treatment=${spotlight.id}&direct=1`}>
                       Book Treatment
                     </Link>
                     <Link className="btn btn-secondary justify-center" href={`/treatments/${spotlight.id}`}>
@@ -292,7 +292,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                       <Link className="btn btn-secondary justify-center" href={`/treatments/${treatment.id}`}>
                         Details
                       </Link>
-                      <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}`}>
+                      <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}&direct=1`}>
                         Book
                       </Link>
                     </div>

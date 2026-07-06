@@ -337,7 +337,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                       <Link className="btn btn-secondary justify-center" href={`/treatments/${treatment.id}`}>
                         Details
                       </Link>
-                      <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}`}>
+                      <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}&direct=1`}>
                         Book
                       </Link>
                     </div>

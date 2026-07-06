@@ -49,6 +49,7 @@ type BookingIntent = "treatment" | "consultation";
 
 type BookingFlowProps = {
   initialTreatmentId?: string;
+  startAtDetails?: boolean;
   prefill?: BookingPrefill;
 };
 
@@ -119,12 +120,14 @@ declare global {
   }
 }
 
-export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
+export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefill }: BookingFlowProps) {
   const { isLoaded, isSignedIn } = useUser();
   const hasInitialTreatment = Boolean(
     initialTreatmentId && treatments.some((treatment) => treatment.id === initialTreatmentId),
   );
-  const [step, setStep] = useState(hasInitialTreatment ? 1 : 0);
+  const skipTreatmentSelection = hasInitialTreatment && startAtDetails;
+  const firstAvailableStep = skipTreatmentSelection ? 2 : 0;
+  const [step, setStep] = useState(skipTreatmentSelection ? 2 : hasInitialTreatment ? 1 : 0);
   const [bookingIntent, setBookingIntent] = useState<BookingIntent | null>(
     hasInitialTreatment ? "treatment" : null,
   );
@@ -638,7 +641,7 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
                         setTreatmentId(recommendation.treatment.id);
                         setCheckoutNote("");
                         resetScheduleSelection();
-                        setStep(1);
+                        setStep(2);
                       }}
                     >
                       Book this treatment
@@ -901,11 +904,11 @@ export function BookingFlow({ initialTreatmentId, prefill }: BookingFlowProps) {
         <div className="mt-8 flex justify-between gap-3">
           <button
             className="btn btn-secondary"
-            disabled={step === 0}
+            disabled={step <= firstAvailableStep}
             onClick={() => {
               setCheckoutState("idle");
               setCheckoutNote("");
-              setStep((current) => Math.max(0, current - 1));
+              setStep((current) => Math.max(firstAvailableStep, current - 1));
             }}
           >
             <ArrowLeft className="h-4 w-4" />

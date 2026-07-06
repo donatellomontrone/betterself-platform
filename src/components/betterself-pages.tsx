@@ -546,7 +546,7 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
                 )}
               </div>
               <div className="mt-5 grid gap-2">
-                <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}`}>
+                <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}&direct=1`}>
                   {isConsultation ? "Book consultation" : "Book Treatment"}
                 </Link>
                 <Link className="btn btn-secondary justify-center" href="/messages">
@@ -563,9 +563,11 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
 
 export function BookingPage({
   treatmentId,
+  startAtDetails = false,
   prefill,
 }: {
   treatmentId?: string;
+  startAtDetails?: boolean;
   prefill?: BookingPrefill;
 }) {
   return (
@@ -577,7 +579,7 @@ export function BookingPage({
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <BookingFlow initialTreatmentId={treatmentId} prefill={prefill} />
+          <BookingFlow initialTreatmentId={treatmentId} startAtDetails={startAtDetails} prefill={prefill} />
         </div>
       </section>
     </PageShell>

@@ -311,7 +311,7 @@ export function TreatmentCard({ treatment }: { treatment: Treatment }) {
           <Link className="btn btn-secondary flex-1" href={`/treatments/${treatment.id}`}>
             View Treatment
           </Link>
-          <Link className="btn btn-primary flex-1" href={`/booking?treatment=${treatment.id}`}>
+          <Link className="btn btn-primary flex-1" href={`/booking?treatment=${treatment.id}&direct=1`}>
             Book Treatment
           </Link>
         </div>

@@ -15,6 +15,7 @@ export default async function Booking({
   const treatment = Array.isArray(params.treatment)
     ? params.treatment[0]
     : params.treatment;
+  const direct = Array.isArray(params.direct) ? params.direct[0] : params.direct;
   let prefill;
 
   if (hasValidClerkServerKeys()) {
@@ -49,5 +50,5 @@ export default async function Booking({
     }
   }
 
-  return <BookingPage treatmentId={treatment} prefill={prefill} />;
+  return <BookingPage treatmentId={treatment} startAtDetails={direct === "1"} prefill={prefill} />;
 }
