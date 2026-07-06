@@ -2,6 +2,7 @@ import { DashboardPage } from "@/components/betterself-pages";
 import { currentUser } from "@clerk/nextjs/server";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import { getPatientBookings, type PatientBookingView } from "@/lib/db/queries";
+import { syncCalendlyBookings } from "@/lib/calendly-sync";
 
 // Per-patient data — never statically cached or shared between users.
 export const dynamic = "force-dynamic";
@@ -25,6 +26,12 @@ export default async function Dashboard({
   let bookings: PatientBookingView[] = [];
   let loadFailed = false;
   if (user && isDatabaseConfigured()) {
+    try {
+      await syncCalendlyBookings();
+    } catch (error) {
+      console.error("[dashboard] Calendly sync failed:", error);
+    }
+
     try {
       bookings = await getPatientBookings(user.id);
     } catch (error) {
