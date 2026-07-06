@@ -156,7 +156,7 @@ function getPatientNextStep(booking: PatientBookingView) {
       return {
         eyebrow: "Consultation",
         title: "Consultation paid. Next step: doctor call.",
-        text: "If you already picked a Calendly slot, keep that appointment. Until Calendly sync is added, the doctor can update the exact time in the admin calendar.",
+        text: "If you already picked a Calendly slot, keep that appointment. BetterSelf syncs Calendly automatically; if the time still shows pending, the doctor can update it in the admin calendar.",
       };
     }
 

@@ -1,6 +1,7 @@
 import { isDatabaseConfigured } from "@/lib/db/client";
 import {
   clearBookingScheduleByPaymentReference,
+  updateLatestPaidConsultationScheduleByPatientEmail,
   updateBookingScheduleByPaymentReference,
 } from "@/lib/db/queries";
 
@@ -36,6 +37,7 @@ type CalendlyEvent = {
 
 type CalendlyInvitee = {
   uri?: string | null;
+  email?: string | null;
   status?: string | null;
   timezone?: string | null;
   tracking?: {
@@ -55,6 +57,7 @@ type CalendlySyncResult = {
   inviteesScanned: number;
   schedulesUpdated: number;
   schedulesCleared: number;
+  emailFallbacksUsed: number;
 };
 
 const referencePattern = /BS-[A-Z]+-\d+-[a-z0-9]+/i;
@@ -143,6 +146,7 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
     inviteesScanned: 0,
     schedulesUpdated: 0,
     schedulesCleared: 0,
+    emailFallbacksUsed: 0,
   };
   const token = process.env.CALENDLY_ACCESS_TOKEN?.trim();
 
@@ -176,9 +180,8 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
     await eachCalendlyPage<CalendlyInvitee>(firstInviteesUrl.toString(), token, async (invitee) => {
       result.inviteesScanned += 1;
       const referenceNumber = findReference(invitee);
-      if (!referenceNumber) return;
 
-      if (event.status === "canceled" || invitee.status === "canceled") {
+      if (referenceNumber && (event.status === "canceled" || invitee.status === "canceled")) {
         result.schedulesCleared += await clearBookingScheduleByPaymentReference(
           referenceNumber,
           invitee.cancellation?.created_at ?? null,
@@ -186,12 +189,11 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
         return;
       }
 
-      if (!event.start_time) return;
+      if (!event.start_time || event.status === "canceled" || invitee.status === "canceled") return;
 
       const timeZone = invitee.timezone || "Asia/Manila";
       const schedule = zonedDateAndTime(event.start_time, timeZone);
-      result.schedulesUpdated += await updateBookingScheduleByPaymentReference({
-        referenceNumber,
+      const scheduleInput = {
         appointmentDate: schedule.date,
         appointmentTime: schedule.time,
         eventUri: event.uri ?? null,
@@ -199,7 +201,24 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
         videoCallUrl: getVideoCallUrl(event.location),
         timezone: timeZone,
         eventName: event.name ?? null,
-      });
+      };
+
+      if (referenceNumber) {
+        result.schedulesUpdated += await updateBookingScheduleByPaymentReference({
+          referenceNumber,
+          ...scheduleInput,
+        });
+        return;
+      }
+
+      if (invitee.email) {
+        const updated = await updateLatestPaidConsultationScheduleByPatientEmail({
+          inviteeEmail: invitee.email,
+          ...scheduleInput,
+        });
+        result.schedulesUpdated += updated;
+        result.emailFallbacksUsed += updated;
+      }
     });
   });
 
