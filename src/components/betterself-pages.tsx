@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
+  ArrowRight,
   CalendarDays,
   Check,
   FileText,
@@ -441,43 +442,75 @@ const faqs = [
 export function HomePage() {
   return (
     <PageShell>
-      <section className="relative isolate overflow-hidden border-b border-[#E6DFD5] px-5 py-12 lg:px-8 lg:py-20">
+      <section className="home-campaign">
         <Image
           src="/betterself-hero-home.jpg"
           alt="BetterSelf doctor preparing a sterile home aesthetic treatment kit in a private residence"
           fill
           priority
           sizes="100vw"
-          className="-z-20 object-cover object-[68%_center] md:object-center"
+          className="home-campaign-image object-cover object-[72%_center] md:object-center"
         />
-        <div className="absolute inset-0 -z-10 bg-[#FAF8F4]/62 md:bg-transparent" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#FAF8F4] via-[#FAF8F4]/92 to-[#FAF8F4]/10" />
-        <div className="mx-auto flex min-h-[600px] max-w-7xl items-center">
-          <div className="max-w-3xl">
-            <Badge>Home-visit medical aesthetics · Metro Manila</Badge>
-            <h1 className="mt-6 font-serif text-5xl leading-[1.03] text-[#1F1F1F] md:text-7xl">
-              Doctor-led aesthetic care at your doorstep.
+        <div className="home-campaign-wash" />
+        <div className="home-campaign-orb home-campaign-orb-one" />
+        <div className="home-campaign-orb home-campaign-orb-two" />
+        <div className="relative mx-auto grid min-h-[680px] max-w-7xl items-end gap-8 px-5 pb-8 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:pb-12 lg:pt-20">
+          <div className="home-campaign-copy">
+            <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.24em] text-[#8F5B67]">
+              BetterSelf Home Aesthetics
+            </p>
+            <h1 className="mt-5 font-serif text-5xl leading-[0.95] text-[#1F1F1F] md:text-7xl lg:text-8xl">
+              Doctor-led beauty, brought home.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#595550]">
-              BetterSelf brings private aesthetic treatments to your home,
-              guided by a licensed medical doctor and designed around safety,
-              discretion, and convenience.
+            <p className="mt-6 max-w-xl text-base leading-8 text-[#595550] md:text-lg">
+              A private aesthetic experience for Metro Manila: medical intake,
+              doctor review, secure payment, and discreet home treatment when suitable.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link className="btn btn-primary" href="/booking">
+              <Link className="premium-cta px-6" href="/booking">
                 Book a Treatment
               </Link>
-              <Link className="btn btn-secondary" href="/treatments">
+              <Link className="btn btn-secondary rounded-full px-6" href="/treatments">
                 Explore Treatments
               </Link>
             </div>
-            <p className="mt-5 text-sm leading-6 text-[#5C574F]">
-              Medical intake required. Doctor assessment before treatment.
-              Private home appointments available.
-            </p>
+            <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#6E565A]">
+              <span className="rounded-full border border-[#E6DFD5] bg-white/70 px-3 py-2 backdrop-blur">
+                Doctor-led
+              </span>
+              <span className="rounded-full border border-[#E6DFD5] bg-white/70 px-3 py-2 backdrop-blur">
+                Home visit
+              </span>
+              <span className="rounded-full border border-[#E6DFD5] bg-white/70 px-3 py-2 backdrop-blur">
+                Metro Manila
+              </span>
+            </div>
+          </div>
+          <div className="hidden lg:block">
+            <div className="home-campaign-card">
+              <p className="eyebrow">Private visit protocol</p>
+              <div className="mt-5 grid gap-3">
+                {["Choose your concern", "Doctor reviews suitability", "Confirm treatment at home"].map(
+                  (item, index) => (
+                    <div key={item} className="flex items-center gap-3 rounded-2xl bg-white/62 p-3">
+                      <span className="grid h-9 w-9 place-items-center rounded-full bg-[#8F5B67] text-sm font-bold text-white">
+                        {index + 1}
+                      </span>
+                      <span className="font-semibold text-[#2E2926]">{item}</span>
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="home-slider-dots" aria-hidden="true">
+            <span />
+            <span />
+            <span />
           </div>
         </div>
       </section>
+      <HomeEditorialRail />
       <DoctorLedStrip />
       <HowItWorksSection />
       <FeaturedTreatmentsSection />
@@ -487,6 +520,72 @@ export function HomePage() {
       <PricingSectionCompact />
       <FinalCta />
     </PageShell>
+  );
+}
+
+function HomeEditorialRail() {
+  const cards = [
+    {
+      title: "Face",
+      text: "Lines, pores, scars, boosters, and facial contour concerns.",
+      href: "/treatments#treatment-map",
+      image: "/betterself-face-map.png",
+    },
+    {
+      title: "Body",
+      text: "Sweating, whitening, mesolipo, keloids, and selected body concerns.",
+      href: "/treatments#treatment-map",
+      image: "/betterself-body-map.png",
+    },
+    {
+      title: "Consultation",
+      text: "Not sure what you need? Start with a doctor call first.",
+      href: "/booking?treatment=doctor-consultation",
+      image: "/betterself-doctor-kit.jpg",
+    },
+  ];
+
+  return (
+    <section className="home-editorial-rail px-5 py-10 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">Explore by concern</p>
+            <h2 className="mt-2 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">
+              Choose where to begin.
+            </h2>
+          </div>
+          <Link className="hidden items-center gap-2 text-sm font-bold text-[#6E444E] md:inline-flex" href="/treatments">
+            All treatments <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {cards.map((card) => (
+            <Link key={card.title} href={card.href} className="home-editorial-card group">
+              <div className="relative h-44 overflow-hidden rounded-[1.25rem] bg-[#F6EDEA]">
+                <Image
+                  src={card.image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 768px) 33vw, 100vw"
+                  className="object-cover transition duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1F1F1F]/34 via-transparent to-transparent" />
+              </div>
+              <div className="mt-4 flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-serif text-3xl text-[#1F1F1F]">{card.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#595550]">{card.text}</p>
+                </div>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#1F1F1F] text-white transition group-hover:bg-[#8F5B67]">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

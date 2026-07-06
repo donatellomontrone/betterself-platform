@@ -183,7 +183,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
   }
 
   return (
-    <section className="px-5 pb-8 lg:px-8">
+    <section id="treatment-map" className="px-5 pb-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="overflow-hidden rounded-lg border border-[#E6DFD5] bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[1fr_0.92fr]">
