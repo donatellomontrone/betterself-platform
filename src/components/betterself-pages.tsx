@@ -4,11 +4,9 @@ import type { ReactNode } from "react";
 import {
   ArrowRight,
   CalendarDays,
-  Check,
   FileText,
   Home,
   Sparkles,
-  Stethoscope,
 } from "lucide-react";
 import {
   categories,
@@ -20,16 +18,13 @@ import {
   treatments,
 } from "@/lib/treatments";
 import {
-  ArrowLink,
   Badge,
-  DoctorLedStrip,
   Notice,
   PageShell,
   SafetyChecklist,
   SectionHeading,
   StatusBadge,
   type StatusTone,
-  TreatmentCard,
 } from "@/components/site-shell";
 import {
   BookingFlow,
@@ -372,15 +367,6 @@ function formatBookingDate(value: string) {
   });
 }
 
-const safetyItems = [
-  "Medical intake before treatment",
-  "Doctor review required",
-  "Consent form before procedure",
-  "Sterile treatment preparation",
-  "Aftercare instructions",
-  "Follow-up support",
-];
-
 const howItWorksSteps = [
   {
     title: "Choose your treatment",
@@ -454,7 +440,7 @@ export function HomePage() {
         <div className="home-campaign-wash" />
         <div className="home-campaign-orb home-campaign-orb-one" />
         <div className="home-campaign-orb home-campaign-orb-two" />
-        <div className="relative mx-auto grid min-h-[680px] max-w-7xl items-end gap-8 px-5 pb-8 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:pb-12 lg:pt-20">
+        <div className="relative mx-auto grid min-h-[720px] max-w-7xl items-center gap-8 px-5 pb-14 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:pb-16 lg:pt-20">
           <div className="home-campaign-copy">
             <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.24em] text-[#8F5B67]">
               BetterSelf Home Aesthetics
@@ -482,25 +468,15 @@ export function HomePage() {
                 Home visit
               </span>
               <span className="rounded-full border border-[#E6DFD5] bg-white/70 px-3 py-2 backdrop-blur">
-                Metro Manila
+              Metro Manila
               </span>
             </div>
           </div>
           <div className="hidden lg:block">
-            <div className="home-campaign-card">
-              <p className="eyebrow">Private visit protocol</p>
-              <div className="mt-5 grid gap-3">
-                {["Choose your concern", "Doctor reviews suitability", "Confirm treatment at home"].map(
-                  (item, index) => (
-                    <div key={item} className="flex items-center gap-3 rounded-2xl bg-white/62 p-3">
-                      <span className="grid h-9 w-9 place-items-center rounded-full bg-[#8F5B67] text-sm font-bold text-white">
-                        {index + 1}
-                      </span>
-                      <span className="font-semibold text-[#2E2926]">{item}</span>
-                    </div>
-                  ),
-                )}
-              </div>
+            <div className="home-campaign-note">
+              <span>Private doctor care</span>
+              <span>At home</span>
+              <span>By assessment</span>
             </div>
           </div>
           <div className="home-slider-dots" aria-hidden="true">
@@ -510,79 +486,180 @@ export function HomePage() {
           </div>
         </div>
       </section>
-      <HomeEditorialRail />
-      <DoctorLedStrip />
-      <HowItWorksSection />
-      <FeaturedTreatmentsSection />
-      <WhyBetterSelfSection />
-      <DoctorProfileSection />
-      <SafetySectionCompact />
-      <PricingSectionCompact />
+      <HomeBeautyStory />
+      <HomeConcernRibbon />
+      <HomeSignatureTreatments />
+      <HomeFluidProcess />
+      <HomeTrustMoment />
       <FinalCta />
     </PageShell>
   );
 }
 
-function HomeEditorialRail() {
-  const cards = [
-    {
-      title: "Face",
-      text: "Lines, pores, scars, boosters, and facial contour concerns.",
-      href: "/treatments#treatment-map",
-      image: "/betterself-face-map.png",
-    },
-    {
-      title: "Body",
-      text: "Sweating, whitening, mesolipo, keloids, and selected body concerns.",
-      href: "/treatments#treatment-map",
-      image: "/betterself-body-map.png",
-    },
-    {
-      title: "Consultation",
-      text: "Not sure what you need? Start with a doctor call first.",
-      href: "/booking?treatment=doctor-consultation",
-      image: "/betterself-doctor-kit.jpg",
-    },
+function HomeBeautyStory() {
+  return (
+    <section className="home-story-section px-5 py-20 lg:px-8 lg:py-28">
+      <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.86fr_1.14fr]">
+        <div className="home-story-image">
+          <Image
+            src="/betterself-doctor-kit.jpg"
+            alt="BetterSelf doctor preparing sterile home aesthetic care equipment"
+            fill
+            sizes="(min-width: 1024px) 42vw, 100vw"
+            className="object-cover"
+          />
+        </div>
+        <div className="max-w-2xl">
+          <p className="eyebrow">The feeling</p>
+          <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
+            A calm beauty appointment, without the clinic waiting room.
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-[#595550]">
+            BetterSelf should feel like a private ritual: considered, discreet,
+            and medically guided. You choose the concern, the doctor checks if it
+            is suitable, then the visit is prepared around you.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            {["Doctor-led", "Sterile setup", "Private home care", "Clear aftercare"].map((item) => (
+              <span key={item} className="home-soft-pill">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HomeConcernRibbon() {
+  const concerns = [
+    "Expression lines",
+    "Skin glow",
+    "Pores",
+    "Jawline",
+    "Acne scars",
+    "Sweating",
+    "Keloids",
+    "Whitening",
+    "Small lesions",
   ];
 
   return (
-    <section className="home-editorial-rail px-5 py-10 lg:px-8">
+    <section className="home-ribbon-section" aria-label="Common aesthetic concerns">
+      <div className="home-ribbon-track">
+        {[...concerns, ...concerns].map((concern, index) => (
+          <Link key={`${concern}-${index}`} href="/treatments#treatment-map" className="home-ribbon-item">
+            {concern}
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function HomeSignatureTreatments() {
+  const featured = getFeaturedTreatments().slice(0, 4);
+
+  return (
+    <section className="home-signature-section px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-5 flex items-end justify-between gap-4">
+        <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
           <div>
-            <p className="eyebrow">Explore by concern</p>
-            <h2 className="mt-2 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">
-              Choose where to begin.
+            <p className="eyebrow">Signature requests</p>
+            <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
+              Treatments that feel selected, not stacked.
             </h2>
           </div>
-          <Link className="hidden items-center gap-2 text-sm font-bold text-[#6E444E] md:inline-flex" href="/treatments">
-            All treatments <ArrowRight className="h-4 w-4" />
-          </Link>
+          <p className="max-w-2xl text-base leading-8 text-[#595550] lg:ml-auto">
+            The public site should guide patients by desire and concern. The
+            medical details stay available, but the first read is softer,
+            clearer, and more aspirational.
+          </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {cards.map((card) => (
-            <Link key={card.title} href={card.href} className="home-editorial-card group">
-              <div className="relative h-44 overflow-hidden rounded-[1.25rem] bg-[#F6EDEA]">
-                <Image
-                  src={card.image}
-                  alt=""
-                  fill
-                  sizes="(min-width: 768px) 33vw, 100vw"
-                  className="object-cover transition duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1F1F1F]/34 via-transparent to-transparent" />
-              </div>
-              <div className="mt-4 flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-serif text-3xl text-[#1F1F1F]">{card.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#595550]">{card.text}</p>
-                </div>
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#1F1F1F] text-white transition group-hover:bg-[#8F5B67]">
-                  <ArrowRight className="h-4 w-4" />
-                </span>
-              </div>
+        <div className="home-signature-list mt-12">
+          {featured.map((treatment, index) => (
+            <Link
+              key={treatment.id}
+              href={`/booking?treatment=${treatment.id}&direct=1`}
+              className="home-signature-row group"
+            >
+              <span className="home-signature-number">{String(index + 1).padStart(2, "0")}</span>
+              <span className="home-signature-name">{treatment.name}</span>
+              <span className="home-signature-meta">{treatment.category}</span>
+              <span className="home-signature-price">{treatment.priceLabel}</span>
+              <span className="home-signature-arrow">
+                <ArrowRight className="h-4 w-4" />
+              </span>
             </Link>
           ))}
+        </div>
+        <div className="mt-8">
+          <Link className="inline-flex items-center gap-2 text-sm font-bold text-[#6E444E]" href="/treatments">
+            View the full treatment edit <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HomeFluidProcess() {
+  const steps = [
+    ["01", "Tell us the concern", "Choose a treatment or start with a consultation."],
+    ["02", "Doctor reviews", "Suitability, intake, and expected plan are checked first."],
+    ["03", "Confirm beautifully", "Pay only when the plan is clear, then prepare for the visit."],
+  ];
+
+  return (
+    <section className="home-process-section px-5 py-20 lg:px-8 lg:py-28">
+      <div className="mx-auto max-w-7xl">
+        <div className="max-w-3xl">
+          <p className="eyebrow">The journey</p>
+          <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
+            A flow that feels as considered as the treatment.
+          </h2>
+        </div>
+        <div className="home-process-line mt-14">
+          {steps.map(([number, title, text]) => (
+            <div key={number} className="home-process-step">
+              <span>{number}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HomeTrustMoment() {
+  return (
+    <section className="home-trust-moment px-5 py-20 lg:px-8 lg:py-28">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="max-w-2xl">
+          <p className="eyebrow">Safety, quietly visible</p>
+          <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
+            Premium does not mean vague. It means everything is prepared.
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-[#595550]">
+            Medical intake, consent, sterile preparation, appointment notes, and
+            aftercare are part of the experience. The website should make that
+            feel reassuring, not heavy.
+          </p>
+          <Link className="btn btn-secondary mt-8 rounded-full px-6" href="/safety">
+            Read the safety approach
+          </Link>
+        </div>
+        <div className="home-trust-image">
+          <Image
+            src="/betterself-safety-kit.jpg"
+            alt="Sterile supplies prepared for BetterSelf doctor-led home aesthetic care"
+            fill
+            sizes="(min-width: 1024px) 42vw, 100vw"
+            className="object-cover"
+          />
         </div>
       </div>
     </section>
@@ -2267,158 +2344,6 @@ function HowItWorksSection() {
               doctor arrives prepared for the confirmed treatment plan.
             </p>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FeaturedTreatmentsSection() {
-  const featured = getFeaturedTreatments();
-
-  return (
-    <section className="bg-white px-5 py-14 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <SectionHeading
-            eyebrow="Popular treatments"
-            title="Selected treatments, medically reviewed."
-            text="Patients can request the treatment directly, with doctor review before final confirmation and payment."
-          />
-          <ArrowLink href="/treatments">View all treatments</ArrowLink>
-        </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {featured.map((treatment) => (
-            <TreatmentCard key={treatment.id} treatment={treatment} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function WhyBetterSelfSection() {
-  const pillars = [
-    ["Doctor-led", "Every treatment is reviewed and performed under medical supervision."],
-    ["Discreet", "Appointments are private and designed around your schedule."],
-    ["Convenient", "Receive aesthetic care without visiting a clinic when home treatment is suitable."],
-    ["Safe process", "Medical intake, consent forms, aftercare, and follow-up are part of the journey."],
-  ];
-
-  return (
-    <section className="px-5 py-14 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-lg border border-[#E6DFD5] bg-[#ECDCDE] p-8">
-          <Stethoscope className="h-8 w-8 text-[#8F5B67]" />
-          <h2 className="mt-8 font-serif text-5xl leading-tight text-[#1F1F1F]">
-            Private care, medically guided.
-          </h2>
-          <p className="mt-5 text-base leading-7 text-[#6E565A]">
-            BetterSelf brings selected aesthetic treatments to your home through
-            a structured, doctor-led process.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {pillars.map(([title, text]) => (
-            <article key={title} className="card p-5">
-              <Check className="h-5 w-5 text-[#8F5B67]" />
-              <h3 className="mt-5 font-serif text-3xl text-[#1F1F1F]">{title}</h3>
-              <p className="mt-3 text-sm leading-6 text-[#595550]">{text}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function DoctorProfileSection() {
-  return (
-    <section className="bg-white px-5 py-14 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-        <div className="card p-5">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#F1ECE4]">
-            <Image
-              src="/betterself-doctor-kit.jpg"
-              alt="Doctor preparing sterile equipment for a BetterSelf home treatment"
-              fill
-              sizes="(min-width: 1024px) 420px, 90vw"
-              className="object-cover object-center"
-            />
-          </div>
-          <div className="mt-5 grid gap-2">
-            <StatusBadge>Licensed medical care</StatusBadge>
-            <StatusBadge>Doctor-led</StatusBadge>
-          </div>
-        </div>
-        <div>
-          <SectionHeading
-            eyebrow="Our approach"
-            title="Care begins with proper assessment."
-            text="Every BetterSelf treatment is doctor-led and follows the same process: medical intake, suitability review, written consent, sterile preparation, and clear aftercare. Treatment only proceeds when it is medically appropriate."
-          />
-          <Link className="btn btn-primary mt-8" href="/booking">
-            Book Treatment
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SafetySectionCompact() {
-  return (
-    <section className="px-5 py-14 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.9fr]">
-        <SectionHeading
-          eyebrow="Safety comes first"
-          title="Aesthetic treatments are medical procedures."
-          text="BetterSelf follows a structured process that includes medical intake, doctor assessment, consent, treatment documentation, and aftercare instructions."
-        />
-        <section className="card overflow-hidden">
-          <div className="relative h-56">
-            <Image
-              src="/betterself-safety-kit.jpg"
-              alt="Sterile medical supplies used in BetterSelf safety preparation"
-              fill
-              sizes="(min-width: 1024px) 38vw, 100vw"
-              className="object-cover object-[center_42%]"
-            />
-          </div>
-          <div className="p-6">
-            <SafetyChecklist items={safetyItems} />
-            <Link className="btn btn-secondary mt-6" href="/safety">
-              Read Our Safety Protocol
-            </Link>
-          </div>
-        </section>
-      </div>
-    </section>
-  );
-}
-
-function PricingSectionCompact() {
-  return (
-    <section className="bg-white px-5 py-14 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-center">
-        <SectionHeading
-          eyebrow="Per-treatment pricing"
-          title="No memberships. Each booking is priced by treatment."
-          text="Patients choose a treatment, review the published starting price or unit rate, complete medical intake, and pay for that specific service when the booking is confirmed."
-        />
-        <div className="card p-6">
-          <SafetyChecklist
-            items={[
-              "No monthly or annual membership",
-              "Prices are per treatment, unit, area, or piece where noted",
-              "Payment opens from the dashboard after doctor confirmation",
-              "Doctor assessment is required before final treatment confirmation",
-              "Eligible employee and referral discounts can still apply",
-            ]}
-          />
-          <Link className="btn btn-primary mt-6" href="/treatments">
-            View Service Rates
-          </Link>
         </div>
       </div>
     </section>

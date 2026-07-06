@@ -33,7 +33,7 @@ export function CookieConsentBanner() {
   return (
     <section
       aria-label="Cookie consent"
-      className="fixed inset-x-3 bottom-20 z-50 mx-auto max-w-5xl rounded-lg border border-[#E6DFD5] bg-white p-4 shadow-2xl md:bottom-4 md:p-5"
+      className="cookie-consent fixed inset-x-3 bottom-20 z-50 mx-auto max-w-5xl p-3 md:bottom-4 md:p-4"
     >
       <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
         <div>
@@ -52,14 +52,14 @@ export function CookieConsentBanner() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row md:justify-end">
           <button
-            className="btn btn-secondary justify-center"
+            className="cookie-consent-secondary justify-center"
             type="button"
             onClick={() => saveChoice("essential")}
           >
             Essential only
           </button>
           <button
-            className="btn btn-primary justify-center"
+            className="cookie-consent-primary justify-center"
             type="button"
             onClick={() => saveChoice("accepted")}
           >
