@@ -669,14 +669,52 @@ function HomeTrustMoment() {
 export function TreatmentsPage() {
   return (
     <PageShell>
-      <PageHero
-        eyebrow="Treatments"
-        title="Doctor-led aesthetic treatments delivered privately at home."
-        text="Browse the current BetterSelf service menu. Prices are starting points or unit-based rates where noted. Every treatment remains subject to medical intake and doctor assessment."
-      />
+      <TreatmentsEditorialHero />
       <TreatmentAnatomyMap treatments={treatments} />
       <TreatmentExplorer categories={categories} treatments={treatments} />
     </PageShell>
+  );
+}
+
+function TreatmentsEditorialHero() {
+  return (
+    <section className="treatments-editorial-hero px-5 py-16 lg:px-8 lg:py-24">
+      <div className="mx-auto grid max-w-7xl items-end gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="max-w-3xl">
+          <p className="eyebrow">Treatment edit</p>
+          <h1 className="mt-4 font-serif text-6xl leading-[0.92] text-[#1F1F1F] md:text-8xl">
+            Start with the concern, not the procedure.
+          </h1>
+          <p className="mt-7 max-w-2xl text-lg leading-8 text-[#595550]">
+            Browse BetterSelf treatments through the area or concern you want to address.
+            Every request is still reviewed by the doctor before confirmation.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link className="premium-cta px-6" href="/booking">
+              Book Treatment
+            </Link>
+            <Link className="btn btn-secondary rounded-full px-6" href="/booking?treatment=doctor-consultation">
+              Start with Consultation
+            </Link>
+          </div>
+        </div>
+        <div className="treatments-hero-visual">
+          <Image
+            src="/betterself-face-map.png"
+            alt="Illustrated face map for BetterSelf aesthetic treatments"
+            fill
+            sizes="(min-width: 1024px) 44vw, 100vw"
+            className="object-contain"
+            priority
+          />
+          <div className="treatments-hero-card">
+            <span>Face</span>
+            <span>Body</span>
+            <span>Injectables</span>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -2287,14 +2325,14 @@ function PageHero({
   text: string;
 }) {
   return (
-    <section className="px-5 py-10 lg:px-8 lg:py-14">
+    <section className="page-editorial-hero px-5 py-14 lg:px-8 lg:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-4xl">
           <p className="eyebrow">{eyebrow}</p>
-          <h1 className="mt-3 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
+          <h1 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
             {title}
           </h1>
-          <p className="mt-5 max-w-3xl text-base leading-7 text-[#595550]">
+          <p className="mt-6 max-w-3xl text-base leading-8 text-[#595550] md:text-lg">
             {text}
           </p>
         </div>

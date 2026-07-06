@@ -183,27 +183,27 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
   }
 
   return (
-    <section id="treatment-map" className="px-5 pb-8 lg:px-8">
+    <section id="treatment-map" className="treatment-map-section px-5 py-16 lg:px-8 lg:py-24">
       <div className="mx-auto max-w-7xl">
-        <div className="overflow-hidden rounded-lg border border-[#E6DFD5] bg-white shadow-sm">
+        <div className="treatment-map-shell overflow-hidden">
           <div className="grid gap-0 lg:grid-cols-[1fr_0.92fr]">
-            <div className="bg-[#F7F3ED] p-5 md:p-7">
+            <div className="treatment-map-visual-panel p-5 md:p-7">
               <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
                   <p className="eyebrow">Interactive treatment map</p>
-                  <h2 className="mt-3 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">
+                  <h2 className="mt-3 font-serif text-5xl leading-[0.96] text-[#1F1F1F] md:text-7xl">
                     Choose the area first.
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-[#595550]">
                     Tap the face, neck, or body area to see which BetterSelf treatments may be requested there.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 rounded-lg border border-[#E6DFD5] bg-white p-1 text-sm font-semibold">
+                <div className="grid grid-cols-2 rounded-full border border-[#E6DFD5] bg-white/72 p-1 text-sm font-semibold backdrop-blur">
                   {(["face", "body"] as const).map((view) => (
                     <button
                       key={view}
                       type="button"
-                      className={`rounded-md px-4 py-2 transition ${
+                      className={`rounded-full px-4 py-2 transition ${
                         activeView === view ? "bg-[#8F5B67] text-white" : "text-[#4D4D4D] hover:bg-[#F6EDEA]"
                       }`}
                       onClick={() => chooseView(view)}
@@ -215,7 +215,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
               </div>
 
               <div className="mt-6 grid gap-5 md:grid-cols-[0.95fr_1fr] md:items-center">
-                <div className="relative min-h-[520px] overflow-hidden rounded-lg border border-[#E6DFD5] bg-gradient-to-b from-white to-[#F1ECE4] p-4">
+                <div className="treatment-map-figure relative min-h-[520px] overflow-hidden p-4">
                   <div className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-[#8F5B67] shadow-sm">
                     <MousePointer2 className="h-3.5 w-3.5" />
                     Tap a point
@@ -269,7 +269,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                       <button
                         key={zone.id}
                         type="button"
-                        className={`rounded-lg border p-4 text-left transition ${
+                        className={`rounded-[1.15rem] border p-4 text-left transition ${
                           isActive
                             ? "border-[#8F5B67] bg-[#8F5B67] text-white"
                             : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"
@@ -289,7 +289,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
               </div>
             </div>
 
-            <aside className="p-5 md:p-7">
+            <aside className="treatment-map-results p-5 md:p-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="eyebrow">{activeView === "face" ? "Face area" : "Body area"}</p>
@@ -300,12 +300,12 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                     {activeZone.description}
                   </p>
                 </div>
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#F6EDEA] text-[#8F5B67]">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#F6EDEA] text-[#8F5B67]">
                   <Sparkles className="h-5 w-5" />
                 </span>
               </div>
 
-              <div className="mt-5 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] p-4">
+              <div className="mt-5 rounded-[1.15rem] border border-[#ECDCDE] bg-[#F6EDEA]/72 p-4">
                 <div className="flex gap-3 text-sm leading-6 text-[#6E565A]">
                   <BadgeInfo className="mt-0.5 h-4 w-4 shrink-0 text-[#8F5B67]" />
                   <p>
@@ -316,7 +316,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
 
               <div className="mt-6 grid gap-3">
                 {activeTreatments.map((treatment) => (
-                  <article key={treatment.id} className="rounded-lg border border-[#E6DFD5] p-4">
+                  <article key={treatment.id} className="treatment-map-result-card p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <p className="font-serif text-2xl leading-tight text-[#1F1F1F]">

@@ -31,26 +31,26 @@ export const patientNav = [
 export function Header() {
   return (
     <header className="premium-header sticky top-0 z-30">
-      <div className="mx-auto flex min-h-[88px] max-w-7xl items-center justify-between gap-5 px-5 py-3 lg:px-8">
-        <Link className="group flex items-center gap-3 sm:gap-4" href="/" aria-label="BetterSelf home">
-          <span className="premium-logo-shell">
+      <div className="mx-auto flex min-h-[96px] max-w-7xl items-center justify-between gap-5 px-5 py-3 lg:px-8">
+        <Link className="brand-lockup group" href="/" aria-label="BetterSelf home">
+          <span className="brand-mark-wrap" aria-hidden="true">
             <Image
-              src="/betterself-mark.png"
-              alt="BetterSelf Home Aesthetics"
-              width={96}
-              height={96}
+              src="/betterself-mark-transparent.png"
+              alt=""
+              width={128}
+              height={128}
               priority
-              className="h-14 w-14 rounded-full object-cover sm:h-16 sm:w-16"
+              className="brand-mark-image"
             />
           </span>
-          <div className="min-w-0">
-            <p className="font-serif text-[2rem] leading-none text-[#1F1F1F] sm:text-[2.55rem]">
+          <span className="brand-wordmark min-w-0">
+            <span className="brand-name font-serif">
               BetterSelf
-            </p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.28em] text-[#756A61] sm:text-[11px]">
+            </span>
+            <span className="brand-tagline">
               Home Aesthetics
-            </p>
-          </div>
+            </span>
+          </span>
         </Link>
         <nav
           className="premium-nav hidden items-center gap-1 text-sm font-semibold text-[#4D4D4D] min-[900px]:flex"

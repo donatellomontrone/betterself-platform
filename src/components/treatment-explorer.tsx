@@ -98,11 +98,11 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
   }
 
   return (
-    <section className="px-5 pb-14 lg:px-8">
+    <section className="treatment-edit-section px-5 pb-20 pt-10 lg:px-8 lg:pb-28">
       <div className="mx-auto max-w-7xl">
-        <div className="grid min-w-0 gap-5 overflow-hidden rounded-lg border border-[#E6DFD5] bg-white p-4 shadow-sm lg:grid-cols-[280px_1fr] lg:overflow-visible lg:p-5">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[270px_1fr]">
           <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
-            <div className="min-w-0 overflow-hidden rounded-lg bg-[#FAF8F4] p-3">
+            <div className="treatment-section-nav min-w-0 overflow-hidden p-3">
               <div className="flex items-center gap-2 px-2 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#8F5B67]">
                 <SlidersHorizontal className="h-4 w-4" />
                 Sections
@@ -120,10 +120,10 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                       key={category}
                       type="button"
                       aria-pressed={isActive}
-                      className={`min-w-[11rem] rounded-lg border px-4 py-3 text-left transition lg:min-w-0 ${
+                      className={`treatment-section-button min-w-[11rem] px-4 py-3 text-left transition lg:min-w-0 ${
                         isActive
-                          ? "border-[#8F5B67] bg-[#8F5B67] text-white shadow-sm"
-                          : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"
+                          ? "is-active text-white"
+                          : "text-[#1F1F1F]"
                       }`}
                       onClick={() => {
                         setActiveCategory(category);
@@ -143,10 +143,10 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
           </aside>
 
           <div className="min-w-0">
-            <div className="grid min-w-0 gap-4 rounded-lg bg-[#FAF8F4] p-4 lg:grid-cols-[1fr_0.9fr] lg:items-end">
+            <div className="treatment-edit-control grid min-w-0 gap-4 p-4 lg:grid-cols-[1fr_0.9fr] lg:items-end">
               <div className="min-w-0">
                 <p className="eyebrow">{activeMeta.eyebrow}</p>
-                <h2 className="mt-3 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">
+                <h2 className="mt-3 font-serif text-5xl leading-[0.95] text-[#1F1F1F] md:text-7xl">
                   {activeCategory}
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-[#595550]">
@@ -158,7 +158,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                   <span className="sr-only">Search treatments</span>
                   <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#5C574F]" />
                   <input
-                    className="h-14 w-full rounded-lg border border-[#E6DFD5] bg-white py-0 pl-12 pr-4 text-base text-[#1F1F1F] outline-none transition placeholder:text-[#5C574F] focus:border-[#8F5B67] focus:shadow-[0_0_0_3px_rgb(143_91_103_/_0.18)] sm:h-12 sm:text-sm"
+                    className="h-14 w-full rounded-full border border-[#E6DFD5] bg-white/78 py-0 pl-12 pr-4 text-base text-[#1F1F1F] outline-none transition placeholder:text-[#5C574F] focus:border-[#8F5B67] focus:shadow-[0_0_0_3px_rgb(143_91_103_/_0.18)] sm:h-12 sm:text-sm"
                     value={query}
                     placeholder="Search treatment, concern, or price"
                     onChange={(event) => setQuery(event.target.value)}
@@ -167,7 +167,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                 {hasFilters ? (
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#E6DFD5] bg-white px-3 py-2 text-sm font-semibold text-[#8F5B67]"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-[#E6DFD5] bg-white/78 px-3 py-2 text-sm font-semibold text-[#8F5B67]"
                     onClick={resetFilters}
                   >
                     <X className="h-4 w-4" />
@@ -191,7 +191,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                     className={`rounded-full border px-3 py-2 text-sm font-semibold leading-none transition sm:px-4 ${
                       isActive
                         ? "border-[#8F5B67] bg-[#8F5B67] text-white"
-                        : "border-[#E6DFD5] bg-white text-[#4D4D4D] hover:border-[#8F5B67]"
+                        : "border-[#E6DFD5] bg-white/68 text-[#4D4D4D] hover:border-[#8F5B67]"
                     }`}
                     onClick={() => setActiveConcern(isActive ? "" : concern)}
                   >
@@ -208,10 +208,10 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
             </p>
 
             {spotlight ? (
-              <article className="mt-5 grid overflow-hidden rounded-lg border border-[#E6DFD5] bg-white shadow-sm lg:grid-cols-[1fr_0.75fr]">
+              <article className="treatment-spotlight mt-7 grid overflow-hidden lg:grid-cols-[1fr_0.75fr]">
                 <div className="p-5 md:p-6">
                   <p className="eyebrow">Top match</p>
-                  <h3 className="mt-3 font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">
+                  <h3 className="mt-3 font-serif text-5xl leading-[0.96] text-[#1F1F1F] md:text-6xl">
                     {spotlight.name}
                   </h3>
                   <p className="mt-4 max-w-2xl text-sm leading-6 text-[#595550]">
@@ -231,7 +231,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-col justify-between bg-[#F7F3ED] p-5 md:p-6">
+                <div className="flex flex-col justify-between bg-white/46 p-5 md:p-6">
                   <div className="grid grid-cols-2 gap-3">
                     <TreatmentStat label="Duration" value={spotlight.duration} />
                     <TreatmentStat label="From" value={spotlight.priceLabel} />
@@ -247,7 +247,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                 </div>
               </article>
             ) : (
-              <div className="mt-5 rounded-lg border border-[#E6DFD5] bg-white p-6 text-center">
+              <div className="mt-5 rounded-[1.5rem] border border-[#E6DFD5] bg-white/74 p-6 text-center">
                 <h3 className="font-serif text-3xl text-[#1F1F1F]">No treatments found</h3>
                 <p className="mt-2 text-sm leading-6 text-[#595550]">
                   Try another section or clear the search filters.
@@ -256,18 +256,18 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
             )}
 
             {compactTreatments.length > 0 ? (
-              <div className="mt-4 grid gap-3">
+              <div className="mt-6 grid">
                 {compactTreatments.map((treatment) => (
                   <article
                     key={treatment.id}
-                    className="grid gap-4 rounded-lg border border-[#E6DFD5] bg-white p-4 shadow-sm lg:grid-cols-[1fr_auto] lg:items-center"
+                    className="treatment-edit-row grid gap-4 py-5 lg:grid-cols-[1fr_auto] lg:items-center"
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-serif text-3xl leading-tight text-[#1F1F1F]">
                           {treatment.name}
                         </h3>
-                        <span className="rounded-full bg-[#F1ECE4] px-3 py-1 text-xs font-semibold text-[#595550]">
+                        <span className="rounded-full bg-[#F1ECE4]/80 px-3 py-1 text-xs font-semibold text-[#595550]">
                           {treatment.priceLabel}
                         </span>
                       </div>
@@ -289,10 +289,10 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                       </div>
                     </div>
                     <div className="grid gap-2 sm:grid-cols-2 lg:w-72">
-                      <Link className="btn btn-secondary justify-center" href={`/treatments/${treatment.id}`}>
+                      <Link className="btn btn-secondary justify-center rounded-full" href={`/treatments/${treatment.id}`}>
                         Details
                       </Link>
-                      <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}&direct=1`}>
+                      <Link className="btn btn-primary justify-center rounded-full" href={`/booking?treatment=${treatment.id}&direct=1`}>
                         Book
                       </Link>
                     </div>
