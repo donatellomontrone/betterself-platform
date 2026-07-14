@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { isAdminEmail } from "@/lib/admin";
+import { syncCalendlyBookings } from "@/lib/calendly-sync";
 import {
   createDoctorMessage,
   recordAdminAuditLog,
@@ -225,4 +227,40 @@ export async function sendDoctorMessageAction(formData: FormData) {
   });
   revalidatePath("/admin");
   revalidatePath("/messages");
+}
+
+export async function syncCalendlyAction() {
+  const actor = await assertAdmin();
+  if (!actor) return;
+
+  let destination = "/admin?calendly=error";
+  try {
+    const result = await syncCalendlyBookings({ force: true });
+    await recordAdminAuditLog({
+      actorId: actor.id,
+      actorEmail: actor.email,
+      action: "calendly.sync.manual",
+      targetType: "integration",
+      targetId: "calendly",
+      metadata: {
+        skipped: result.skipped,
+        eventsScanned: result.eventsScanned,
+        inviteesScanned: result.inviteesScanned,
+        schedulesUpdated: result.schedulesUpdated,
+        schedulesCleared: result.schedulesCleared,
+      },
+    });
+    revalidatePath("/admin");
+
+    const params = new URLSearchParams({
+      calendly: result.skipped ? "busy" : "success",
+      updated: String(result.schedulesUpdated),
+      cleared: String(result.schedulesCleared),
+    });
+    destination = `/admin?${params.toString()}`;
+  } catch (error) {
+    console.error("[admin] manual Calendly sync failed:", error);
+  }
+
+  redirect(destination);
 }

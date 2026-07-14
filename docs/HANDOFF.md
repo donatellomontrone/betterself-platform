@@ -112,6 +112,7 @@ There is no membership model. Pricing is per consultation or per treatment.
 - Durable Neon-backed doctor-patient messaging and admin message inbox.
 - Durable Neon-backed rate limiting for the public treatment recommendation endpoint.
 - Durable Neon-backed lock and cooldown for Calendly API reconciliation.
+- Admin-only manual Calendly sync with visible result counts and audit logging.
 - Webhook hardening: HMAC, timestamp replay window, payload-shape support, no
   cancelled-booking resurrection.
 - SEO metadata, robots, sitemap, and private noindex behavior.

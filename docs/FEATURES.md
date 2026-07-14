@@ -59,6 +59,8 @@ There are two separate business flows.
   to open Calendly in a new tab.
 - Calendly API reconciliation uses a shared Neon lock so concurrent dashboard
   and admin requests do not repeat the same full event scan.
+- The doctor admin can trigger an immediate Calendly sync and see how many
+  schedules were updated or cleared.
 - Discount-code support is validated server-side before payment.
 
 ## Patient dashboard

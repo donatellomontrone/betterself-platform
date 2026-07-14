@@ -42,6 +42,7 @@ import type { Json } from "@/lib/db/types";
 import {
   setBookingAmountAction,
   sendDoctorMessageAction,
+  syncCalendlyAction,
   updateBookingNotesAction,
   updateBookingPaymentStatusAction,
   updateBookingScheduleAction,
@@ -1477,11 +1478,17 @@ export function AdminPage({
   authorized = false,
   bookings = [],
   messageThreads = [],
+  calendlySync,
   filters = {},
 }: {
   authorized?: boolean;
   bookings?: AdminBookingView[];
   messageThreads?: MessageThreadView[];
+  calendlySync?: {
+    status: "success" | "busy" | "error";
+    updated: number;
+    cleared: number;
+  };
   filters?: AdminFilters;
 }) {
   if (!authorized) {
@@ -1621,6 +1628,11 @@ export function AdminPage({
           </form>
 
           <div className="mt-5 flex flex-wrap gap-3">
+            <form action={syncCalendlyAction}>
+              <FormSubmitButton className="btn btn-primary" pendingLabel="Syncing Calendly...">
+                Sync Calendly
+              </FormSubmitButton>
+            </form>
             <Link className="btn btn-secondary" href="/admin/export.csv">
               Export CSV
             </Link>
@@ -1628,6 +1640,26 @@ export function AdminPage({
               Patient view
             </Link>
           </div>
+
+          {calendlySync ? (
+            <div className="mt-4" aria-live="polite">
+              <Notice
+                title={
+                  calendlySync.status === "success"
+                    ? "Calendly is up to date"
+                    : calendlySync.status === "busy"
+                      ? "Calendly sync already running"
+                      : "Calendly could not sync"
+                }
+              >
+                {calendlySync.status === "success"
+                  ? `${calendlySync.updated} schedule(s) updated and ${calendlySync.cleared} cancelled schedule(s) cleared.`
+                  : calendlySync.status === "busy"
+                    ? "Another sync is already in progress. Wait a moment, then try again."
+                    : "Check the Calendly access token and try again. Existing booking data was not changed."}
+              </Notice>
+            </div>
+          ) : null}
 
           <div className="mt-8 grid gap-6">
             <AdminPanel id="calendar" eyebrow="Calendar" title="Confirmed calls and visits">

@@ -147,7 +147,9 @@ async function eachCalendlyPage<T>(
   }
 }
 
-export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
+export async function syncCalendlyBookings(
+  options: { force?: boolean } = {},
+): Promise<CalendlySyncResult> {
   const result: CalendlySyncResult = {
     skipped: true,
     eventsScanned: 0,
@@ -165,7 +167,7 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
 
   const claimed = await claimIntegrationSync({
     integration: calendlySyncKey,
-    minIntervalSeconds: 30,
+    minIntervalSeconds: options.force ? 0 : 30,
     staleAfterSeconds: 5 * 60,
   });
   if (!claimed) {

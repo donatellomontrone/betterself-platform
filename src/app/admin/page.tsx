@@ -54,11 +54,26 @@ export default async function Admin({
     return Array.isArray(value) ? value[0] : value;
   };
 
+  const calendlyStatus = readParam("calendly");
+  const calendlySync: {
+    status: "success" | "busy" | "error";
+    updated: number;
+    cleared: number;
+  } | undefined =
+    calendlyStatus === "success" || calendlyStatus === "busy" || calendlyStatus === "error"
+      ? {
+          status: calendlyStatus,
+          updated: Number(readParam("updated") ?? 0),
+          cleared: Number(readParam("cleared") ?? 0),
+        }
+      : undefined;
+
   return (
     <AdminPage
       authorized={authorized}
       bookings={bookings}
       messageThreads={messageThreads}
+      calendlySync={calendlySync}
       filters={{
         q: readParam("q"),
         status: readParam("status"),
