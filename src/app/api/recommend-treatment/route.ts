@@ -1,4 +1,7 @@
+import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { isDatabaseConfigured } from "@/lib/db/client";
+import { consumeRateLimit, type RateLimitResult } from "@/lib/db/rate-limit";
 import { consultationService, treatments, type Treatment } from "@/lib/treatments";
 
 type RecommendationConfidence = "low" | "medium" | "high";
@@ -244,19 +247,44 @@ function getClientKey(request: NextRequest) {
   return forwardedFor || request.headers.get("x-real-ip") || "anonymous";
 }
 
-function isRateLimited(request: NextRequest) {
+function consumeMemoryRateLimit(request: NextRequest): RateLimitResult {
   const key = getClientKey(request);
   const now = Date.now();
   const current = recommendationRateLimits.get(key);
 
   if (!current || current.resetAt <= now) {
     recommendationRateLimits.set(key, { count: 1, resetAt: now + rateLimitWindowMs });
-    return false;
+    return { limited: false, retryAfterSeconds: Math.ceil(rateLimitWindowMs / 1000) };
   }
 
   current.count += 1;
   recommendationRateLimits.set(key, current);
-  return current.count > rateLimitMaxRequests;
+  return {
+    limited: current.count > rateLimitMaxRequests,
+    retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+  };
+}
+
+async function getRateLimit(request: NextRequest): Promise<RateLimitResult> {
+  if (!isDatabaseConfigured()) {
+    return consumeMemoryRateLimit(request);
+  }
+
+  const clientKeyHash = createHash("sha256")
+    .update(`recommend-treatment:${getClientKey(request)}`)
+    .digest("hex");
+
+  try {
+    return await consumeRateLimit({
+      scope: "recommend-treatment",
+      clientKeyHash,
+      windowSeconds: Math.ceil(rateLimitWindowMs / 1000),
+      maxRequests: rateLimitMaxRequests,
+    });
+  } catch (error) {
+    console.error("[recommend-treatment] durable rate limit unavailable:", error);
+    return consumeMemoryRateLimit(request);
+  }
 }
 
 async function getTreatmentRecommendation(
@@ -335,10 +363,14 @@ async function getTreatmentRecommendation(
 }
 
 export async function POST(request: NextRequest) {
-  if (isRateLimited(request)) {
+  const rateLimit = await getRateLimit(request);
+  if (rateLimit.limited) {
     return NextResponse.json(
       { message: "Too many matching requests. Please wait a moment and try again." },
-      { status: 429 },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      },
     );
   }
 

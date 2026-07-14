@@ -1,6 +1,6 @@
 # BetterSelf Project Handoff
 
-Last updated: 2026-07-04
+Last updated: 2026-07-14
 
 This is the current handoff for another engineer/agent continuing BetterSelf.
 
@@ -109,6 +109,8 @@ There is no membership model. Pricing is per consultation or per treatment.
 - Patient payment retry with fresh PayMongo QR Ph checkout session.
 - Patient cancellation for pending unpaid bookings.
 - Admin booking filters, patient view, calendar sections, payment queue, CSV export.
+- Durable Neon-backed doctor-patient messaging and admin message inbox.
+- Durable Neon-backed rate limiting for the public treatment recommendation endpoint.
 - Webhook hardening: HMAC, timestamp replay window, payload-shape support, no
   cancelled-booking resurrection.
 - SEO metadata, robots, sitemap, and private noindex behavior.

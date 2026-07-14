@@ -1,6 +1,6 @@
 # BetterSelf Features
 
-Last updated: 2026-07-04
+Last updated: 2026-07-14
 
 BetterSelf is a doctor-led home aesthetics platform for Metro Manila. Patients can
 create an account, describe their concern, book either a paid consultation or a
@@ -25,7 +25,7 @@ treatment request, and continue payment/scheduling from their dashboard.
   face/body anatomy maps.
 - Patient concern prompt: the patient describes the problem they want to address.
 - Optional OpenAI treatment recommendation endpoint with strict output schema,
-  red-flag fallback, and 1000-character abuse/cost cap.
+  red-flag fallback, 1000-character cap, and durable Neon-backed rate limiting.
 - If OpenAI is not configured or fails, the local heuristic fallback still
   recommends a treatment or the doctor consultation.
 
@@ -151,5 +151,5 @@ secret, database, or OpenAI keys as public variables.
 - PayMongo webhook delivery test from the live dashboard.
 - Final legal entity, registered address, and DPO/contact details for legal pages.
 - Real medical copy and treatment-specific aftercare from the doctor.
-- Optional: real persisted doctor-patient messaging instead of support-channel
-  handoff.
+- Optional: secure medical photo uploads after the doctor confirms the operating
+  need, retention policy, and review workflow.

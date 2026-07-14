@@ -127,7 +127,7 @@ If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo check
 ## Production next steps
 
 - Apply every SQL file in `database/migrations/` to Neon before deploying new admin or payment features.
-- Add a durable rate limiter (for example Upstash Redis) for `/api/recommend-treatment` before high traffic campaigns.
+- Keep the Neon migration for the durable `/api/recommend-treatment` rate limiter applied before high traffic campaigns.
 - Add secure patient photo uploads when BetterSelf is ready to review images inside the platform.
 - Review legal entity, DPO, consent, and medical disclaimer copy with the clinic/legal owner before launch.
 - Keep PayMongo webhook, Calendly webhook, Clerk production keys, and `NEXT_PUBLIC_SITE_URL` in Vercel Production and Preview environments.

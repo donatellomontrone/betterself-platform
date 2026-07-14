@@ -1,6 +1,6 @@
 # BetterSelf To-Do
 
-Last updated: 2026-07-04
+Last updated: 2026-07-14
 
 ## P0 - Verify before real patients
 
@@ -27,25 +27,22 @@ Last updated: 2026-07-04
 
 ## P1 - Product/admin improvements
 
-4. Real doctor-patient messaging
-   - Current platform has message entry points and doctor-side context, but the
-     durable chat workflow should be finalized.
-   - Decide between real in-app messages table, WhatsApp handoff, or email-based
-     support.
+4. Real doctor-patient messaging — completed
+   - Messages are persisted in Neon and visible in both patient and admin views.
+   - WhatsApp and email remain available as support fallbacks.
 
 5. Photo upload
    - Decide whether patient photos are required for intake.
    - If yes, add secure upload storage and write URLs to medical intake records.
    - If no, remove any remaining photo-upload placeholder wording.
 
-6. Appointment time from Calendly
-   - Store the actual Calendly event time when available.
-   - Show confirmed video-call/home-visit time in patient dashboard and admin
-     calendar.
+6. Appointment time from Calendly — completed in code
+   - Calendly event time and call URL are stored and shown in patient/admin views.
+   - Production has a Calendly access token; add the webhook signing key when a
+     webhook subscription is enabled for immediate push updates.
 
-7. Admin audit trail
-   - CSV export currently console-logs access.
-   - Add a real `admin_audit_events` table if operating with multiple admins.
+7. Admin audit trail — completed
+   - Sensitive admin changes and CSV exports are stored in `admin_audit_logs`.
 
 ## P2 - Content and polish
 
