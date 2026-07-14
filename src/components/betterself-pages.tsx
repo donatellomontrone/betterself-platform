@@ -816,12 +816,23 @@ export function BookingPage({
   startAtDetails?: boolean;
   prefill?: BookingPrefill;
 }) {
+  const selectedTreatment = treatmentId ? getTreatmentById(treatmentId) : undefined;
+  const isDirectBooking = Boolean(startAtDetails && selectedTreatment);
+
   return (
     <PageShell>
       <PageHero
         eyebrow="Book appointment"
-        title="Choose a treatment directly or start with a doctor consultation."
-        text="Submit your request first, schedule a doctor call or review, then pay from your dashboard only after BetterSelf confirms the service."
+        title={
+          isDirectBooking
+            ? `Book ${selectedTreatment?.name}.`
+            : "Choose a treatment directly or start with a doctor consultation."
+        }
+        text={
+          isDirectBooking
+            ? "Complete your details and medical intake. The doctor reviews suitability and confirms the plan before treatment payment opens."
+            : "Submit your request first, schedule a doctor call or review, then pay from your dashboard only after BetterSelf confirms the service."
+        }
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">

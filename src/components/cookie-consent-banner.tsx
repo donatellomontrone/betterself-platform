@@ -33,24 +33,30 @@ export function CookieConsentBanner() {
   return (
     <section
       aria-label="Cookie consent"
-      className="cookie-consent fixed inset-x-3 bottom-20 z-50 mx-auto max-w-5xl p-3 md:bottom-4 md:p-4"
+      className="cookie-consent fixed inset-x-3 bottom-3 z-50 mx-auto max-w-5xl p-3 md:bottom-4 md:p-4"
     >
-      <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+      <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center md:gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8F5B67]">
+          <p className="hidden text-xs font-bold uppercase tracking-[0.18em] text-[#8F5B67] sm:block">
             Cookie consent
           </p>
-          <p className="mt-2 text-sm leading-6 text-[#4A4641]">
-            BetterSelf uses essential cookies for account access, booking,
-            payments, and site security. Optional cookies are used only after
-            you accept them. Read our{" "}
+          <p className="text-sm leading-5 text-[#4A4641] sm:mt-2 sm:leading-6">
+            <span className="md:hidden">
+              We use essential cookies for secure bookings. Optional cookies
+              require your permission.{" "}
+            </span>
+            <span className="hidden md:inline">
+              BetterSelf uses essential cookies for account access, booking,
+              payments, and site security. Optional cookies are used only after
+              you accept them.{" "}
+            </span>
             <Link className="font-bold text-[#6E444E] underline" href="/privacy">
               Privacy Policy
             </Link>
             .
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row md:justify-end">
+        <div className="grid grid-cols-2 gap-2 md:flex md:justify-end">
           <button
             className="cookie-consent-secondary justify-center"
             type="button"
