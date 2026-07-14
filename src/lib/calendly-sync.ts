@@ -1,5 +1,10 @@
 import { isDatabaseConfigured } from "@/lib/db/client";
 import {
+  claimIntegrationSync,
+  completeIntegrationSync,
+  failIntegrationSync,
+} from "@/lib/db/integration-sync-state";
+import {
   clearInvalidEmailMatchedCalendlySchedules,
   clearBookingScheduleByPaymentReference,
   updateLatestPaidConsultationScheduleByPatientEmail,
@@ -63,6 +68,7 @@ type CalendlySyncResult = {
 };
 
 const referencePattern = /BS-[A-Z]+-\d+-[a-z0-9]+/i;
+const calendlySyncKey = "calendly-api";
 
 export function isCalendlyApiSyncConfigured() {
   return Boolean(process.env.CALENDLY_ACCESS_TOKEN?.trim());
@@ -157,75 +163,96 @@ export async function syncCalendlyBookings(): Promise<CalendlySyncResult> {
     return result;
   }
 
-  const me = await calendlyGet<CalendlyMeResponse>("https://api.calendly.com/users/me", token);
-  const userUri = me.resource?.uri;
-  if (!userUri) {
-    throw new Error("Calendly API did not return a user URI.");
+  const claimed = await claimIntegrationSync({
+    integration: calendlySyncKey,
+    minIntervalSeconds: 30,
+    staleAfterSeconds: 5 * 60,
+  });
+  if (!claimed) {
+    return result;
   }
 
-  result.skipped = false;
-  result.invalidEmailMatchesCleared = await clearInvalidEmailMatchedCalendlySchedules();
-  const minStart = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
-  const firstEventsUrl = new URL("https://api.calendly.com/scheduled_events");
-  firstEventsUrl.searchParams.set("user", userUri);
-  firstEventsUrl.searchParams.set("min_start_time", minStart);
-  firstEventsUrl.searchParams.set("count", "100");
+  try {
+    const me = await calendlyGet<CalendlyMeResponse>("https://api.calendly.com/users/me", token);
+    const userUri = me.resource?.uri;
+    if (!userUri) {
+      throw new Error("Calendly API did not return a user URI.");
+    }
 
-  await eachCalendlyPage<CalendlyEvent>(firstEventsUrl.toString(), token, async (event) => {
-    result.eventsScanned += 1;
-    const uuid = eventUuid(event.uri);
-    if (!uuid) return;
+    result.skipped = false;
+    result.invalidEmailMatchesCleared = await clearInvalidEmailMatchedCalendlySchedules();
+    const minStart = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+    const firstEventsUrl = new URL("https://api.calendly.com/scheduled_events");
+    firstEventsUrl.searchParams.set("user", userUri);
+    firstEventsUrl.searchParams.set("min_start_time", minStart);
+    firstEventsUrl.searchParams.set("count", "100");
 
-    const firstInviteesUrl = new URL(
-      `https://api.calendly.com/scheduled_events/${encodeURIComponent(uuid)}/invitees`,
-    );
-    firstInviteesUrl.searchParams.set("count", "100");
+    await eachCalendlyPage<CalendlyEvent>(firstEventsUrl.toString(), token, async (event) => {
+      result.eventsScanned += 1;
+      const uuid = eventUuid(event.uri);
+      if (!uuid) return;
 
-    await eachCalendlyPage<CalendlyInvitee>(firstInviteesUrl.toString(), token, async (invitee) => {
-      result.inviteesScanned += 1;
-      const referenceNumber = findReference(invitee);
+      const firstInviteesUrl = new URL(
+        `https://api.calendly.com/scheduled_events/${encodeURIComponent(uuid)}/invitees`,
+      );
+      firstInviteesUrl.searchParams.set("count", "100");
 
-      if (referenceNumber && (event.status === "canceled" || invitee.status === "canceled")) {
-        result.schedulesCleared += await clearBookingScheduleByPaymentReference(
-          referenceNumber,
-          invitee.cancellation?.created_at ?? null,
-        );
-        return;
-      }
+      await eachCalendlyPage<CalendlyInvitee>(firstInviteesUrl.toString(), token, async (invitee) => {
+        result.inviteesScanned += 1;
+        const referenceNumber = findReference(invitee);
 
-      if (!event.start_time || event.status === "canceled" || invitee.status === "canceled") return;
+        if (referenceNumber && (event.status === "canceled" || invitee.status === "canceled")) {
+          result.schedulesCleared += await clearBookingScheduleByPaymentReference(
+            referenceNumber,
+            invitee.cancellation?.created_at ?? null,
+          );
+          return;
+        }
 
-      const timeZone = invitee.timezone || "Asia/Manila";
-      const schedule = zonedDateAndTime(event.start_time, timeZone);
-      const scheduleInput = {
-        appointmentDate: schedule.date,
-        appointmentTime: schedule.time,
-        eventUri: event.uri ?? null,
-        inviteeUri: invitee.uri ?? null,
-        videoCallUrl: getVideoCallUrl(event.location),
-        timezone: timeZone,
-        eventName: event.name ?? null,
-      };
+        if (!event.start_time || event.status === "canceled" || invitee.status === "canceled") {
+          return;
+        }
 
-      if (referenceNumber) {
-        result.schedulesUpdated += await updateBookingScheduleByPaymentReference({
-          referenceNumber,
-          ...scheduleInput,
-        });
-        return;
-      }
+        const timeZone = invitee.timezone || "Asia/Manila";
+        const schedule = zonedDateAndTime(event.start_time, timeZone);
+        const scheduleInput = {
+          appointmentDate: schedule.date,
+          appointmentTime: schedule.time,
+          eventUri: event.uri ?? null,
+          inviteeUri: invitee.uri ?? null,
+          videoCallUrl: getVideoCallUrl(event.location),
+          timezone: timeZone,
+          eventName: event.name ?? null,
+        };
 
-      if (invitee.email) {
-        const updated = await updateLatestPaidConsultationScheduleByPatientEmail({
-          inviteeEmail: invitee.email,
-          scheduledStartAt: event.start_time,
-          ...scheduleInput,
-        });
-        result.schedulesUpdated += updated;
-        result.emailFallbacksUsed += updated;
-      }
+        if (referenceNumber) {
+          result.schedulesUpdated += await updateBookingScheduleByPaymentReference({
+            referenceNumber,
+            ...scheduleInput,
+          });
+          return;
+        }
+
+        if (invitee.email) {
+          const updated = await updateLatestPaidConsultationScheduleByPatientEmail({
+            inviteeEmail: invitee.email,
+            scheduledStartAt: event.start_time,
+            ...scheduleInput,
+          });
+          result.schedulesUpdated += updated;
+          result.emailFallbacksUsed += updated;
+        }
+      });
     });
-  });
 
-  return result;
+    await completeIntegrationSync(calendlySyncKey);
+    return result;
+  } catch (error) {
+    try {
+      await failIntegrationSync(calendlySyncKey, error);
+    } catch (stateError) {
+      console.error("[calendly] failed to record sync failure:", stateError);
+    }
+    throw error;
+  }
 }

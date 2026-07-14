@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash, createHmac } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import { consumeRateLimit, type RateLimitResult } from "@/lib/db/rate-limit";
@@ -270,9 +270,14 @@ async function getRateLimit(request: NextRequest): Promise<RateLimitResult> {
     return consumeMemoryRateLimit(request);
   }
 
-  const clientKeyHash = createHash("sha256")
-    .update(`recommend-treatment:${getClientKey(request)}`)
-    .digest("hex");
+  const value = `recommend-treatment:${getClientKey(request)}`;
+  const hashSecret =
+    process.env.RATE_LIMIT_HASH_SECRET?.trim() ||
+    process.env.CLERK_SECRET_KEY?.trim() ||
+    process.env.DATABASE_URL?.trim();
+  const clientKeyHash = hashSecret
+    ? createHmac("sha256", hashSecret).update(value).digest("hex")
+    : createHash("sha256").update(value).digest("hex");
 
   try {
     return await consumeRateLimit({

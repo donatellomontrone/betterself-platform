@@ -38,6 +38,7 @@ Last updated: 2026-07-14
 
 6. Appointment time from Calendly — completed in code
    - Calendly event time and call URL are stored and shown in patient/admin views.
+   - Dashboard/admin polling is protected by a shared Neon lock and 30-second cooldown.
    - Production has a Calendly access token; add the webhook signing key when a
      webhook subscription is enabled for immediate push updates.
 

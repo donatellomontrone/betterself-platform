@@ -130,6 +130,16 @@ create table public.api_rate_limits (
   primary key (scope, client_key_hash)
 );
 
+create table public.integration_sync_state (
+  integration text primary key,
+  last_started_at timestamptz,
+  last_completed_at timestamptz,
+  last_status text not null default 'idle'
+    check (last_status in ('idle', 'running', 'completed', 'failed')),
+  last_error text,
+  updated_at timestamptz not null default now()
+);
+
 create table public.payments (
   id uuid primary key default gen_random_uuid(),
   booking_id uuid not null references public.bookings(id) on delete cascade,

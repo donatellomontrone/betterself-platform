@@ -122,12 +122,15 @@ If `NEXT_PUBLIC_CALENDLY_URL` is missing, the booking page shows a Calendly setu
 
 If `NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL` is present, doctor-consultation bookings show that call link in the patient dashboard and admin calendar whenever Calendly has not stored a booking-specific link.
 
+When `CALENDLY_ACCESS_TOKEN` is present, dashboard and admin page loads reconcile Calendly events with Neon. A shared Neon lock limits the full scan to once every 30 seconds and recovers stale runs after five minutes; a Calendly webhook can still be added later for immediate push updates.
+
 If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo checkout page. If present, consultation bookings create a PayMongo Hosted Checkout session for the ₱800 consultation fee. Treatment requests are submitted first; the doctor confirms suitability and the final amount, then the patient pays from the dashboard.
 
 ## Production next steps
 
 - Apply every SQL file in `database/migrations/` to Neon before deploying new admin or payment features.
 - Keep the Neon migration for the durable `/api/recommend-treatment` rate limiter applied before high traffic campaigns.
+- Keep the Neon migration for the shared Calendly sync state applied before enabling `CALENDLY_ACCESS_TOKEN`.
 - Add secure patient photo uploads when BetterSelf is ready to review images inside the platform.
 - Review legal entity, DPO, consent, and medical disclaimer copy with the clinic/legal owner before launch.
 - Keep PayMongo webhook, Calendly webhook, Clerk production keys, and `NEXT_PUBLIC_SITE_URL` in Vercel Production and Preview environments.

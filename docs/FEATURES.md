@@ -57,6 +57,8 @@ There are two separate business flows.
   required items are completed.
 - Calendly embed is available for doctor call scheduling, with a fallback button
   to open Calendly in a new tab.
+- Calendly API reconciliation uses a shared Neon lock so concurrent dashboard
+  and admin requests do not repeat the same full event scan.
 - Discount-code support is validated server-side before payment.
 
 ## Patient dashboard
