@@ -18,6 +18,27 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
     ref.current?.removeAttribute("open");
   }, [pathname]);
 
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (ref.current?.open && !ref.current.contains(event.target as Node)) {
+        ref.current.removeAttribute("open");
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        ref.current?.removeAttribute("open");
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   const close = () => ref.current?.removeAttribute("open");
 
   return (

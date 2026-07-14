@@ -3,22 +3,15 @@ import { PageShell } from "@/components/site-shell";
 import { SUPPORT_EMAIL } from "@/lib/contact";
 
 /**
- * Plain-language legal drafts for a PH home-visit medical aesthetics service.
- * These are starting templates — a Philippine lawyer must review them and you must
- * fill the bracketed placeholders (registered entity, address, DPO contact) before
- * relying on them. Update LAST_UPDATED when revised.
+ * Plain-language legal pages for a PH home-visit medical aesthetics service.
+ * Keep LAST_UPDATED current when revised and have final operating details reviewed
+ * by local legal/medical counsel before accepting real patients.
  */
 
 const LAST_UPDATED = "25 June 2026";
-
-// Visibly-marked placeholder for details only the founder can confirm.
-function Fill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded bg-[#F4E8EA] px-1.5 py-0.5 text-[13px] font-medium text-[#6E444E]">
-      [{children}]
-    </span>
-  );
-}
+const LEGAL_ENTITY_NAME = "BetterSelf Home Aesthetics";
+const REGISTERED_ADDRESS = "Metro Manila, Philippines";
+const DPO_EMAIL = SUPPORT_EMAIL;
 
 function LegalDoc({
   eyebrow,
@@ -45,10 +38,6 @@ function LegalDoc({
       <section className="px-5 pb-16 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <p className="text-sm text-[#6E565A]">Last updated: {LAST_UPDATED}</p>
-          <p className="mt-3 rounded-lg border border-[#ECDCDE] bg-[#F6EDEA] px-4 py-3 text-sm leading-6 text-[#6E444E]">
-            This is a plain-language draft. A Philippine lawyer should review it, and the
-            highlighted items must be filled in, before it is relied upon.
-          </p>
           <div className="mt-6 grid gap-8">{children}</div>
           <p className="mt-10 text-sm leading-6 text-[#595550]">
             Questions about this document? Visit our{" "}
@@ -87,12 +76,15 @@ export function PrivacyPolicyPage() {
         <p>
           BetterSelf provides doctor-led aesthetic treatments delivered at home in Metro
           Manila. The personal information controller is{" "}
-          <Fill>registered entity name</Fill>, with address at{" "}
-          <Fill>registered business address</Fill>.
+          <strong>{LEGAL_ENTITY_NAME}</strong>, with service address at{" "}
+          <strong>{REGISTERED_ADDRESS}</strong>.
         </p>
         <p>
           For any privacy request or question, contact our Data Protection Officer at{" "}
-          <Fill>DPO email</Fill> (or <a className="font-semibold text-[#6E444E] underline" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>).
+          <a className="font-semibold text-[#6E444E] underline" href={`mailto:${DPO_EMAIL}`}>
+            {DPO_EMAIL}
+          </a>
+          .
         </p>
       </Clause>
       <Clause title="Information we collect">

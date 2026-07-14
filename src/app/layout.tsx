@@ -24,7 +24,7 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://betterself.health";
 const SITE_DESCRIPTION =
-  "Private doctor-led aesthetic treatments — Botox, fillers, and skin boosters — with medical intake, consent, and home visits across Metro Manila.";
+  "Private doctor-led aesthetic treatments — neurotoxin, skin boosters, scar care, and selected medical aesthetic services — with intake, consent, and home visits across Metro Manila.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -12,6 +12,34 @@ type AccountConsentRequest = {
   acceptedItems?: unknown[];
 };
 
+function normalizeConsentItem(item: unknown) {
+  if (typeof item === "string" && item.trim().length > 0) {
+    return {
+      id: item.trim().slice(0, 80),
+      label: item.trim().slice(0, 300),
+    };
+  }
+
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  const candidate = item as { id?: unknown; label?: unknown };
+  if (
+    typeof candidate.id !== "string" ||
+    candidate.id.trim().length === 0 ||
+    typeof candidate.label !== "string" ||
+    candidate.label.trim().length === 0
+  ) {
+    return null;
+  }
+
+  return {
+    id: candidate.id.trim().slice(0, 80),
+    label: candidate.label.trim().slice(0, 300),
+  };
+}
+
 export async function POST(request: NextRequest) {
   if (!hasValidClerkServerKeys() || !isDatabaseConfigured()) {
     return NextResponse.json(
@@ -27,12 +55,11 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json().catch(() => null)) as AccountConsentRequest | null;
 
-  // Only accept non-empty strings, each bounded, capped to a sane count — so arbitrary
-  // objects/huge payloads can't be persisted to the consent jsonb.
+  // Persist the exact consent items shown during sign-up, bounded to a sane size.
   const acceptedItems = Array.isArray(body?.acceptedItems)
     ? body.acceptedItems
-        .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-        .map((item) => item.trim().slice(0, 300))
+        .map(normalizeConsentItem)
+        .filter((item): item is { id: string; label: string } => item !== null)
         .slice(0, 20)
     : [];
 

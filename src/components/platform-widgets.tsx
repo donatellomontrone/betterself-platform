@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Script from "next/script";
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,10 +9,9 @@ import {
   Paperclip,
   Send,
   ShieldCheck,
-  SquareArrowOutUpRight,
   WandSparkles,
 } from "lucide-react";
-import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
+import { FormEvent, useId, useMemo, useState } from "react";
 import {
   consultationService,
   getTreatmentById,
@@ -26,7 +24,6 @@ import { AddressAutocomplete } from "@/components/address-autocomplete";
 
 const directTreatmentAppointment = "Doctor review call";
 const consultationAppointment = "Doctor consultation call";
-const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() ?? "";
 
 const intakeQuestions = [
   "Are you pregnant or breastfeeding?",
@@ -67,15 +64,6 @@ export type BookingPrefill = {
   phone?: string;
   address?: string;
   emergencyContact?: string;
-};
-
-type CalendlyPayload = {
-  event?: {
-    uri?: string;
-  };
-  invitee?: {
-    uri?: string;
-  };
 };
 
 type RecommendationResult = {
@@ -139,6 +127,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
   const [location, setLocation] = useState(prefill?.address ?? "");
   const [locationValid, setLocationValid] = useState(Boolean(prefill?.address));
   const [patientConcern, setPatientConcern] = useState("");
+  const [aiMatchingConsent, setAiMatchingConsent] = useState(false);
   const [recommendation, setRecommendation] = useState<RecommendationResult | null>(null);
   const [recommendationState, setRecommendationState] = useState<"idle" | "loading" | "error">("idle");
   const [recommendationNote, setRecommendationNote] = useState("");
@@ -149,9 +138,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
     address: "",
     emergencyContact: prefill?.emergencyContact ?? "",
   });
-  const [calendlyEventUri, setCalendlyEventUri] = useState("");
-  const [calendlyInviteeUri, setCalendlyInviteeUri] = useState("");
-  const [scheduleConfirmed, setScheduleConfirmed] = useState(false);
   const [checkoutState, setCheckoutState] = useState<"idle" | "loading" | "error">("idle");
   const [checkoutNote, setCheckoutNote] = useState("");
   const [intake, setIntake] = useState(() => intakeQuestions.map(() => false));
@@ -186,7 +172,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
     "Review",
   ];
   const progress = ((step + 1) / 5) * 100;
-  const scheduleStatus = scheduleConfirmed ? "Calendly appointment selected" : "Not scheduled yet";
+  const scheduleStatus = "Doctor arranges after review";
   const requiresAddress = isDirectTreatment;
   const allConsented = consents.every(Boolean);
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
@@ -199,12 +185,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       setCheckoutState("idle");
       setCheckoutNote("");
     }
-  }
-
-  function resetScheduleSelection() {
-    setCalendlyEventUri("");
-    setCalendlyInviteeUri("");
-    setScheduleConfirmed(false);
   }
 
   function isCustomerReady() {
@@ -239,12 +219,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       return;
     }
 
-    if (step === 3 && !isConsultation && calendlyUrl && !scheduleConfirmed) {
-      setCheckoutState("error");
-      setCheckoutNote("Please choose a doctor call before submitting.");
-      return;
-    }
-
     setCheckoutState("idle");
     setStep((current) => Math.min(4, current + 1));
   }
@@ -258,6 +232,14 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       return;
     }
 
+    if (!aiMatchingConsent) {
+      setRecommendationState("error");
+      setRecommendationNote(
+        "Please confirm the AI matching consent first, or continue without a suggestion.",
+      );
+      return;
+    }
+
     setRecommendationState("loading");
     setRecommendationNote("");
     setRecommendation(null);
@@ -266,7 +248,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       const response = await fetch("/api/recommend-treatment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ concern }),
+        body: JSON.stringify({ concern, aiConsent: aiMatchingConsent }),
       });
       const payload = (await response.json()) as RecommendationResult;
 
@@ -330,12 +312,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       return;
     }
 
-    if (!isConsultation && calendlyUrl && !scheduleConfirmed) {
-      setCheckoutState("error");
-      setCheckoutNote("Please choose a doctor call before submitting.");
-      return;
-    }
-
     try {
       setCheckoutState("loading");
       const response = await fetch("/api/bookings", {
@@ -346,8 +322,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
           treatmentId: selectedService.id,
           appointmentType,
           location: requiresAddress ? location : "Online consultation",
-          calendlyEventUri,
-          calendlyInviteeUri,
           patientConcern: patientConcern.trim() || undefined,
           intake: intakeQuestions.filter((_, index) => intake[index]),
           discountCode: isConsultation ? discountCode.trim() || undefined : undefined,
@@ -463,7 +437,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 onClick={() => {
                   setBookingIntent("treatment");
                   setCheckoutNote("");
-                  resetScheduleSelection();
                 }}
               >
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8F5B67]">
@@ -490,7 +463,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 onClick={() => {
                   setBookingIntent("consultation");
                   setCheckoutNote("");
-                  resetScheduleSelection();
                 }}
               >
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8F5B67]">
@@ -529,7 +501,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                   }`}
                   onClick={() => {
                     setTreatmentId(treatment.id);
-                    resetScheduleSelection();
                   }}
                 >
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#5C574F]">
@@ -559,10 +530,10 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
               <p className="mt-2 font-serif text-4xl text-[#1F1F1F]">
                 {consultationService.priceLabel}
               </p>
-              <p className="mt-2 text-sm leading-6 text-[#595550]">
-                The doctor call happens first. Any payment or next step appears
-                in the patient dashboard after BetterSelf confirms it.
-              </p>
+                <p className="mt-2 text-sm leading-6 text-[#595550]">
+                  Pay the consultation fee now, then choose your doctor call time
+                  immediately after PayMongo confirms the payment.
+                </p>
             </div>
             <label className="mt-5 grid gap-2 text-sm font-semibold text-[#1F1F1F]">
               <span>
@@ -572,15 +543,28 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 className="field min-h-32 py-3"
                 placeholder="Example: I have acne scars on my cheeks, visible pores, underarm sweating, jawline bulk, keloids, warts, or under-eye tiredness."
                 value={patientConcern}
-                onChange={(event) => {
-                  setPatientConcern(event.target.value);
-                  setRecommendation(null);
-                  setRecommendationNote("");
-                  setCheckoutNote("");
-                }}
-              />
-            </label>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+	                onChange={(event) => {
+	                  setPatientConcern(event.target.value);
+	                  setRecommendation(null);
+	                  setRecommendationNote("");
+	                  setCheckoutNote("");
+	                }}
+	              />
+	            </label>
+	            <label className="mt-3 flex gap-3 rounded-lg border border-[#E6DFD5] bg-white/70 p-3 text-xs leading-5 text-[#5C574F]">
+	              <input
+	                className="mt-1 h-4 w-4 accent-[#8F5B67]"
+	                type="checkbox"
+	                checked={aiMatchingConsent}
+	                onChange={(event) => setAiMatchingConsent(event.target.checked)}
+	              />
+	              <span>
+	                I agree that BetterSelf may send this concern text to its AI matching
+	                provider to suggest a possible treatment. This is not a diagnosis, and I
+	                can skip this and continue with a doctor consultation.
+	              </span>
+	            </label>
+	            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
                 className="btn btn-secondary justify-center"
                 type="button"
@@ -640,7 +624,6 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                         setBookingIntent("treatment");
                         setTreatmentId(recommendation.treatment.id);
                         setCheckoutNote("");
-                        resetScheduleSelection();
                         setStep(2);
                       }}
                     >
@@ -671,7 +654,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
             text={
               isConsultation
                 ? "These details pre-fill Calendly for the doctor consultation call."
-                : "These details pre-fill Calendly for the doctor review call. Payment happens later from the dashboard after review."
+                : "These details create the request for the doctor. Payment happens later from the dashboard after review."
             }
           >
             {requiresAddress ? (
@@ -755,11 +738,11 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
 
         {step === 3 ? (
           <BookingStep
-            title={isConsultation ? "Booking your consultation" : "Choose doctor review call time"}
+            title={isConsultation ? "Booking your consultation" : "Doctor review before payment"}
             text={
               isConsultation
                 ? "You'll pay the consultation fee on the next step. Once it clears, you'll get the link to pick your call time straight away."
-                : "Calendly handles the doctor's review-call availability. The home visit is confirmed only after review and payment from the dashboard."
+                : "Submit the request first. The doctor will review your intake, contact you for a call if needed, then unlock payment from your dashboard."
             }
           >
             {isConsultation ? (
@@ -771,18 +754,16 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 </p>
               </div>
             ) : (
-              <CalendlyScheduler
-                customer={customer}
-                location={requiresAddress ? location : "Online consultation"}
-                treatmentName={selectedService.name}
-                onScheduled={(payload) => {
-                  // Preserve URIs captured from the embed; the manual-confirm button sends an
-                  // empty payload and must not wipe a real Calendly event/invitee.
-                  if (payload.event?.uri) setCalendlyEventUri(payload.event.uri);
-                  if (payload.invitee?.uri) setCalendlyInviteeUri(payload.invitee.uri);
-                  setScheduleConfirmed(true);
-                }}
-              />
+              <div className="booking-soft-panel p-5">
+                <p className="text-sm font-semibold text-[#1F1F1F]">
+                  No payment and no home visit confirmation yet
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[#595550]">
+                  This creates the clinical request in BetterSelf. The doctor sees your intake
+                  in the admin workspace, can message or call you, and then confirms the final
+                  treatment plan and amount. Your dashboard will show Pay now only after that.
+                </p>
+              </div>
             )}
           </BookingStep>
         ) : null}
@@ -983,121 +964,14 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
             ) : null}
           </div>
         </section>
-        <Notice title="Booking disclaimer">
-          {isConsultation
-            ? "The consultation helps the doctor guide treatment options. Any payment or later procedure is handled from the dashboard after confirmation."
+          <Notice title="Booking disclaimer">
+            {isConsultation
+            ? "The consultation helps the doctor guide treatment options. You pay the consultation fee now, then pick the call time after PayMongo confirms payment."
             : "Your treatment request requires doctor review before payment and home-visit confirmation. Suitability, treatment plan, and expected outcomes depend on individual medical assessment."}
-        </Notice>
+          </Notice>
       </aside>
       </div>
     </>
-  );
-}
-
-function CalendlyScheduler({
-  customer,
-  location,
-  treatmentName,
-  onScheduled,
-}: {
-  customer: CustomerDetails;
-  location: string;
-  treatmentName: string;
-  onScheduled: (payload: CalendlyPayload) => void;
-}) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [scriptReady, setScriptReady] = useState(false);
-  const [manualConfirmation, setManualConfirmation] = useState(false);
-  const onScheduledRef = useRef(onScheduled);
-
-  useEffect(() => {
-    onScheduledRef.current = onScheduled;
-  });
-
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (event.origin !== "https://calendly.com") {
-        return;
-      }
-
-      const data = event.data as { event?: string; payload?: CalendlyPayload };
-
-      if (data.event === "calendly.event_scheduled") {
-        onScheduledRef.current(data.payload ?? {});
-      }
-    }
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
-  useEffect(() => {
-    if (!calendlyUrl || !scriptReady || !containerRef.current || !window.Calendly) {
-      return;
-    }
-
-    containerRef.current.innerHTML = "";
-    window.Calendly.initInlineWidget({
-      url: calendlyUrl,
-      parentElement: containerRef.current,
-      prefill: {
-        name: customer.name,
-        email: customer.email,
-        customAnswers: {
-          a1: treatmentName,
-          a2: location,
-          a3: customer.phone,
-          a4: customer.address,
-        },
-      },
-    });
-  }, [customer.address, customer.email, customer.name, customer.phone, location, scriptReady, treatmentName]);
-
-  if (!calendlyUrl) {
-    return (
-      <div className="rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-5">
-        <p className="text-sm font-semibold text-[#1F1F1F]">Calendly is ready to connect</p>
-        <p className="mt-2 text-sm leading-6 text-[#595550]">
-          Add <span className="font-semibold text-[#1F1F1F]">NEXT_PUBLIC_CALENDLY_URL</span> in
-          Vercel with the BetterSelf event link. The calendar will appear here after redeploy.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid gap-4">
-      <div className="flex flex-col gap-3 rounded-lg border border-[#E6DFD5] bg-[#FAF8F4] p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-[#1F1F1F]">BetterSelf Calendly</p>
-          <p className="mt-1 text-sm text-[#595550]">
-            If the embedded calendar is blocked, open Calendly in a new tab.
-          </p>
-        </div>
-        <a className="btn btn-secondary" href={calendlyUrl} rel="noreferrer" target="_blank">
-          <SquareArrowOutUpRight className="h-4 w-4" />
-          Open Calendly
-        </a>
-      </div>
-      <Script
-        src="https://assets.calendly.com/assets/external/widget.js"
-        strategy="lazyOnload"
-        onLoad={() => setScriptReady(true)}
-        onReady={() => setScriptReady(true)}
-      />
-      <div ref={containerRef} className="booking-calendly-frame min-h-[720px] overflow-hidden bg-white" />
-      <button
-        className={`booking-manual-schedule p-4 text-left text-sm font-semibold ${
-          manualConfirmation ? "is-selected" : ""
-        }`}
-        onClick={() => {
-          setManualConfirmation(true);
-          onScheduledRef.current({});
-        }}
-      >
-        I scheduled the doctor call and want to continue
-      </button>
-    </div>
   );
 }
 
@@ -1172,39 +1046,100 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-type ChatMessage = {
+export type ChatMessage = {
+  id: string;
   sender: "doctor" | "patient" | "system";
   text: string;
   time: string;
 };
 
-const seedMessages: ChatMessage[] = [
-  {
+type PersistedApiMessage = {
+  id: string;
+  sender_role: "doctor" | "patient";
+  message_text: string;
+  created_at: string;
+};
+
+function formatChatTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-PH", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function mapApiMessages(messages: PersistedApiMessage[]): ChatMessage[] {
+  return messages.map((message) => ({
+    id: message.id,
+    sender: message.sender_role,
+    text: message.message_text,
+    time: formatChatTime(message.created_at),
+  }));
+}
+
+function getSystemMessage(): ChatMessage {
+  return {
+    id: "system-intro",
     sender: "system",
     text: `This is your private message box with the BetterSelf medical team. For the fastest reply, message us on WhatsApp or email ${SUPPORT_EMAIL} — we'll also follow up here about your booking.`,
     time: "",
-  },
-];
+  };
+}
 
-export function DoctorChat() {
-  const [messages, setMessages] = useState(seedMessages);
+export function DoctorChat({
+  initialMessages = [],
+  patientId,
+  isAdmin = false,
+}: {
+  initialMessages?: ChatMessage[];
+  patientId?: string;
+  isAdmin?: boolean;
+}) {
+  const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
+  const [error, setError] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
-  function sendMessage(event: FormEvent<HTMLFormElement>) {
+  async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = draft.trim();
     if (!text) return;
-    setMessages((current) => [
-      ...current,
-      { sender: "patient", text, time: "Now" },
-      {
-        sender: "system",
-        text: `Thanks — we've noted this. For a faster reply, message us on WhatsApp or email ${SUPPORT_EMAIL}.`,
-        time: "Now",
-      },
-    ]);
-    setDraft("");
+    setError("");
+    setIsSending(true);
+    const optimisticMessage: ChatMessage = {
+      id: `optimistic-${Date.now()}`,
+      sender: isAdmin ? "doctor" : "patient",
+      text,
+      time: "Now",
+    };
+    setMessages((current) => [...current, optimisticMessage]);
+    try {
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, patientId }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        messages?: PersistedApiMessage[];
+        error?: string;
+      } | null;
+      if (!response.ok) {
+        throw new Error(payload?.error || "Message could not be sent.");
+      }
+      if (payload?.messages) setMessages(mapApiMessages(payload.messages));
+      setDraft("");
+    } catch (sendError) {
+      setMessages((current) => current.filter((message) => message.id !== optimisticMessage.id));
+      setError(sendError instanceof Error ? sendError.message : "Message could not be sent.");
+    } finally {
+      setIsSending(false);
+    }
   }
+
+  const displayMessages = [getSystemMessage(), ...messages];
 
   return (
     <div className="grid min-h-[620px] overflow-hidden rounded-lg border border-[#E6DFD5] bg-white lg:grid-cols-[280px_1fr]">
@@ -1238,7 +1173,9 @@ export function DoctorChat() {
         <div className="flex items-center justify-between border-b border-[#E6DFD5] p-5">
           <div>
             <p className="font-serif text-2xl text-[#1F1F1F]">Doctor Chat</p>
-            <p className="mt-1 text-sm text-[#595550]">Response time may vary.</p>
+            <p className="mt-1 text-sm text-[#595550]">
+              {isAdmin ? "Doctor-side reply thread." : "Response time may vary."}
+            </p>
           </div>
           <StatusBadge>Linked to booking</StatusBadge>
         </div>
@@ -1247,9 +1184,9 @@ export function DoctorChat() {
             This chat is not for emergency care. For urgent symptoms or medical
             emergencies, seek immediate medical attention.
           </Notice>
-          {messages.map((message, index) => (
+          {displayMessages.map((message) => (
             <div
-              key={`${message.sender}-${index}`}
+              key={message.id}
               className={`max-w-[78%] rounded-lg p-4 text-sm leading-6 ${
                 message.sender === "patient"
                   ? "ml-auto bg-[#1F1F1F] text-white"
@@ -1262,6 +1199,11 @@ export function DoctorChat() {
               <p className="mt-2 text-xs opacity-90">{message.time}</p>
             </div>
           ))}
+          {error ? (
+            <p className="rounded-lg border border-[#E0B4B4] bg-[#FFF7F7] p-3 text-sm text-[#8A2F2F]">
+              {error}
+            </p>
+          ) : null}
         </div>
         <form className="flex gap-3 border-t border-[#E6DFD5] p-4" onSubmit={sendMessage}>
           <a
@@ -1278,12 +1220,13 @@ export function DoctorChat() {
             className="field min-w-0 flex-1"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="Type a message for the doctor"
-            aria-label="Type a message for the doctor"
+            placeholder={isAdmin ? "Reply to the patient" : "Type a message for the doctor"}
+            aria-label={isAdmin ? "Reply to the patient" : "Type a message for the doctor"}
+            maxLength={2000}
           />
-          <button className="btn btn-primary h-12" type="submit">
+          <button className="btn btn-primary h-12" type="submit" disabled={isSending}>
             <Send className="h-4 w-4" />
-            Send
+            {isSending ? "Sending..." : "Send"}
           </button>
         </form>
       </section>

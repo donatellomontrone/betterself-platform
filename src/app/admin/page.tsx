@@ -3,7 +3,12 @@ import { currentUser } from "@clerk/nextjs/server";
 import { isAdminEmail } from "@/lib/admin";
 import { syncCalendlyBookings } from "@/lib/calendly-sync";
 import { isDatabaseConfigured } from "@/lib/db/client";
-import { getAllBookings, type AdminBookingView } from "@/lib/db/queries";
+import {
+  getAllBookings,
+  getMessageThreads,
+  type AdminBookingView,
+  type MessageThreadView,
+} from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +28,7 @@ export default async function Admin({
   const authorized = isAdminEmail(email);
 
   let bookings: AdminBookingView[] = [];
+  let messageThreads: MessageThreadView[] = [];
   if (authorized && isDatabaseConfigured()) {
     try {
       await syncCalendlyBookings();
@@ -35,6 +41,12 @@ export default async function Admin({
     } catch (error) {
       console.error("[admin] failed to load bookings:", error);
     }
+
+    try {
+      messageThreads = await getMessageThreads();
+    } catch (error) {
+      console.error("[admin] failed to load message threads:", error);
+    }
   }
 
   const readParam = (key: string) => {
@@ -46,6 +58,7 @@ export default async function Admin({
     <AdminPage
       authorized={authorized}
       bookings={bookings}
+      messageThreads={messageThreads}
       filters={{
         q: readParam("q"),
         status: readParam("status"),

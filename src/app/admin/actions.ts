@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { isAdminEmail } from "@/lib/admin";
 import {
+  createDoctorMessage,
+  recordAdminAuditLog,
   setBookingConfirmedAmount,
   updateBookingNotes,
   updateBookingPaymentStatus,
@@ -37,7 +39,8 @@ async function assertAdmin() {
     (entry) => entry.id === user.primaryEmailAddressId,
   )?.emailAddress;
 
-  return isAdminEmail(email);
+  if (!isAdminEmail(email)) return null;
+  return { id: user?.id ?? null, email: email ?? null };
 }
 
 function cleanText(value: FormDataEntryValue | null) {
@@ -47,54 +50,90 @@ function cleanText(value: FormDataEntryValue | null) {
 
 export async function updateBookingStatusAction(formData: FormData) {
   // Re-check authorization on the server — never trust the client.
-  if (!(await assertAdmin())) return;
+  const actor = await assertAdmin();
+  if (!actor) return;
 
   const bookingId = String(formData.get("bookingId") ?? "");
   const status = String(formData.get("status") ?? "") as BookingStatus;
   if (!bookingId || !VALID_STATUSES.includes(status)) return;
 
   await updateBookingStatus(bookingId, status);
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "booking.status.update",
+    targetType: "booking",
+    targetId: bookingId,
+    metadata: { status },
+  });
   revalidatePath("/admin");
 }
 
 export async function updateBookingPaymentStatusAction(formData: FormData) {
-  if (!(await assertAdmin())) return;
+  const actor = await assertAdmin();
+  if (!actor) return;
 
   const bookingId = String(formData.get("bookingId") ?? "");
   const status = String(formData.get("paymentStatus") ?? "") as PaymentStatus;
   if (!bookingId || !VALID_PAYMENT_STATUSES.includes(status)) return;
 
   await updateBookingPaymentStatus(bookingId, status);
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "booking.payment_status.update",
+    targetType: "booking",
+    targetId: bookingId,
+    metadata: { status },
+  });
   revalidatePath("/admin");
 }
 
 export async function updateIntakeReviewAction(formData: FormData) {
-  if (!(await assertAdmin())) return;
+  const actor = await assertAdmin();
+  if (!actor) return;
 
   const bookingId = String(formData.get("bookingId") ?? "");
   const status = String(formData.get("intakeStatus") ?? "") as IntakeReviewStatus;
   if (!bookingId || !VALID_INTAKE_STATUSES.includes(status)) return;
 
-  await updateMedicalIntakeReview(bookingId, status, cleanText(formData.get("doctorNotes")));
+  const doctorNotes = cleanText(formData.get("doctorNotes"));
+  await updateMedicalIntakeReview(bookingId, status, doctorNotes);
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "intake.review.update",
+    targetType: "booking",
+    targetId: bookingId,
+    metadata: { status, hasDoctorNotes: Boolean(doctorNotes) },
+  });
   revalidatePath("/admin");
 }
 
 export async function updateBookingScheduleAction(formData: FormData) {
-  if (!(await assertAdmin())) return;
+  const actor = await assertAdmin();
+  if (!actor) return;
 
   const bookingId = String(formData.get("bookingId") ?? "");
   if (!bookingId) return;
 
-  await updateBookingSchedule(
-    bookingId,
-    cleanText(formData.get("appointmentDate")),
-    cleanText(formData.get("appointmentTime")),
-  );
+  const appointmentDate = cleanText(formData.get("appointmentDate"));
+  const appointmentTime = cleanText(formData.get("appointmentTime"));
+  await updateBookingSchedule(bookingId, appointmentDate, appointmentTime);
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "booking.schedule.update",
+    targetType: "booking",
+    targetId: bookingId,
+    metadata: { appointmentDate, appointmentTime },
+  });
   revalidatePath("/admin");
 }
 
 export async function setBookingAmountAction(formData: FormData) {
-  if (!(await assertAdmin())) return;
+  const actor = await assertAdmin();
+  if (!actor) return;
 
   const bookingId = String(formData.get("bookingId") ?? "");
   if (!bookingId) return;
@@ -109,21 +148,40 @@ export async function setBookingAmountAction(formData: FormData) {
   }
 
   await setBookingConfirmedAmount(bookingId, amount);
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "booking.amount.update",
+    targetType: "booking",
+    targetId: bookingId,
+    metadata: { amount },
+  });
   revalidatePath("/admin");
 }
 
 export async function updateBookingNotesAction(formData: FormData) {
-  if (!(await assertAdmin())) return;
+  const actor = await assertAdmin();
+  if (!actor) return;
 
   const bookingId = String(formData.get("bookingId") ?? "");
   if (!bookingId) return;
 
-  await updateBookingNotes(bookingId, cleanText(formData.get("notes")));
+  const notes = cleanText(formData.get("notes"));
+  await updateBookingNotes(bookingId, notes);
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "booking.notes.update",
+    targetType: "booking",
+    targetId: bookingId,
+    metadata: { hasNotes: Boolean(notes) },
+  });
   revalidatePath("/admin");
 }
 
 export async function updatePatientProfileAction(formData: FormData) {
-  if (!(await assertAdmin())) return;
+  const actor = await assertAdmin();
+  if (!actor) return;
 
   const userId = String(formData.get("userId") ?? "");
   if (!userId) return;
@@ -137,5 +195,34 @@ export async function updatePatientProfileAction(formData: FormData) {
     medications: cleanText(formData.get("medications")),
     contraindications: cleanText(formData.get("contraindications")),
   });
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "patient.profile.update",
+    targetType: "patient",
+    targetId: userId,
+    metadata: { source: "admin" },
+  });
   revalidatePath("/admin");
+}
+
+export async function sendDoctorMessageAction(formData: FormData) {
+  const actor = await assertAdmin();
+  if (!actor) return;
+
+  const patientId = String(formData.get("patientId") ?? "").trim();
+  const message = String(formData.get("message") ?? "").trim().slice(0, 2000);
+  if (!patientId || !message) return;
+
+  await createDoctorMessage(patientId, message);
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "message.doctor_reply",
+    targetType: "patient",
+    targetId: patientId,
+    metadata: { length: message.length },
+  });
+  revalidatePath("/admin");
+  revalidatePath("/messages");
 }

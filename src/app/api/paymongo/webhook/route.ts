@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Invalid webhook signature." }, { status: 401 });
   }
 
-  const event = JSON.parse(rawBody) as {
+  let event: {
     data?: {
       id?: string;
       type?: string;
@@ -95,6 +95,13 @@ export async function POST(request: NextRequest) {
     };
   };
 
+  try {
+    event = JSON.parse(rawBody) as typeof event;
+  } catch (error) {
+    console.error("[paymongo webhook] invalid JSON payload:", error);
+    return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
+  }
+
   // PayMongo's Hosted Checkout docs currently send the event type at data.type
   // and the checkout session at data.data. Some dashboard/webhook fixtures wrap
   // the event type at data.attributes.type with the resource at attributes.data.
@@ -107,15 +114,29 @@ export async function POST(request: NextRequest) {
   if (eventType === "checkout_session.payment.paid") {
     const referenceNumber = checkoutSession?.attributes?.reference_number;
 
+    if (!referenceNumber) {
+      console.error("[paymongo webhook] paid checkout event missing reference number.");
+      return NextResponse.json(
+        { message: "Paid checkout event is missing a reference number." },
+        { status: 422 },
+      );
+    }
+
+    if (!isDatabaseConfigured()) {
+      console.error("[paymongo webhook] database is not configured.");
+      return NextResponse.json({ message: "Database is not configured." }, { status: 503 });
+    }
+
     let bookingsMarkedPaid = 0;
-    if (referenceNumber && isDatabaseConfigured()) {
-      try {
-        bookingsMarkedPaid = await markPaidByReference(referenceNumber);
-      } catch (error) {
-        // Acknowledge the webhook with 200 so PayMongo doesn't retry forever on a
-        // transient DB error; surface the failure in logs for manual follow-up.
-        console.error("[paymongo webhook] failed to mark booking paid:", error);
-      }
+    try {
+      bookingsMarkedPaid = await markPaidByReference(referenceNumber);
+    } catch (error) {
+      // Return non-2xx so PayMongo retries instead of losing a real paid event.
+      console.error("[paymongo webhook] failed to mark booking paid:", error);
+      return NextResponse.json(
+        { message: "Could not persist paid checkout event." },
+        { status: 500 },
+      );
     }
 
     console.info("[paymongo webhook] checkout paid", {

@@ -200,12 +200,13 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                 </div>
                 <div className="grid grid-cols-2 rounded-full border border-[#E6DFD5] bg-white/72 p-1 text-sm font-semibold backdrop-blur">
                   {(["face", "body"] as const).map((view) => (
-                    <button
-                      key={view}
-                      type="button"
-                      className={`rounded-full px-4 py-2 transition ${
-                        activeView === view ? "bg-[#8F5B67] text-white" : "text-[#4D4D4D] hover:bg-[#F6EDEA]"
-                      }`}
+	                    <button
+	                      key={view}
+	                      type="button"
+	                      aria-pressed={activeView === view}
+	                      className={`min-h-11 rounded-full px-4 py-2 transition ${
+	                        activeView === view ? "bg-[#8F5B67] text-white" : "text-[#4D4D4D] hover:bg-[#F6EDEA]"
+	                      }`}
                       onClick={() => chooseView(view)}
                     >
                       {view === "face" ? "Face & neck" : "Body"}
@@ -236,9 +237,9 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                         <button
                           key={zone.id}
                           type="button"
-                          aria-label={`Show treatments for ${zone.label}`}
-                          aria-pressed={isActive}
-                          className="absolute z-20 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-[#6E444E] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+	                          aria-label={`Show treatments for ${zone.label}`}
+	                          aria-pressed={isActive}
+	                          className="absolute z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-[#6E444E] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                           style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
                           onClick={() => setActiveZoneId(zone.id)}
                         >
@@ -266,10 +267,11 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                     const isActive = zone.id === activeZone.id;
 
                     return (
-                      <button
-                        key={zone.id}
-                        type="button"
-                        className={`rounded-[1.15rem] border p-4 text-left transition ${
+	                      <button
+	                        key={zone.id}
+	                        type="button"
+	                        aria-pressed={isActive}
+	                        className={`rounded-[1.15rem] border p-4 text-left transition ${
                           isActive
                             ? "border-[#8F5B67] bg-[#8F5B67] text-white"
                             : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"

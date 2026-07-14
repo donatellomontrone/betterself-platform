@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
     return dashboardRedirect(request, "not_confirmed");
   }
 
+  if (booking.amount == null) {
+    return dashboardRedirect(request, "amount_missing");
+  }
+
   // Validate any discount code server-side against the booking's amount.
   const applied = applyDiscount(booking.amount, discountCode);
 

@@ -25,6 +25,9 @@ const redFlagTerms = [
   "pregnant",
   "breastfeeding",
 ];
+const rateLimitWindowMs = 60_000;
+const rateLimitMaxRequests = 8;
+const recommendationRateLimits = new Map<string, { count: number; resetAt: number }>();
 
 const recommendationSchema = {
   type: "object",
@@ -178,7 +181,7 @@ function tokenize(text: string) {
 function fallbackRecommendation(concern: string): ModelRecommendation {
   const normalizedConcern = concern.toLowerCase();
 
-  if (redFlagTerms.some((term) => normalizedConcern.includes(term))) {
+  if (isRedFlagConcern(normalizedConcern)) {
     return {
       recommendedTreatmentId: consultationService.id,
       confidence: "low",
@@ -229,6 +232,31 @@ function fallbackRecommendation(concern: string): ModelRecommendation {
       "This suggestion is not a diagnosis. The doctor still confirms suitability, contraindications, and the final plan.",
     alternativeTreatmentIds: scored.slice(1, 4).map((item) => item.treatment.id),
   };
+}
+
+function isRedFlagConcern(concern: string) {
+  const normalizedConcern = concern.toLowerCase();
+  return redFlagTerms.some((term) => normalizedConcern.includes(term));
+}
+
+function getClientKey(request: NextRequest) {
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwardedFor || request.headers.get("x-real-ip") || "anonymous";
+}
+
+function isRateLimited(request: NextRequest) {
+  const key = getClientKey(request);
+  const now = Date.now();
+  const current = recommendationRateLimits.get(key);
+
+  if (!current || current.resetAt <= now) {
+    recommendationRateLimits.set(key, { count: 1, resetAt: now + rateLimitWindowMs });
+    return false;
+  }
+
+  current.count += 1;
+  recommendationRateLimits.set(key, current);
+  return current.count > rateLimitMaxRequests;
 }
 
 async function getTreatmentRecommendation(
@@ -307,7 +335,17 @@ async function getTreatmentRecommendation(
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => null)) as { concern?: string } | null;
+  if (isRateLimited(request)) {
+    return NextResponse.json(
+      { message: "Too many matching requests. Please wait a moment and try again." },
+      { status: 429 },
+    );
+  }
+
+  const body = (await request.json().catch(() => null)) as {
+    concern?: string;
+    aiConsent?: boolean;
+  } | null;
   const concern = body?.concern?.trim() ?? "";
 
   if (concern.length < 8) {
@@ -322,6 +360,29 @@ export async function POST(request: NextRequest) {
   if (concern.length > 1000) {
     return NextResponse.json(
       { message: "Please shorten your description to 1000 characters or fewer." },
+      { status: 400 },
+    );
+  }
+
+  if (isRedFlagConcern(concern)) {
+    const recommendation = fallbackRecommendation(concern);
+    const treatment = findService(recommendation.recommendedTreatmentId);
+    return NextResponse.json({
+      recommendation: {
+        ...recommendation,
+        source: "fallback" satisfies RecommendationSource,
+      },
+      treatment: toClientService(treatment),
+      alternatives: [],
+    });
+  }
+
+  if (process.env.OPENAI_API_KEY?.trim() && body?.aiConsent !== true) {
+    return NextResponse.json(
+      {
+        message:
+          "Please confirm that this concern can be sent to the AI matching provider, or book a doctor consultation directly.",
+      },
       { status: 400 },
     );
   }

@@ -30,16 +30,18 @@ import {
   BookingFlow,
   DoctorChat,
   type BookingPrefill,
+  type ChatMessage,
 } from "@/components/platform-widgets";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
-import type { AdminBookingView, PatientBookingView } from "@/lib/db/queries";
+import type { AdminBookingView, MessageThreadView, PatientBookingView } from "@/lib/db/queries";
 import { buildCalendlySchedulingUrl } from "@/lib/calendly";
 import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
 import type { Json } from "@/lib/db/types";
 import {
   setBookingAmountAction,
+  sendDoctorMessageAction,
   updateBookingNotesAction,
   updateBookingPaymentStatusAction,
   updateBookingScheduleAction,
@@ -92,10 +94,8 @@ function canRetryPayment(booking: PatientBookingView) {
   // Payable if a payment row exists, the doctor set an assessed amount, or it's a
   // fixed-price treatment (base price is the real price). Unit/area treatments need
   // the doctor's assessed amount first.
-  const hasPayableAmount =
-    booking.amount != null ||
-    booking.confirmed_amount != null ||
-    !isUnitOrAreaPriced(booking.treatment_price_label);
+  const isVariablePrice = isUnitOrAreaPriced(booking.treatment_price_label);
+  const hasPayableAmount = booking.confirmed_amount != null || !isVariablePrice;
   return (
     hasPayableAmount &&
     booking.status === "confirmed" &&
@@ -128,7 +128,7 @@ function hasPayMongoAttempt(
 }
 
 function getDisplayAmount(booking: Pick<PatientBookingView, "amount" | "confirmed_amount">) {
-  return booking.amount ?? booking.confirmed_amount ?? null;
+  return booking.confirmed_amount ?? booking.amount ?? null;
 }
 
 function getPatientNextStep(booking: PatientBookingView) {
@@ -310,6 +310,10 @@ const paymentRetryMessages: Record<string, { title: string; text: string }> = {
   not_confirmed: {
     title: "Doctor confirmation required",
     text: "Payment opens here after the doctor call/review confirms the service.",
+  },
+  amount_missing: {
+    title: "Doctor-assessed amount required",
+    text: "The doctor still needs to set the final amount before this payment can open.",
   },
   synced: {
     title: "Payment confirmed",
@@ -515,9 +519,9 @@ function HomeBeautyStory() {
             A calm beauty appointment, without the clinic waiting room.
           </h2>
           <p className="mt-6 text-lg leading-8 text-[#595550]">
-            BetterSelf should feel like a private ritual: considered, discreet,
-            and medically guided. You choose the concern, the doctor checks if it
-            is suitable, then the visit is prepared around you.
+            Your appointment is designed to feel considered, discreet, and
+            medically guided. Choose the concern, complete the doctor review, and
+            BetterSelf prepares the visit around your plan.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {["Doctor-led", "Sterile setup", "Private home care", "Clear aftercare"].map((item) => (
@@ -572,9 +576,9 @@ function HomeSignatureTreatments() {
             </h2>
           </div>
           <p className="max-w-2xl text-base leading-8 text-[#595550] lg:ml-auto">
-            The public site should guide patients by desire and concern. The
-            medical details stay available, but the first read is softer,
-            clearer, and more aspirational.
+            Browse by concern, review clear pricing, and request the option that
+            fits your goals. Every treatment still depends on medical suitability
+            and doctor confirmation.
           </p>
         </div>
         <div className="home-signature-list mt-12">
@@ -1180,20 +1184,32 @@ function DashboardBookingCard({
   );
 }
 
-export function MessagesPage() {
+export function MessagesPage({
+  initialMessages = [],
+  isAdmin = false,
+  patientId,
+}: {
+  initialMessages?: ChatMessage[];
+  isAdmin?: boolean;
+  patientId?: string;
+}) {
   return (
     <PageShell>
       <PageHero
         eyebrow="Messages"
-        title="Message your BetterSelf doctor."
-        text="Ask non-urgent questions about your treatment and bookings before or after your appointment."
+        title={isAdmin ? "Patient message thread." : "Message your BetterSelf doctor."}
+        text={
+          isAdmin
+            ? "Reply to non-urgent patient questions from the doctor workspace."
+            : "Ask non-urgent questions about your treatment and bookings before or after your appointment."
+        }
       />
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Link className="btn btn-ghost mb-4 inline-flex" href="/dashboard">
             ← Back to dashboard
           </Link>
-          <DoctorChat />
+          <DoctorChat initialMessages={initialMessages} isAdmin={isAdmin} patientId={patientId} />
         </div>
       </section>
     </PageShell>
@@ -1320,8 +1336,16 @@ function isVideoCallBooking(booking: BookingCallFields) {
 // A confirmed booking still awaiting payment — the single source of truth for the
 // admin "Ready to pay" stat and the Payment queue (so they never disagree and
 // cancelled/refunded bookings don't linger).
-function isReadyToPay(booking: { status: string; payment_status: string }) {
-  return booking.status === "confirmed" && booking.payment_status === "pending";
+function isReadyToPay(
+  booking: Pick<
+    AdminBookingView,
+    "status" | "payment_status" | "amount" | "confirmed_amount" | "treatment_price_label"
+  >,
+) {
+  if (booking.status !== "confirmed" || booking.payment_status !== "pending") return false;
+  if (booking.confirmed_amount != null) return true;
+  if (isUnitOrAreaPriced(booking.treatment_price_label)) return false;
+  return true;
 }
 
 // A joinable meeting URL — NOT a Calendly API resource URI
@@ -1452,10 +1476,12 @@ function AdminEmptyState({ children }: { children: ReactNode }) {
 export function AdminPage({
   authorized = false,
   bookings = [],
+  messageThreads = [],
   filters = {},
 }: {
   authorized?: boolean;
   bookings?: AdminBookingView[];
+  messageThreads?: MessageThreadView[];
   filters?: AdminFilters;
 }) {
   if (!authorized) {
@@ -1491,7 +1517,7 @@ export function AdminPage({
   const confirmedBookings = bookings.filter((booking) => booking.status === "confirmed");
   const confirmedVideoCalls = confirmedBookings.filter(isVideoCallBooking);
   const confirmedHomeVisits = confirmedBookings.filter((booking) => !isVideoCallBooking(booking));
-  const activeMessageThreads = bookings.filter((booking) => booking.status !== "cancelled").slice(0, 6);
+  const activeMessageThreads = messageThreads.slice(0, 12);
   const patientSummaries = Array.from(
     new Map(bookings.map((booking) => [booking.patient_id, booking])).values(),
   );
@@ -1643,27 +1669,47 @@ export function AdminPage({
             <AdminPanel id="messages" eyebrow="Messages" title="Doctor-side patient threads">
               <div className="grid gap-3">
                 {activeMessageThreads.length > 0 ? (
-                  activeMessageThreads.map((booking) => (
+                  activeMessageThreads.map((thread) => (
                     <article
-                      key={booking.id}
+                      key={thread.patient_id}
                       className="grid gap-4 rounded-lg border border-[#E6DFD5] bg-white p-4 lg:grid-cols-[1fr_auto] lg:items-center"
                     >
                       <div>
-                        <p className="font-serif text-2xl text-[#1F1F1F]">{booking.patient_name}</p>
+                        <p className="font-serif text-2xl text-[#1F1F1F]">{thread.patient_name}</p>
                         <p className="mt-1 text-sm text-[#595550]">
-                          {booking.treatment_name} · {booking.patient_email}
+                          {thread.patient_email}
+                          {thread.patient_phone ? ` · ${thread.patient_phone}` : ""}
                         </p>
                         <p className="mt-2 text-sm text-[#4D4D4D]">
-                          {getPatientConcern(booking.intake_answers) || "No patient concern recorded yet."}
+                          <span className="font-semibold">
+                            {thread.last_sender_role === "doctor" ? "Doctor" : "Patient"}:
+                          </span>{" "}
+                          {thread.last_message}
                         </p>
+                        <p className="mt-1 text-xs text-[#5C574F]">
+                          Last message {formatBookingDate(thread.last_message_at)}
+                        </p>
+                        <form action={sendDoctorMessageAction} className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
+                          <input type="hidden" name="patientId" value={thread.patient_id} />
+                          <input
+                            className="field h-10"
+                            name="message"
+                            maxLength={2000}
+                            placeholder="Quick reply to patient"
+                            aria-label={`Quick reply to ${thread.patient_name}`}
+                          />
+                          <FormSubmitButton className="btn btn-primary h-10">
+                            Reply
+                          </FormSubmitButton>
+                        </form>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Link className="btn btn-secondary h-10" href="/messages">
+                        <Link className="btn btn-secondary h-10" href={`/messages?patientId=${thread.patient_id}`}>
                           Open chat
                         </Link>
                         <a
                           className="btn btn-ghost h-10"
-                          href={`mailto:${booking.patient_email}?subject=${encodeURIComponent(`BetterSelf: ${booking.treatment_name}`)}`}
+                          href={`mailto:${thread.patient_email}?subject=${encodeURIComponent("BetterSelf follow-up")}`}
                         >
                           Email
                         </a>
@@ -1671,7 +1717,7 @@ export function AdminPage({
                     </article>
                   ))
                 ) : (
-                  <AdminEmptyState>No active patient threads yet.</AdminEmptyState>
+                  <AdminEmptyState>No patient messages yet.</AdminEmptyState>
                 )}
               </div>
             </AdminPanel>
@@ -1710,7 +1756,7 @@ export function AdminPage({
                         <div>
                           <p className="font-serif text-2xl text-[#1F1F1F]">{booking.treatment_name}</p>
                           <p className="mt-1 text-sm text-[#595550]">
-                            {booking.patient_name} · {formatPeso(booking.amount)}
+                            {booking.patient_name} · {formatPeso(getDisplayAmount(booking))}
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -1776,8 +1822,8 @@ export function AdminPage({
                         {flagged.length > 0 ? (
                           <StatusBadge tone="warning">{flagged.length} medical flags</StatusBadge>
                         ) : null}
-                        {b.amount != null ? (
-                          <StatusBadge tone="neutral">{formatPeso(b.amount)}</StatusBadge>
+                        {getDisplayAmount(b) != null ? (
+                          <StatusBadge tone="neutral">{formatPeso(getDisplayAmount(b))}</StatusBadge>
                         ) : null}
                       </div>
                       <form
@@ -1978,7 +2024,7 @@ export function AdminPage({
                         <section>
                           <p className="eyebrow">Payment</p>
                           <div className="mt-3 grid gap-3 md:grid-cols-4">
-                            <AdminMeta label="Amount" value={formatPeso(b.amount)} />
+                            <AdminMeta label="Amount" value={formatPeso(getDisplayAmount(b))} />
                             <AdminMeta label="Type" value={b.payment_type} />
                             <AdminMeta label="Reference" value={b.transaction_reference} />
                             <AdminMeta label="PayMongo session" value={b.paymongo_checkout_id} />

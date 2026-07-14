@@ -106,7 +106,6 @@ export function Footer() {
             ["Book Appointment", "/booking"],
             ["Patient Dashboard", "/dashboard"],
             ["Messages", "/messages"],
-            ["Admin Access", "/admin"],
           ]}
         />
         <FooterColumn

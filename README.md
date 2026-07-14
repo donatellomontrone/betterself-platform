@@ -73,21 +73,22 @@ Included categories:
 - Acne Scars
 - Others
 
-The file also includes employee discount tiers and referral promo structures.
+The platform does not use memberships. Pricing is per consultation or per
+doctor-confirmed treatment.
 
 ## Platform features represented
 
 - Doctor-led homepage and public service positioning
 - Full treatment catalog with detail pages
 - Medical-safe treatment copy and disclaimers
-- Booking flow with two paths: direct treatment booking or paid doctor consultation, then patient details, Calendly scheduling, review, and PayMongo payment
+- Booking flow with two paths: paid doctor consultation first, or treatment request followed by doctor review and dashboard payment
 - Patient dashboard with bookings, treatment plan, messages, aftercare, and payment status
-- Internal doctor-patient chat structure with emergency disclaimer and attachment placeholder
-- Doctor/admin dashboard preview for appointments, intake review, patient messaging, payment status, and notes
+- Internal doctor-patient messaging surface with emergency disclaimer
+- Doctor/admin dashboard for appointments, intake review, patient records, payment status, and notes
 - Safety & Protocol page
-- Per-treatment pricing structure with employee and referral discounts
-- PayMongo Hosted Checkout-ready API route
-- PayMongo webhook stub for confirmed payment fulfillment
+- Per-treatment pricing structure with doctor-confirmed totals for unit/area/piece services
+- PayMongo Hosted Checkout routes for QR Ph payments
+- PayMongo webhook fulfillment for paid checkout sessions
 
 ## Run locally
 
@@ -121,16 +122,12 @@ If `NEXT_PUBLIC_CALENDLY_URL` is missing, the booking page shows a Calendly setu
 
 If `NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL` is present, doctor-consultation bookings show that call link in the patient dashboard and admin calendar whenever Calendly has not stored a booking-specific link.
 
-If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo checkout page. If present, `/api/checkout` creates a PayMongo Hosted Checkout session server-side after the Calendly step. Direct treatment bookings charge the selected treatment; consultation bookings charge the ₱1,500 consultation service.
+If `PAYMONGO_SECRET_KEY` is missing, the booking flow opens the local demo checkout page. If present, consultation bookings create a PayMongo Hosted Checkout session for the ₱800 consultation fee. Treatment requests are submitted first; the doctor confirms suitability and the final amount, then the patient pays from the dashboard.
 
 ## Production next steps
 
-- Create Clerk and Neon integrations from Vercel Marketplace.
-- Run `database/schema.sql` in the Neon SQL editor.
-- Persist Clerk-created users into `user_profiles`.
-- Store uploaded patient photos securely.
-- Replace placeholder doctor credentials and imagery.
-- Connect booking statuses to doctor review actions.
-- Fulfill bookings only from verified PayMongo webhooks, not browser redirects.
-- Add the real BetterSelf Calendly event link to Vercel as `NEXT_PUBLIC_CALENDLY_URL` and redeploy.
-- Add privacy policy, terms, consent forms, and medical disclaimer pages with legal review.
+- Apply every SQL file in `database/migrations/` to Neon before deploying new admin or payment features.
+- Add a durable rate limiter (for example Upstash Redis) for `/api/recommend-treatment` before high traffic campaigns.
+- Add secure patient photo uploads when BetterSelf is ready to review images inside the platform.
+- Review legal entity, DPO, consent, and medical disclaimer copy with the clinic/legal owner before launch.
+- Keep PayMongo webhook, Calendly webhook, Clerk production keys, and `NEXT_PUBLIC_SITE_URL` in Vercel Production and Preview environments.

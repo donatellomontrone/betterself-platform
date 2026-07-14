@@ -155,7 +155,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Invalid webhook signature." }, { status: 401 });
   }
 
-  const body = JSON.parse(rawBody) as CalendlyWebhookPayload;
+  let body: CalendlyWebhookPayload;
+  try {
+    body = JSON.parse(rawBody) as CalendlyWebhookPayload;
+  } catch (error) {
+    console.error("[calendly webhook] invalid JSON payload:", error);
+    return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
+  }
   const payload = body.payload;
   const referenceNumber = findReference(payload);
 
@@ -174,6 +180,7 @@ export async function POST(request: NextRequest) {
     const updated = await clearBookingScheduleByPaymentReference(
       referenceNumber,
       payload?.cancellation?.created_at ?? null,
+      payload?.email ?? null,
     );
     console.info("[calendly webhook] invitee canceled", { referenceNumber, updated });
     return NextResponse.json({ received: true, action: "schedule_cleared", updated });
@@ -197,6 +204,7 @@ export async function POST(request: NextRequest) {
     referenceNumber,
     appointmentDate: schedule.date,
     appointmentTime: schedule.time,
+    inviteeEmail: payload?.email ?? null,
     eventUri: eventUri(payload, event),
     inviteeUri: payload?.uri ?? null,
     videoCallUrl: getVideoCallUrl(event.location),

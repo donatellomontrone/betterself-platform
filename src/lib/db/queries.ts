@@ -1,4 +1,5 @@
 import { getSql } from "./client";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 import type { BookingStatus, Json, PatientProfile, PaymentStatus, UserProfile } from "./types";
 
 /**
@@ -20,6 +21,9 @@ export type EnsureUserProfileInput = {
   phone?: string | null;
 };
 
+export const MEDICAL_TEAM_USER_ID = "betterself-medical-team";
+export const MEDICAL_TEAM_NAME = "BetterSelf medical team";
+
 /** Insert the Clerk user into user_profiles, or refresh contact details if it exists. */
 export async function ensureUserProfile(input: EnsureUserProfileInput) {
   const sql = getSql();
@@ -30,6 +34,18 @@ export async function ensureUserProfile(input: EnsureUserProfileInput) {
       full_name = excluded.full_name,
       email = excluded.email,
       phone = coalesce(excluded.phone, public.user_profiles.phone)
+  `;
+}
+
+export async function ensureMedicalTeamProfile() {
+  const sql = getSql();
+  await sql`
+    insert into public.user_profiles (id, full_name, email, role)
+    values (${MEDICAL_TEAM_USER_ID}, ${MEDICAL_TEAM_NAME}, ${SUPPORT_EMAIL}, 'doctor')
+    on conflict (id) do update set
+      full_name = excluded.full_name,
+      email = excluded.email,
+      role = excluded.role
   `;
 }
 
@@ -185,7 +201,7 @@ export type RetryableBookingCheckout = {
   location: string;
   status: BookingStatus;
   payment_status: PaymentStatus;
-  amount: number;
+  amount: number | null;
   payment_type: string;
   patient_name: string;
   patient_email: string;
@@ -201,6 +217,37 @@ export type PaymentReconciliationTarget = {
   transaction_reference: string | null;
   paymongo_checkout_id: string | null;
 };
+
+export type PaidConsultationByReference = {
+  booking_id: string;
+  patient_id: string;
+  patient_email: string;
+};
+
+export async function getPaidConsultationByPaymentReference(
+  referenceNumber: string,
+  patientId?: string | null,
+): Promise<PaidConsultationByReference | null> {
+  const sql = getSql();
+  const rows = (await sql`
+    select
+      b.id as booking_id,
+      b.patient_id,
+      u.email as patient_email
+    from public.bookings b
+    join public.payments p on p.booking_id = b.id
+    join public.user_profiles u on u.id = b.patient_id
+    where p.transaction_reference = ${referenceNumber}
+      and p.status = 'paid'
+      and b.payment_status = 'paid'
+      and b.status <> 'cancelled'
+      and b.treatment_id = 'doctor-consultation'
+      and (${patientId ?? null}::text is null or b.patient_id = ${patientId ?? null})
+    order by p.created_at desc
+    limit 1
+  `) as unknown as PaidConsultationByReference[];
+  return rows[0] ?? null;
+}
 
 /** All of a patient's bookings, newest first, with treatment name and latest payment amount. */
 export async function getPatientBookings(patientId: string): Promise<PatientBookingView[]> {
@@ -256,7 +303,12 @@ export async function getRetryableBookingForCheckout(
       b.location,
       b.status,
       b.payment_status,
-      coalesce(p.amount, b.confirmed_amount, t.starting_price) as amount,
+      case
+        when b.confirmed_amount is not null then b.confirmed_amount
+        when b.treatment_id = 'doctor-consultation' then coalesce(p.amount, t.starting_price)
+        when t.price_label ~* '/(unit|area|piece)' then null
+        else coalesce(p.amount, t.starting_price)
+      end as amount,
       coalesce(
         p.payment_type,
         case when b.treatment_id = 'doctor-consultation' then 'consultation' else 'treatment' end
@@ -528,6 +580,7 @@ export type CalendlyBookingScheduleInput = {
   referenceNumber: string;
   appointmentDate: string;
   appointmentTime: string;
+  inviteeEmail?: string | null;
   eventUri?: string | null;
   inviteeUri?: string | null;
   videoCallUrl?: string | null;
@@ -543,7 +596,16 @@ export async function updateBookingScheduleByPaymentReference(
     select b.id, b.notes
     from public.bookings b
     join public.payments p on p.booking_id = b.id
+    join public.user_profiles u on u.id = b.patient_id
     where p.transaction_reference = ${input.referenceNumber}
+      and p.status = 'paid'
+      and b.payment_status = 'paid'
+      and b.status <> 'cancelled'
+      and b.treatment_id = 'doctor-consultation'
+      and (
+        ${input.inviteeEmail ?? null}::text is null
+        or lower(u.email) = lower(${input.inviteeEmail ?? null})
+      )
     order by p.created_at desc
     limit 1
   `) as unknown as { id: string; notes: string | null }[];
@@ -585,16 +647,21 @@ export async function updateLatestPaidConsultationScheduleByPatientEmail(
 ): Promise<number> {
   const sql = getSql();
   const rows = (await sql`
-    select b.id, b.notes
-    from public.bookings b
-    join public.user_profiles u on u.id = b.patient_id
-    where lower(u.email) = lower(${input.inviteeEmail})
-      and b.treatment_id = 'doctor-consultation'
-      and b.payment_status = 'paid'
-      and b.status <> 'cancelled'
-      and b.appointment_date is null
-      and b.created_at <= ${input.scheduledStartAt}::timestamptz
-    order by b.created_at desc
+    with eligible as (
+      select b.id, b.notes, b.created_at
+      from public.bookings b
+      join public.user_profiles u on u.id = b.patient_id
+      where lower(u.email) = lower(${input.inviteeEmail})
+        and b.treatment_id = 'doctor-consultation'
+        and b.payment_status = 'paid'
+        and b.status <> 'cancelled'
+        and b.appointment_date is null
+        and b.created_at <= ${input.scheduledStartAt}::timestamptz
+    )
+    select id, notes
+    from eligible
+    where (select count(*) from eligible) = 1
+    order by created_at desc
     limit 1
   `) as unknown as { id: string; notes: string | null }[];
 
@@ -662,13 +729,23 @@ export async function clearInvalidEmailMatchedCalendlySchedules(): Promise<numbe
 export async function clearBookingScheduleByPaymentReference(
   referenceNumber: string,
   cancelledAt: string | null,
+  inviteeEmail?: string | null,
 ): Promise<number> {
   const sql = getSql();
   const rows = (await sql`
     select b.id, b.notes
     from public.bookings b
     join public.payments p on p.booking_id = b.id
+    join public.user_profiles u on u.id = b.patient_id
     where p.transaction_reference = ${referenceNumber}
+      and p.status = 'paid'
+      and b.payment_status = 'paid'
+      and b.status <> 'cancelled'
+      and b.treatment_id = 'doctor-consultation'
+      and (
+        ${inviteeEmail ?? null}::text is null
+        or lower(u.email) = lower(${inviteeEmail ?? null})
+      )
     order by p.created_at desc
     limit 1
   `) as unknown as { id: string; notes: string | null }[];
@@ -816,4 +893,136 @@ export async function markPaidByReference(referenceNumber: string): Promise<numb
     }
   }
   return updated.length;
+}
+
+export type MessageView = {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  message_text: string;
+  attachment_url: string | null;
+  created_at: string;
+  sender_role: "patient" | "doctor";
+};
+
+export type MessageThreadView = {
+  patient_id: string;
+  patient_name: string;
+  patient_email: string;
+  patient_phone: string | null;
+  last_message: string;
+  last_message_at: string;
+  last_sender_role: "patient" | "doctor";
+};
+
+export async function getMessageThreads(limit = 20): Promise<MessageThreadView[]> {
+  const sql = getSql();
+  await ensureMedicalTeamProfile();
+  const rows = (await sql`
+    with thread_patients as (
+      select distinct
+        case
+          when sender_id = ${MEDICAL_TEAM_USER_ID} then receiver_id
+          else sender_id
+        end as patient_id
+      from public.messages
+      where sender_id = ${MEDICAL_TEAM_USER_ID}
+         or receiver_id = ${MEDICAL_TEAM_USER_ID}
+    )
+    select
+      tp.patient_id,
+      u.full_name as patient_name,
+      u.email as patient_email,
+      u.phone as patient_phone,
+      latest.message_text as last_message,
+      latest.created_at as last_message_at,
+      case
+        when latest.sender_id = ${MEDICAL_TEAM_USER_ID} then 'doctor'
+        else 'patient'
+      end as last_sender_role
+    from thread_patients tp
+    join public.user_profiles u on u.id = tp.patient_id
+    join lateral (
+      select m.sender_id, m.message_text, m.created_at
+      from public.messages m
+      where (
+        m.sender_id = tp.patient_id and m.receiver_id = ${MEDICAL_TEAM_USER_ID}
+      ) or (
+        m.sender_id = ${MEDICAL_TEAM_USER_ID} and m.receiver_id = tp.patient_id
+      )
+      order by m.created_at desc
+      limit 1
+    ) latest on true
+    order by latest.created_at desc
+    limit ${Math.max(1, Math.min(limit, 100))}
+  `) as unknown as MessageThreadView[];
+  return rows;
+}
+
+export async function getPatientMessages(patientId: string): Promise<MessageView[]> {
+  const sql = getSql();
+  await ensureMedicalTeamProfile();
+  const rows = (await sql`
+    select
+      m.id,
+      m.sender_id,
+      m.receiver_id,
+      m.message_text,
+      m.attachment_url,
+      m.created_at,
+      case
+        when m.sender_id = ${MEDICAL_TEAM_USER_ID} then 'doctor'
+        else 'patient'
+      end as sender_role
+    from public.messages m
+    where (
+      m.sender_id = ${patientId} and m.receiver_id = ${MEDICAL_TEAM_USER_ID}
+    ) or (
+      m.sender_id = ${MEDICAL_TEAM_USER_ID} and m.receiver_id = ${patientId}
+    )
+    order by m.created_at asc
+  `) as unknown as MessageView[];
+  return rows;
+}
+
+export async function createPatientMessage(patientId: string, messageText: string) {
+  const sql = getSql();
+  await ensureMedicalTeamProfile();
+  await sql`
+    insert into public.messages (sender_id, receiver_id, message_text)
+    values (${patientId}, ${MEDICAL_TEAM_USER_ID}, ${messageText})
+  `;
+}
+
+export async function createDoctorMessage(patientId: string, messageText: string) {
+  const sql = getSql();
+  await ensureMedicalTeamProfile();
+  await sql`
+    insert into public.messages (sender_id, receiver_id, message_text)
+    values (${MEDICAL_TEAM_USER_ID}, ${patientId}, ${messageText})
+  `;
+}
+
+export type AdminAuditLogInput = {
+  actorId?: string | null;
+  actorEmail?: string | null;
+  action: string;
+  targetType: string;
+  targetId: string;
+  metadata?: Json;
+};
+
+export async function recordAdminAuditLog(input: AdminAuditLogInput) {
+  const sql = getSql();
+  try {
+    await sql`
+      insert into public.admin_audit_logs
+        (actor_id, actor_email, action, target_type, target_id, metadata)
+      values
+        (${input.actorId ?? null}, ${input.actorEmail ?? null}, ${input.action},
+         ${input.targetType}, ${input.targetId}, ${JSON.stringify(input.metadata ?? {})}::jsonb)
+    `;
+  } catch (error) {
+    console.error("[admin_audit] failed to write audit log:", error);
+  }
 }
