@@ -53,7 +53,7 @@ export function Header() {
           </span>
         </Link>
         <nav
-          className="premium-nav hidden items-center gap-1 text-sm font-semibold text-[#4D4D4D] min-[900px]:flex"
+          className="premium-nav hidden items-center gap-1 text-sm font-semibold text-[#4D4D4D] min-[1100px]:flex"
           aria-label="Primary navigation"
         >
           {primaryNav.map((item) => (
@@ -63,7 +63,7 @@ export function Header() {
           ))}
         </nav>
         <MobileMenu items={primaryNav} />
-        <div className="premium-header-actions hidden items-center gap-3 min-[900px]:flex">
+        <div className="premium-header-actions hidden items-center gap-3 min-[1100px]:flex">
           <HeaderAuthControls />
           <Link className="premium-cta" href="/booking">
             Book Treatment

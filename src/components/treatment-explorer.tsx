@@ -152,11 +152,11 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3 md:flex-col md:items-stretch">
-                  <Link className="btn btn-secondary justify-center rounded-full" href={`/treatments/${treatment.id}`}>
-                    Details
+                  <Link className="btn btn-secondary justify-center rounded-full" href={`/treatments/${treatment.id}`} aria-label={`View details for ${treatment.name}`}>
+                    View treatment
                   </Link>
-                  <Link className="btn btn-primary justify-center rounded-full" href={`/booking?treatment=${treatment.id}&direct=1`}>
-                    Book
+                  <Link className="btn btn-primary justify-center rounded-full" href={`/booking?treatment=${treatment.id}&direct=1`} aria-label={`Request ${treatment.name}`}>
+                    Request
                   </Link>
                 </div>
               </article>

@@ -2,18 +2,19 @@ import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { isDatabaseConfigured } from "@/lib/db/client";
+import { limitAuthenticatedRequest } from "@/lib/server-rate-limit";
 import {
-  createPayment,
+  attachPayMongoCheckout,
+  createOrReusePendingPayment,
   getRetryableBookingForCheckout,
   markPaidByReference,
-  updateBookingPaymentStatus,
+  markPendingPaymentAttemptFailed,
 } from "@/lib/db/queries";
 import { applyDiscount } from "@/lib/discounts";
 
-// QR Ph only (business uses QR Ph, not cards/GCash). Each "Pay now" creates a
-// fresh single-use checkout session, so a new QR is generated every attempt.
-// "Source has consumed status" only happens if an already-scanned QR is reopened
-// — generate a new payment instead of reloading the old PayMongo page.
+// QR Ph only. A booking has one active payment attempt at a time; a repeated
+// click deliberately reuses its PayMongo idempotency key instead of making a
+// second QR that could charge the patient twice.
 const paymentMethods = ["qrph"];
 
 function dashboardRedirect(request: NextRequest, status: string) {
@@ -28,6 +29,16 @@ export async function POST(request: NextRequest) {
 
   if (!isDatabaseConfigured()) {
     return dashboardRedirect(request, "retry_unavailable");
+  }
+
+  const rateLimit = await limitAuthenticatedRequest({
+    scope: "checkout-retry",
+    userId: user.id,
+    maxRequests: 6,
+    windowSeconds: 10 * 60,
+  });
+  if (rateLimit.limited) {
+    return dashboardRedirect(request, "retry_limited");
   }
 
   const formData = await request.formData();
@@ -50,7 +61,11 @@ export async function POST(request: NextRequest) {
     return dashboardRedirect(request, "retry_missing");
   }
 
-  if (booking.status !== "confirmed") {
+  const isConsultation = booking.treatment_id === "doctor-consultation";
+  const paymentIsAllowed = isConsultation
+    ? booking.status === "pending_doctor_review" || booking.status === "confirmed"
+    : booking.status === "ready_for_payment";
+  if (!paymentIsAllowed) {
     return dashboardRedirect(request, "not_confirmed");
   }
 
@@ -61,7 +76,15 @@ export async function POST(request: NextRequest) {
   // Validate any discount code server-side against the booking's amount.
   const applied = applyDiscount(booking.amount, discountCode);
 
-  const referenceNumber = `BS-RETRY-${Date.now()}-${randomUUID().slice(0, 8)}`;
+  const attempt = await createOrReusePendingPayment({
+    bookingId: booking.id,
+    patientId: user.id,
+    amount: applied.total,
+    paymentType: booking.payment_type,
+    transactionReference: `BS-RETRY-${Date.now()}-${randomUUID().slice(0, 8)}`,
+  });
+  const referenceNumber = attempt.attempt.transaction_reference;
+  const checkoutAmount = attempt.attempt.amount;
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
   const secretKey = process.env.PAYMONGO_SECRET_KEY;
 
@@ -69,13 +92,6 @@ export async function POST(request: NextRequest) {
     // Demo mode (no PayMongo): record + mark the payment paid so the flow actually
     // completes and the dashboard 'Pay now' clears, then land on the success page —
     // instead of dead-ending on /checkout-preview and looping forever.
-    await createPayment({
-      bookingId: booking.id,
-      patientId: user.id,
-      amount: applied.total,
-      paymentType: booking.payment_type,
-      transactionReference: referenceNumber,
-    });
     await markPaidByReference(referenceNumber);
     return NextResponse.redirect(
       new URL(`/booking/success?reference=${referenceNumber}&demo=1`, request.url),
@@ -97,7 +113,7 @@ export async function POST(request: NextRequest) {
           line_items: [
             {
               name: booking.treatment_name,
-              amount: applied.total * 100,
+              amount: checkoutAmount * 100,
               currency: "PHP",
               quantity: 1,
               description: applied.code
@@ -147,18 +163,14 @@ export async function POST(request: NextRequest) {
 
   if (!response.ok || !payload.data?.attributes?.checkout_url) {
     console.error("[checkout retry] PayMongo failed:", payload);
+    await markPendingPaymentAttemptFailed(referenceNumber);
     return dashboardRedirect(request, "retry_failed");
   }
 
-  await createPayment({
-    bookingId: booking.id,
-    patientId: user.id,
-    amount: applied.total,
-    paymentType: booking.payment_type,
+  await attachPayMongoCheckout({
     transactionReference: referenceNumber,
     paymongoCheckoutId: payload.data.id,
   });
-  await updateBookingPaymentStatus(booking.id, "pending");
 
   return NextResponse.redirect(payload.data.attributes.checkout_url, 303);
 }

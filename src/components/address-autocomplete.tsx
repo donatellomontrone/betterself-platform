@@ -61,6 +61,7 @@ function loadGoogleMaps(apiKey: string) {
 }
 
 type AddressAutocompleteProps = {
+  inputId?: string;
   value: string;
   onChange: (address: string, isValid: boolean) => void;
 };
@@ -69,7 +70,7 @@ function isUsableManualAddress(address: string) {
   return address.trim().length >= 8;
 }
 
-export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProps) {
+export function AddressAutocomplete({ inputId = "home-visit-address", value, onChange }: AddressAutocompleteProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
   const optionalCookiesAccepted = useOptionalCookiesAccepted();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -145,6 +146,8 @@ export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProp
   if (!apiKey) {
     return (
       <input
+        id={inputId}
+        aria-describedby={`${inputId}-help`}
         className="field mt-2 w-full"
         placeholder="Your full address (Metro Manila)"
         value={value}
@@ -159,6 +162,8 @@ export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProp
   return (
     <div className="mt-2 grid gap-3">
       <input
+        id={inputId}
+        aria-describedby={`${inputId}-help`}
         className="field w-full"
         placeholder="Type your full address in Metro Manila"
         value={value}
@@ -187,7 +192,7 @@ export function AddressAutocomplete({ value, onChange }: AddressAutocompleteProp
       {value ? (
         <p className="text-sm text-[#4D4D4D]">Address for this booking: {value}</p>
       ) : null}
-      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="mt-2 text-sm text-red-600" role="alert">{error}</p> : null}
     </div>
   );
 }

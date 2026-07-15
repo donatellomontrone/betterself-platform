@@ -139,16 +139,114 @@ export type CreatePaymentInput = {
   paymongoCheckoutId?: string | null;
 };
 
-/** Record a pending payment linked to a booking. */
-export async function createPayment(input: CreatePaymentInput) {
+export type PendingPaymentAttempt = {
+  id: string;
+  booking_id: string;
+  patient_id: string;
+  amount: number;
+  currency: string;
+  payment_type: string;
+  status: PaymentStatus;
+  transaction_reference: string;
+  paymongo_checkout_id: string | null;
+};
+
+/**
+ * Return the one active QR attempt for a booking, or create it. The partial unique
+ * index added in the payment-state migration makes a second active QR impossible
+ * even when a patient double-clicks or two requests reach the server together.
+ */
+export async function createOrReusePendingPayment(input: Required<
+  Pick<CreatePaymentInput, "bookingId" | "patientId" | "amount" | "paymentType" | "transactionReference">
+>): Promise<{ attempt: PendingPaymentAttempt; reused: boolean }> {
+  const sql = getSql();
+  const existing = (await sql`
+    select id, booking_id, patient_id, amount, currency, payment_type, status,
+           transaction_reference, paymongo_checkout_id
+    from public.payments
+    where booking_id = ${input.bookingId} and status = 'pending'
+    order by created_at desc
+    limit 1
+  `) as unknown as PendingPaymentAttempt[];
+  if (existing[0]) return { attempt: existing[0], reused: true };
+
+  try {
+    const created = (await sql`
+      insert into public.payments
+        (booking_id, patient_id, amount, currency, payment_type, status, transaction_reference)
+      values
+        (${input.bookingId}, ${input.patientId}, ${input.amount}, 'PHP', ${input.paymentType},
+         'pending', ${input.transactionReference})
+      returning id, booking_id, patient_id, amount, currency, payment_type, status,
+                transaction_reference, paymongo_checkout_id
+    `) as unknown as PendingPaymentAttempt[];
+    if (created[0]) return { attempt: created[0], reused: false };
+  } catch (error) {
+    // A simultaneous request can lose the partial-unique-index race. Read the
+    // winning attempt and deliberately reuse it rather than issuing another QR.
+    const winner = (await sql`
+      select id, booking_id, patient_id, amount, currency, payment_type, status,
+             transaction_reference, paymongo_checkout_id
+      from public.payments
+      where booking_id = ${input.bookingId} and status = 'pending'
+      order by created_at desc
+      limit 1
+    `) as unknown as PendingPaymentAttempt[];
+    if (winner[0]) return { attempt: winner[0], reused: true };
+    throw error;
+  }
+
+  throw new Error("Could not create a payment attempt.");
+}
+
+export async function attachPayMongoCheckout(input: {
+  transactionReference: string;
+  paymongoCheckoutId: string;
+}) {
   const sql = getSql();
   await sql`
-    insert into public.payments
-      (booking_id, patient_id, amount, currency, payment_type, status, transaction_reference, paymongo_checkout_id)
-    values
-      (${input.bookingId}, ${input.patientId}, ${input.amount}, 'PHP', ${input.paymentType},
-       'pending', ${input.transactionReference ?? null}, ${input.paymongoCheckoutId ?? null})
+    update public.payments
+    set paymongo_checkout_id = ${input.paymongoCheckoutId}
+    where transaction_reference = ${input.transactionReference}
+      and status = 'pending'
+      and (paymongo_checkout_id is null or paymongo_checkout_id = ${input.paymongoCheckoutId})
   `;
+}
+
+export async function markPendingPaymentAttemptFailed(transactionReference: string) {
+  const sql = getSql();
+  await sql`
+    update public.payments
+    set status = 'failed'
+    where transaction_reference = ${transactionReference}
+      and status = 'pending'
+      and paymongo_checkout_id is null
+  `;
+}
+
+/**
+ * Close a pending checkout when its signed-in patient returns from PayMongo's
+ * cancellation URL. The patient ownership guard prevents arbitrary visitors
+ * from invalidating someone else's checkout reference.
+ */
+export async function markPatientPendingPaymentAttemptFailed(
+  transactionReference: string,
+  patientId: string,
+): Promise<boolean> {
+  const sql = getSql();
+  const rows = (await sql`
+    update public.payments p
+    set status = 'failed'
+    from public.bookings b
+    where p.booking_id = b.id
+      and p.transaction_reference = ${transactionReference}
+      and p.status = 'pending'
+      and b.patient_id = ${patientId}
+      and b.status <> 'cancelled'
+      and b.payment_status <> 'paid'
+    returning p.id
+  `) as unknown as { id: string }[];
+  return rows.length > 0;
 }
 
 export type CreateMedicalIntakeInput = {
@@ -168,6 +266,33 @@ export async function createMedicalIntake(input: CreateMedicalIntakeInput) {
       (${input.patientId}, ${input.bookingId}, ${JSON.stringify(input.answers)}::jsonb,
        ${input.consentConfirmed}, 'submitted')
   `;
+}
+
+/** Atomically persist the clinical request and its required intake. */
+export async function createBookingWithMedicalIntake(input: CreateBookingInput & {
+  answers: Json;
+  consentConfirmed: boolean;
+}): Promise<CreatedBooking> {
+  const sql = getSql();
+  const rows = (await sql`
+    with created_booking as (
+      insert into public.bookings
+        (patient_id, treatment_id, appointment_type, location, status, payment_status, notes)
+      values
+        (${input.patientId}, ${input.treatmentId}, ${input.appointmentType}, ${input.location},
+         'pending_doctor_review', 'pending', ${input.notes ?? null})
+      returning id
+    ), created_intake as (
+      insert into public.medical_intakes
+        (patient_id, booking_id, answers, consent_confirmed, doctor_review_status)
+      select ${input.patientId}, id, ${JSON.stringify(input.answers)}::jsonb,
+             ${input.consentConfirmed}, 'submitted'
+      from created_booking
+    )
+    select id from created_booking
+  `) as unknown as CreatedBooking[];
+  if (!rows[0]) throw new Error("Booking intake transaction did not return a booking.");
+  return rows[0];
 }
 
 export type PatientBookingView = {
@@ -368,13 +493,20 @@ export async function getPaymentReconciliationTarget(
  * treatments so the patient is charged the real amount, not the base starting price.
  * Pass null to clear it.
  */
-export async function setBookingConfirmedAmount(bookingId: string, amount: number | null) {
+export async function setBookingConfirmedAmount(
+  bookingId: string,
+  amount: number | null,
+): Promise<boolean> {
   const sql = getSql();
-  await sql`
+  const rows = (await sql`
     update public.bookings
     set confirmed_amount = ${amount}, updated_at = now()
     where id::text = ${bookingId}
-  `;
+      and status <> 'cancelled'
+      and payment_status <> 'paid'
+    returning id
+  `) as unknown as { id: string }[];
+  return rows.length > 0;
 }
 
 /**
@@ -526,14 +658,62 @@ export async function getAllBookings(): Promise<AdminBookingView[]> {
  * move a patient-cancelled booking back to an active state (which would re-expose
  * the "Pay now" button on a dead booking).
  */
-export async function updateBookingStatus(bookingId: string, status: BookingStatus) {
+export async function updateBookingStatus(
+  bookingId: string,
+  status: BookingStatus,
+): Promise<boolean> {
   const sql = getSql();
-  await sql`
+  if (status === "completed") {
+    const rows = (await sql`
+      update public.bookings
+      set status = ${status}, updated_at = now()
+      where id::text = ${bookingId}
+        and status <> 'cancelled'
+        and payment_status = 'paid'
+      returning id
+    `) as unknown as { id: string }[];
+    return rows.length > 0;
+  }
+
+  const rows = (await sql`
     update public.bookings
     set status = ${status}, updated_at = now()
     where id::text = ${bookingId}
       and status <> 'cancelled'
-  `;
+      and payment_status <> 'paid'
+    returning id
+  `) as unknown as { id: string }[];
+  return rows.length > 0;
+}
+
+/**
+ * Open payment only after the clinician explicitly approved intake and set the
+ * appropriate total for variable-price treatments. This is the only route to
+ * `ready_for_payment`; `confirmed` is reserved for a paid appointment.
+ */
+export async function markBookingReadyForPayment(bookingId: string): Promise<boolean> {
+  const sql = getSql();
+  const rows = (await sql`
+    update public.bookings b
+    set status = 'ready_for_payment', updated_at = now()
+    where b.id::text = ${bookingId}
+      and b.status in ('pending_doctor_review', 'needs_more_information')
+      and b.payment_status in ('pending', 'refunded', 'failed')
+      and b.treatment_id <> 'doctor-consultation'
+      and exists (
+        select 1 from public.medical_intakes mi
+        where mi.booking_id = b.id and mi.doctor_review_status = 'approved'
+      )
+      and (
+        b.confirmed_amount is not null
+        or exists (
+          select 1 from public.treatments t
+          where t.id = b.treatment_id and t.price_label !~* '/(unit|area|piece)'
+        )
+      )
+    returning b.id
+  `) as unknown as { id: string }[];
+  return rows.length > 0;
 }
 
 /** Set the confirmed appointment date/time for a booking (admin/doctor). */
@@ -541,15 +721,18 @@ export async function updateBookingSchedule(
   bookingId: string,
   appointmentDate: string | null,
   appointmentTime: string | null,
-) {
+): Promise<boolean> {
   const sql = getSql();
-  await sql`
+  const rows = (await sql`
     update public.bookings
     set appointment_date = ${appointmentDate}::date,
         appointment_time = ${appointmentTime},
         updated_at = now()
     where id::text = ${bookingId}
-  `;
+      and payment_status = 'paid'
+    returning id
+  `) as unknown as { id: string }[];
+  return rows.length > 0;
 }
 
 export async function updateBookingNotes(bookingId: string, notes: string | null) {
@@ -775,30 +958,6 @@ export async function clearBookingScheduleByPaymentReference(
   return updated.length;
 }
 
-export async function updateBookingPaymentStatus(
-  bookingId: string,
-  status: PaymentStatus,
-) {
-  const sql = getSql();
-  await sql`
-    update public.bookings
-    set payment_status = ${status}, updated_at = now()
-    where id::text = ${bookingId}
-  `;
-  // Target the newest still-PENDING payment row first (a stale resolved row may be
-  // newer), falling back to the newest row, so admin "mark paid" hits the real one.
-  await sql`
-    update public.payments
-    set status = ${status}
-    where id = (
-      select id from public.payments
-      where booking_id::text = ${bookingId}
-      order by (status = 'pending') desc, created_at desc
-      limit 1
-    )
-  `;
-}
-
 export async function updateMedicalIntakeReview(
   bookingId: string,
   status: string,
@@ -859,39 +1018,52 @@ export async function updatePatientAdminProfile(input: {
  * Mark a booking + its payment as paid, identified by the checkout reference number.
  * Called from the PayMongo webhook. Returns the number of payment rows updated.
  */
-export async function markPaidByReference(referenceNumber: string): Promise<number> {
+export async function markPaidByReference(input: string | {
+  referenceNumber: string;
+  paymongoCheckoutId?: string | null;
+  paymongoEventId?: string | null;
+  paymongoLivemode?: boolean | null;
+  eventType?: string | null;
+}): Promise<number> {
   const sql = getSql();
+  const details = typeof input === "string" ? { referenceNumber: input } : input;
   const updated = (await sql`
-    update public.payments
-    set status = 'paid'
-    where transaction_reference = ${referenceNumber}
-      and status = 'pending'
-    returning booking_id
-  `) as unknown as { booking_id: string }[];
-
-  for (const row of updated) {
-    // Never resurrect a cancelled booking to paid. If money was captured against a
-    // cancelled booking, the payment row is still marked paid above — log it so the
-    // booking can be reconciled/refunded manually.
-    const bookingUpdated = (await sql`
-      update public.bookings
+    with accepted_event as (
+      insert into public.paymongo_webhook_events (id, event_type)
+      select ${details.paymongoEventId ?? null}, ${details.eventType ?? 'payment.paid'}
+      where ${details.paymongoEventId ?? null}::text is not null
+      on conflict (id) do nothing
+      returning id
+    ), captured_payment as (
+      update public.payments p
+      set status = 'paid',
+          paymongo_event_id = coalesce(${details.paymongoEventId ?? null}, p.paymongo_event_id),
+          paymongo_livemode = coalesce(${details.paymongoLivemode ?? null}, p.paymongo_livemode)
+      where p.transaction_reference = ${details.referenceNumber}
+        and p.status = 'pending'
+        and (${details.paymongoCheckoutId ?? null}::text is null
+          or p.paymongo_checkout_id = ${details.paymongoCheckoutId ?? null})
+        and (${details.paymongoEventId ?? null}::text is null
+          or exists (select 1 from accepted_event))
+      returning p.booking_id
+    ), updated_booking as (
+      update public.bookings b
       set payment_status = 'paid',
           status = case
-            when treatment_id = 'doctor-consultation' and status = 'pending_doctor_review'
+            when b.treatment_id = 'doctor-consultation' and b.status = 'pending_doctor_review'
               then 'confirmed'::public.booking_status
-            else status
+            when b.status = 'ready_for_payment'
+              then 'confirmed'::public.booking_status
+            else b.status
           end,
           updated_at = now()
-      where id = ${row.booking_id}
-        and status <> 'cancelled'
-      returning id
-    `) as unknown as { id: string }[];
-    if (bookingUpdated.length === 0) {
-      console.error(
-        `[markPaidByReference] payment captured (ref ${referenceNumber}) for booking ${row.booking_id}, but it is cancelled — needs manual reconciliation/refund.`,
-      );
-    }
-  }
+      from captured_payment cp
+      where b.id = cp.booking_id and b.status <> 'cancelled'
+      returning b.id
+    )
+    select booking_id from captured_payment
+  `) as unknown as { booking_id: string }[];
+
   return updated.length;
 }
 

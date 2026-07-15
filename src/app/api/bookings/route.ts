@@ -5,11 +5,14 @@ import { consultationService, getTreatmentById, type Treatment } from "@/lib/tre
 import { applyDiscount } from "@/lib/discounts";
 import { hasValidClerkServerKeys } from "@/lib/clerk-env";
 import { isDatabaseConfigured } from "@/lib/db/client";
+import { limitAuthenticatedRequest } from "@/lib/server-rate-limit";
 import {
-  createBooking,
-  createMedicalIntake,
-  createPayment,
+  attachPayMongoCheckout,
+  createBookingWithMedicalIntake,
+  createOrReusePendingPayment,
   ensureUserProfile,
+  markPaidByReference,
+  markPendingPaymentAttemptFailed,
   upsertPatientProfile,
 } from "@/lib/db/queries";
 
@@ -22,7 +25,7 @@ type BookingRequest = {
   calendlyInviteeUri?: string;
   patientConcern?: string;
   consultationNotes?: string;
-  intake?: string[];
+  intakeAnswers?: Record<string, { answer?: unknown; detail?: unknown }>;
   discountCode?: string;
   consentConfirmed?: boolean;
   customer?: {
@@ -57,11 +60,22 @@ function getPatientConcern(body: BookingRequest) {
   return (body.patientConcern?.trim() || body.consultationNotes?.trim() || "").slice(0, 2000);
 }
 
-function sanitizeIntake(intake: unknown): string[] {
-  if (!Array.isArray(intake)) return [];
-  return intake.filter(
-    (item): item is string => typeof item === "string" && INTAKE_QUESTIONS.includes(item),
-  );
+function sanitizeIntake(intake: unknown) {
+  if (!intake || typeof intake !== "object" || Array.isArray(intake)) return null;
+  const record = intake as Record<string, { answer?: unknown; detail?: unknown }>;
+  const answers: Record<string, { answer: "yes" | "no" | "not_sure"; detail?: string }> = {};
+  const flagged: string[] = [];
+
+  for (const question of INTAKE_QUESTIONS) {
+    const candidate = record[question];
+    const answer = candidate?.answer;
+    if (answer !== "yes" && answer !== "no" && answer !== "not_sure") return null;
+    const detail = typeof candidate?.detail === "string" ? candidate.detail.trim().slice(0, 1000) : "";
+    if (answer === "yes" && detail.length < 2) return null;
+    answers[question] = detail ? { answer, detail } : { answer };
+    if (answer === "yes") flagged.push(question);
+  }
+  return { answers, flagged };
 }
 
 function asMetadataValue(value: string | undefined, fallback = "not_provided") {
@@ -94,6 +108,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const rateLimit = await limitAuthenticatedRequest({
+    scope: "booking-submit",
+    userId,
+    maxRequests: 5,
+    windowSeconds: 10 * 60,
+  });
+  if (rateLimit.limited) {
+    return NextResponse.json(
+      { message: `Please wait ${rateLimit.retryAfterSeconds} seconds before creating another request.` },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+    );
+  }
+
   const body = (await request.json().catch(() => null)) as BookingRequest | null;
   if (!body) {
     return NextResponse.json({ message: "Invalid request body." }, { status: 400 });
@@ -109,10 +136,18 @@ export async function POST(request: NextRequest) {
 
   const isConsultation = isConsultationBooking(treatment);
   const patientConcern = getPatientConcern(body);
+  const intake = sanitizeIntake(body.intakeAnswers);
 
   if (!body.consentConfirmed) {
     return NextResponse.json(
       { message: "Please accept the consent items before submitting." },
+      { status: 400 },
+    );
+  }
+
+  if (!intake) {
+    return NextResponse.json(
+      { message: "Please complete every medical screening response before submitting." },
       { status: 400 },
     );
   }
@@ -160,10 +195,6 @@ export async function POST(request: NextRequest) {
 
     // Consultations are paid up front (before the call is booked); treatments are
     // requested first, reviewed by the doctor, then paid from the dashboard.
-    const referenceNumber = isConsultation
-      ? `BS-CONSULT-${Date.now()}-${randomUUID().slice(0, 8)}`
-      : null;
-
     // Consultations are charged now — validate any discount code server-side.
     const consultDiscount = isConsultation
       ? applyDiscount(treatment.price, body.discountCode)
@@ -183,7 +214,7 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join("\n");
 
-    const booking = await createBooking({
+    const booking = await createBookingWithMedicalIntake({
       patientId: userId,
       treatmentId: treatment.id,
       appointmentType: asMetadataValue(
@@ -195,17 +226,10 @@ export async function POST(request: NextRequest) {
         isConsultation ? "Online consultation" : "Metro Manila",
       ),
       notes,
-    });
-
-    // The consultation payment row is created below only once a checkout exists (demo
-    // or a successful PayMongo session) — never on a PayMongo failure — so a 502 leaves
-    // no orphan payment row. Treatments get their payment row at dashboard checkout.
-    await createMedicalIntake({
-      patientId: userId,
-      bookingId: booking.id,
       answers: {
         flow: isConsultation ? "consultation_paid_upfront" : "doctor_review_before_payment",
-        flagged: sanitizeIntake(body.intake),
+        screening: intake.answers,
+        flagged: intake.flagged,
         patientConcern: patientConcern || null,
       },
       consentConfirmed: true,
@@ -226,17 +250,21 @@ export async function POST(request: NextRequest) {
     // Consultation: take payment now; the call is booked after it clears.
     const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
+    const attempt = await createOrReusePendingPayment({
+      bookingId: booking.id,
+      patientId: userId,
+      amount: consultDiscount?.total ?? treatment.price,
+      paymentType: "consultation",
+      transactionReference: `BS-CONSULT-${Date.now()}-${randomUUID().slice(0, 8)}`,
+    });
+    // A payment attempt owns its reference forever. Reusing it lets PayMongo's
+    // idempotency key return the original checkout instead of issuing a second QR.
+    const referenceNumber = attempt.attempt.transaction_reference;
 
     if (!secretKey) {
       // Demo mode: skip PayMongo but still land on the success page so the patient
       // can reach the Calendly link to book the call (mirrors the real success_url).
-      await createPayment({
-        bookingId: booking.id,
-        patientId: userId,
-        amount: consultDiscount?.total ?? treatment.price,
-        paymentType: "consultation",
-        transactionReference: referenceNumber,
-      });
+      await markPaidByReference(referenceNumber);
       return NextResponse.json(
         {
           bookingId: booking.id,
@@ -297,18 +325,18 @@ export async function POST(request: NextRequest) {
     const payload = await paymongo.json();
     if (!paymongo.ok || !payload.data?.attributes?.checkout_url) {
       console.error("[bookings] consultation PayMongo failed:", payload);
-      // No payment row was created, so a failed session leaves no orphan behind.
+      await markPendingPaymentAttemptFailed(referenceNumber);
       return NextResponse.json(
-        { message: "We couldn't open the payment page. Please try again or contact us." },
-        { status: 502 },
+        {
+          bookingId: booking.id,
+          dashboardUrl: "/dashboard?payment=retry_available",
+          message: "We couldn't open PayMongo just now. Your request is saved and you can retry payment from your dashboard.",
+        },
+        { status: 201 },
       );
     }
 
-    await createPayment({
-      bookingId: booking.id,
-      patientId: userId,
-      amount: consultDiscount?.total ?? treatment.price,
-      paymentType: "consultation",
+    await attachPayMongoCheckout({
       transactionReference: referenceNumber,
       paymongoCheckoutId: payload.data.id,
     });

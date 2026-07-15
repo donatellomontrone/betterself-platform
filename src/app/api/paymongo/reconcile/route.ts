@@ -131,6 +131,10 @@ export async function POST(request: NextRequest) {
     return dashboardRedirect(request, "sync_pending");
   }
 
-  const updated = await markPaidByReference(target.transaction_reference);
+  const updated = await markPaidByReference({
+    referenceNumber: target.transaction_reference,
+    paymongoCheckoutId: target.paymongo_checkout_id,
+    eventType: "checkout.reconciled",
+  });
   return dashboardRedirect(request, updated > 0 ? "synced" : "already_paid");
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useCookieConsentVisible } from "@/components/cookie-consent-banner";
 
 // Pages where a fixed "Book" bar would cover the real primary action.
@@ -11,10 +12,17 @@ const HIDDEN_ON = ["/booking", "/messages", "/dashboard"];
 export function MobileBottomCta() {
   const pathname = usePathname();
   const cookieConsentVisible = useCookieConsentVisible();
+  const [showAfterScroll, setShowAfterScroll] = useState(false);
+  useEffect(() => {
+    const update = () => setShowAfterScroll(window.scrollY > 520);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
   if (HIDDEN_ON.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return null;
   }
-  if (cookieConsentVisible) {
+  if (cookieConsentVisible || !showAfterScroll) {
     return null;
   }
   return (

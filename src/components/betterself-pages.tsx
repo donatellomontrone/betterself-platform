@@ -41,10 +41,10 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
 import type { Json } from "@/lib/db/types";
 import {
   setBookingAmountAction,
+  prepareBookingForPaymentAction,
   sendDoctorMessageAction,
   syncCalendlyAction,
   updateBookingNotesAction,
-  updateBookingPaymentStatusAction,
   updateBookingScheduleAction,
   updateBookingStatusAction,
   updateIntakeReviewAction,
@@ -54,6 +54,7 @@ import {
 const bookingStatusLabels: Record<string, string> = {
   pending_doctor_review: "Pending doctor review",
   needs_more_information: "Needs more information",
+  ready_for_payment: "Ready for payment",
   confirmed: "Confirmed",
   completed: "Completed",
   cancelled: "Cancelled",
@@ -64,6 +65,7 @@ const paymentStatusLabels: Record<string, string> = {
   pending: "Payment pending",
   paid: "Paid",
   refunded: "Refunded",
+  failed: "Payment attempt failed",
 };
 
 function formatBookingStatus(status: string) {
@@ -75,6 +77,7 @@ function formatPaymentStatus(status: string) {
 }
 
 function bookingStatusTone(status: string): StatusTone {
+  if (status === "ready_for_payment") return "warning";
   if (status === "confirmed" || status === "completed") return "positive";
   if (status === "cancelled") return "danger";
   if (status === "needs_more_information") return "warning";
@@ -92,6 +95,14 @@ function isUnitOrAreaPriced(priceLabel: string) {
 }
 
 function canRetryPayment(booking: PatientBookingView) {
+  if (isConsultationBooking(booking)) {
+    return (
+      booking.payment_status === "failed" ||
+      (booking.payment_status === "pending" &&
+        !hasPayMongoAttempt(booking) &&
+        (booking.status === "pending_doctor_review" || booking.status === "confirmed"))
+    );
+  }
   // Payable if a payment row exists, the doctor set an assessed amount, or it's a
   // fixed-price treatment (base price is the real price). Unit/area treatments need
   // the doctor's assessed amount first.
@@ -99,15 +110,15 @@ function canRetryPayment(booking: PatientBookingView) {
   const hasPayableAmount = booking.confirmed_amount != null || !isVariablePrice;
   return (
     hasPayableAmount &&
-    booking.status === "confirmed" &&
-    (booking.payment_status === "pending" || booking.payment_status === "refunded")
+    booking.status === "ready_for_payment" &&
+    (booking.payment_status === "pending" || booking.payment_status === "refunded" || booking.payment_status === "failed")
   );
 }
 
 function isAwaitingAssessedPrice(booking: PatientBookingView) {
   return (
-    booking.status === "confirmed" &&
-    (booking.payment_status === "pending" || booking.payment_status === "refunded") &&
+    booking.status === "ready_for_payment" &&
+    (booking.payment_status === "pending" || booking.payment_status === "refunded" || booking.payment_status === "failed") &&
     booking.amount == null &&
     booking.confirmed_amount == null &&
     isUnitOrAreaPriced(booking.treatment_price_label)
@@ -155,6 +166,14 @@ function getPatientNextStep(booking: PatientBookingView) {
         eyebrow: "Consultation",
         title: "Consultation paid. Next step: doctor call.",
         text: "If you already picked a Calendly slot, keep that appointment. BetterSelf syncs Calendly automatically; if the time still shows pending, the doctor can update it in the admin calendar.",
+      };
+    }
+
+    if (booking.payment_status === "failed") {
+      return {
+        eyebrow: "Consultation payment",
+        title: "Payment needs to be reopened.",
+        text: "Your consultation request is saved. Open a new secure QR payment from this dashboard when you are ready.",
       };
     }
 
@@ -292,6 +311,14 @@ function ReconcilePaymentButton({
 }
 
 const paymentRetryMessages: Record<string, { title: string; text: string }> = {
+  retry_available: {
+    title: "Payment needs to be retried",
+    text: "Your booking is saved. Open the consultation and select Pay now to create a new secure QR checkout.",
+  },
+  retry_limited: {
+    title: "Please wait before trying again",
+    text: "For your security, payment checkout can only be reopened a few times in a short period.",
+  },
   retry_failed: {
     title: "Payment could not be reopened",
     text: "PayMongo could not create a new checkout session. Please try again or message the doctor.",
@@ -1231,8 +1258,6 @@ type BookingCallFields = {
   notes?: string | null;
 };
 
-const defaultDoctorVideoCallUrl = process.env.NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL?.trim() ?? "";
-
 function extractNoteValue(notes: string | null | undefined, label: string) {
   const prefix = `${label}:`;
   return (
@@ -1251,7 +1276,7 @@ function isVideoCallBooking(booking: BookingCallFields) {
   return appointment.includes("call") || appointment.includes("consultation") || location.includes("online");
 }
 
-// A confirmed booking still awaiting payment — the single source of truth for the
+// A clinically approved booking waiting for payment — the single source of truth for the
 // admin "Ready to pay" stat and the Payment queue (so they never disagree and
 // cancelled/refunded bookings don't linger).
 function isReadyToPay(
@@ -1260,7 +1285,7 @@ function isReadyToPay(
     "status" | "payment_status" | "amount" | "confirmed_amount" | "treatment_price_label"
   >,
 ) {
-  if (booking.status !== "confirmed" || booking.payment_status !== "pending") return false;
+  if (booking.status !== "ready_for_payment" || booking.payment_status !== "pending") return false;
   if (booking.confirmed_amount != null) return true;
   if (isUnitOrAreaPriced(booking.treatment_price_label)) return false;
   return true;
@@ -1280,9 +1305,7 @@ function getVideoCallLink(booking: BookingCallFields) {
     extractNoteValue(booking.notes, "Calendly invitee"),
     extractNoteValue(booking.notes, "Calendly event"),
   ].find(isJoinableMeetingUrl);
-  if (stored) return stored;
-  if (isVideoCallBooking(booking) && defaultDoctorVideoCallUrl) return defaultDoctorVideoCallUrl;
-  return null;
+  return stored ?? null;
 }
 
 function getScheduleLabel(booking: BookingCallFields) {
@@ -1333,7 +1356,8 @@ function AdminSidebar({
         ))}
       </nav>
       <div className="mt-5 rounded-lg bg-[#F6EDEA] p-3 text-xs leading-5 text-[#6E565A]">
-        Flow: review call first, mark booking confirmed, then patient payment opens in dashboard.
+        Flow: review the intake, set the clinical total, open payment, then the
+        booking is confirmed automatically after PayMongo verifies payment.
       </div>
     </aside>
   );
@@ -1438,7 +1462,11 @@ export function AdminPage({
   const filteredBookings = bookings.filter((booking) => matchesAdminFilters(booking, filters));
   const uniquePatients = new Set(bookings.map((booking) => booking.patient_id)).size;
   const paymentsReady = bookings.filter(isReadyToPay).length;
-  const confirmedBookings = bookings.filter((booking) => booking.status === "confirmed");
+  // The operational calendar is a run sheet: only paid, confirmed appointments
+  // belong here. Requests waiting for payment stay in the separate queue.
+  const confirmedBookings = bookings.filter(
+    (booking) => booking.status === "confirmed" && booking.payment_status === "paid",
+  );
   const confirmedVideoCalls = confirmedBookings.filter(isVideoCallBooking);
   const confirmedHomeVisits = confirmedBookings.filter((booking) => !isVideoCallBooking(booking));
   const activeMessageThreads = messageThreads.slice(0, 12);
@@ -1788,9 +1816,11 @@ export function AdminPage({
                         >
                           <option value="pending_doctor_review">Pending review</option>
                           <option value="needs_more_information">Needs more info</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
+                          <option value="ready_for_payment" disabled>Ready for payment</option>
+                          <option value="confirmed" disabled>Confirmed (payment verified)</option>
+                          <option value="completed" disabled={b.payment_status !== "paid"}>
+                            Completed (paid only)
+                          </option>
                         </select>
                         <button className="btn btn-primary h-10" type="submit">
                           Update
@@ -1892,10 +1922,19 @@ export function AdminPage({
                                 defaultValue={b.appointment_time ?? ""}
                               />
                             </AdminField>
-                            <button className="btn btn-secondary h-12" type="submit">
+                            <button
+                              className="btn btn-secondary h-12"
+                              type="submit"
+                              disabled={b.payment_status !== "paid"}
+                            >
                               Save schedule
                             </button>
                           </form>
+                          {b.payment_status !== "paid" ? (
+                            <p className="mt-2 text-xs text-[#6E565A]">
+                              Schedule opens after PayMongo verifies the payment.
+                            </p>
+                          ) : null}
                           {callLink ? (
                             <a
                               className="btn btn-secondary mt-4"
@@ -1907,8 +1946,8 @@ export function AdminPage({
                             </a>
                           ) : (
                             <p className="mt-4 rounded-lg bg-[#FAF8F4] p-4 text-sm leading-6 text-[#595550]">
-                              No video call link is stored yet. Calendly can provide one, or set
-                              NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL for a default doctor call link.
+                              No event-specific video call link is stored yet. It appears here once
+                              Calendly sends the confirmed meeting details.
                             </p>
                           )}
                         </section>
@@ -1979,27 +2018,6 @@ export function AdminPage({
                             <AdminMeta label="PayMongo session" value={b.paymongo_checkout_id} />
                           </div>
                           <form
-                            action={updateBookingPaymentStatusAction}
-                            className="mt-4 flex flex-wrap items-end gap-3"
-                          >
-                            <input type="hidden" name="bookingId" value={b.id} />
-                            <AdminField label="Payment status">
-                              <select
-                                className="field min-w-56"
-                                name="paymentStatus"
-                                defaultValue={b.payment_status}
-                              >
-                                <option value="pending">Pending</option>
-                                <option value="paid">Paid</option>
-                                <option value="refunded">Refunded</option>
-                                <option value="not_required">Not required</option>
-                              </select>
-                            </AdminField>
-                            <button className="btn btn-secondary h-12" type="submit">
-                              Update payment
-                            </button>
-                          </form>
-                          <form
                             action={setBookingAmountAction}
                             className="mt-3 flex flex-wrap items-end gap-3"
                           >
@@ -2024,6 +2042,21 @@ export function AdminPage({
                             the patient pays before they check out. Leave blank to use the base
                             price.
                           </p>
+                          {b.treatment_id !== "doctor-consultation" ? (
+                            <form action={prepareBookingForPaymentAction} className="mt-4">
+                              <input type="hidden" name="bookingId" value={b.id} />
+                              <button
+                                className="btn btn-primary"
+                                type="submit"
+                                disabled={b.intake_review_status !== "approved" || b.status === "cancelled" || b.payment_status === "paid"}
+                              >
+                                Open payment after clinical review
+                              </button>
+                              <p className="mt-2 text-xs text-[#6E565A]">
+                                Requires an approved intake and, for unit/area services, a doctor-assessed total. PayMongo alone marks payment as paid.
+                              </p>
+                            </form>
+                          ) : null}
                         </section>
 
                         <section>

@@ -1,7 +1,6 @@
 import { AdminPage } from "@/components/betterself-pages";
 import { currentUser } from "@clerk/nextjs/server";
-import { isAdminEmail } from "@/lib/admin";
-import { syncCalendlyBookings } from "@/lib/calendly-sync";
+import { isAdminUser } from "@/lib/admin";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import {
   getAllBookings,
@@ -22,20 +21,18 @@ export default async function Admin({
 }) {
   const params = await searchParams;
   const user = await currentUser();
-  const email = user?.emailAddresses.find(
+  const primaryEmail = user?.emailAddresses.find(
     (entry) => entry.id === user.primaryEmailAddressId,
-  )?.emailAddress;
-  const authorized = isAdminEmail(email);
+  );
+  const authorized = isAdminUser({
+    userId: user?.id,
+    email: primaryEmail?.emailAddress,
+    emailVerified: primaryEmail?.verification?.status === "verified",
+  });
 
   let bookings: AdminBookingView[] = [];
   let messageThreads: MessageThreadView[] = [];
   if (authorized && isDatabaseConfigured()) {
-    try {
-      await syncCalendlyBookings();
-    } catch (error) {
-      console.error("[admin] Calendly sync failed:", error);
-    }
-
     try {
       bookings = await getAllBookings();
     } catch (error) {

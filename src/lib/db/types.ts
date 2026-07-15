@@ -10,10 +10,11 @@ export type UserRole = "patient" | "doctor" | "admin";
 export type BookingStatus =
   | "pending_doctor_review"
   | "needs_more_information"
+  | "ready_for_payment"
   | "confirmed"
   | "completed"
   | "cancelled";
-export type PaymentStatus = "not_required" | "pending" | "paid" | "refunded";
+export type PaymentStatus = "not_required" | "pending" | "paid" | "refunded" | "failed";
 export type IntakeReviewStatus =
   | "not_started"
   | "submitted"

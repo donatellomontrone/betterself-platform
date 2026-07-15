@@ -238,7 +238,6 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                       fill
                       sizes="(min-width: 768px) 330px, 92vw"
                       className="treatment-map-photo object-contain"
-                      priority
                     />
                     {visibleZones.map((zone) => {
                       const isActive = zone.id === activeZone.id;
@@ -247,6 +246,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                         <button
                           key={zone.id}
                           type="button"
+						  tabIndex={-1}
 	                          aria-label={`Show treatments for ${zone.label}`}
 	                          aria-pressed={isActive}
 	                          className={`treatment-map-hotspot absolute z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-[#6E444E] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isActive ? "is-active" : ""}`}
@@ -343,11 +343,11 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                       {treatment.description}
                     </p>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      <Link className="btn btn-secondary justify-center" href={`/treatments/${treatment.id}`}>
-                        Details
+                      <Link className="btn btn-secondary justify-center" href={`/treatments/${treatment.id}`} aria-label={`View details for ${treatment.name}`}>
+                        View treatment
                       </Link>
-                      <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}&direct=1`}>
-                        Book
+                      <Link className="btn btn-primary justify-center" href={`/booking?treatment=${treatment.id}&direct=1`} aria-label={`Request ${treatment.name}`}>
+                        Request
                       </Link>
                     </div>
                   </article>

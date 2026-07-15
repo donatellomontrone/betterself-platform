@@ -113,13 +113,25 @@ export async function POST(request: NextRequest) {
 
   if (eventType === "checkout_session.payment.paid") {
     const referenceNumber = checkoutSession?.attributes?.reference_number;
+    const checkoutId = checkoutSession?.id;
+    // `data.id` is the event id in PayMongo's standard envelope. Use a stable
+    // checkout/type fallback for dashboard fixtures that omit it; the database
+    // still deduplicates delivery before it changes a payment record.
+    const eventId = event.data?.id ?? `${eventType}:${checkoutId}`;
+    const livemode = event.data?.attributes?.livemode;
 
-    if (!referenceNumber) {
-      console.error("[paymongo webhook] paid checkout event missing reference number.");
+    if (!referenceNumber || !checkoutId) {
+      console.error("[paymongo webhook] paid checkout event is missing an immutable identifier.");
       return NextResponse.json(
-        { message: "Paid checkout event is missing a reference number." },
+        { message: "Paid checkout event is missing a reference or checkout ID." },
         { status: 422 },
       );
+    }
+
+    const expectedLiveMode = process.env.PAYMONGO_SECRET_KEY?.startsWith("sk_live_");
+    if (typeof livemode === "boolean" && livemode !== expectedLiveMode) {
+      console.error("[paymongo webhook] livemode does not match the configured PayMongo key.");
+      return NextResponse.json({ message: "PayMongo environment mismatch." }, { status: 422 });
     }
 
     if (!isDatabaseConfigured()) {
@@ -129,7 +141,13 @@ export async function POST(request: NextRequest) {
 
     let bookingsMarkedPaid = 0;
     try {
-      bookingsMarkedPaid = await markPaidByReference(referenceNumber);
+      bookingsMarkedPaid = await markPaidByReference({
+        referenceNumber,
+        paymongoCheckoutId: checkoutId,
+        paymongoEventId: eventId,
+        paymongoLivemode: typeof livemode === "boolean" ? livemode : null,
+        eventType,
+      });
     } catch (error) {
       // Return non-2xx so PayMongo retries instead of losing a real paid event.
       console.error("[paymongo webhook] failed to mark booking paid:", error);
@@ -141,6 +159,8 @@ export async function POST(request: NextRequest) {
 
     console.info("[paymongo webhook] checkout paid", {
       referenceNumber,
+      checkoutId,
+      eventId,
       bookingsMarkedPaid,
     });
 

@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   WandSparkles,
 } from "lucide-react";
-import { FormEvent, useId, useMemo, useState } from "react";
+import { FormEvent, useEffect, useId, useMemo, useState } from "react";
 import {
   consultationService,
   getTreatmentById,
@@ -43,6 +43,7 @@ const consentItems = [
 ];
 
 type BookingIntent = "treatment" | "consultation";
+type IntakeAnswer = "yes" | "no" | "not_sure";
 
 type BookingFlowProps = {
   initialTreatmentId?: string;
@@ -140,7 +141,8 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
   });
   const [checkoutState, setCheckoutState] = useState<"idle" | "loading" | "error">("idle");
   const [checkoutNote, setCheckoutNote] = useState("");
-  const [intake, setIntake] = useState(() => intakeQuestions.map(() => false));
+  const [intake, setIntake] = useState<Record<string, IntakeAnswer | undefined>>({});
+  const [intakeDetails, setIntakeDetails] = useState<Record<string, string>>({});
   const [consents, setConsents] = useState(() => consentItems.map(() => false));
   const [triedDetails, setTriedDetails] = useState(false);
   const [discountCode, setDiscountCode] = useState("");
@@ -177,6 +179,10 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
   const allConsented = consents.every(Boolean);
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
   const phoneValid = customer.phone.replace(/[^\d+]/g, "").length >= 10;
+  const intakeComplete = intakeQuestions.every((question) => Boolean(intake[question]));
+  const intakeNeedsDetail = intakeQuestions.some(
+    (question) => intake[question] === "yes" && intakeDetails[question]?.trim().length < 2,
+  );
 
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }));
@@ -216,6 +222,14 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       setTriedDetails(true);
       setCheckoutState("error");
       setCheckoutNote("Please complete your name, a valid email, and a valid phone number.");
+      return;
+    }
+
+    if (step === 2 && (!intakeComplete || intakeNeedsDetail)) {
+      setCheckoutState("error");
+      setCheckoutNote(
+        "Please answer every medical screening question. Add a short detail for each Yes answer.",
+      );
       return;
     }
 
@@ -297,6 +311,10 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       : 0;
   const consultTotal = Math.max(0, consultBasePrice - consultDiscountAmount);
 
+  useEffect(() => {
+    document.getElementById("booking-step-heading")?.focus();
+  }, [step]);
+
   async function submitBookingRequest() {
     setCheckoutNote("");
 
@@ -323,7 +341,12 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
           appointmentType,
           location: requiresAddress ? location : "Online consultation",
           patientConcern: patientConcern.trim() || undefined,
-          intake: intakeQuestions.filter((_, index) => intake[index]),
+          intakeAnswers: Object.fromEntries(
+            intakeQuestions.map((question) => [
+              question,
+              { answer: intake[question], detail: intakeDetails[question]?.trim() || undefined },
+            ]),
+          ),
           discountCode: isConsultation ? discountCode.trim() || undefined : undefined,
           consentConfirmed: allConsented,
           customer: {
@@ -543,13 +566,18 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 className="field min-h-32 py-3"
                 placeholder="Example: I have acne scars on my cheeks, visible pores, underarm sweating, jawline bulk, keloids, warts, or under-eye tiredness."
                 value={patientConcern}
+				aria-invalid={checkoutState === "error" && patientConcern.trim().length < 8}
+				aria-describedby="patient-concern-help"
 	                onChange={(event) => {
 	                  setPatientConcern(event.target.value);
 	                  setRecommendation(null);
 	                  setRecommendationNote("");
 	                  setCheckoutNote("");
 	                }}
-	              />
+			  />
+			  <span id="patient-concern-help" className="text-xs font-normal text-[#5C574F]">
+			    Please include enough detail for the doctor to understand your concern.
+			  </span>
 	            </label>
 	            <label className="mt-3 flex gap-3 rounded-lg border border-[#E6DFD5] bg-white/70 p-3 text-xs leading-5 text-[#5C574F]">
 	              <input
@@ -659,11 +687,12 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
           >
             {requiresAddress ? (
               <div className="mb-6">
-                <p className="text-sm font-semibold text-[#1F1F1F]">Home visit address</p>
-                <p className="mt-1 text-xs text-[#5C574F]">
+                <label htmlFor="home-visit-address" className="text-sm font-semibold text-[#1F1F1F]">Home visit address</label>
+                <p id="home-visit-address-help" className="mt-1 text-xs text-[#5C574F]">
                   Start typing and select the address. Home treatments are available in Metro Manila only.
                 </p>
                 <AddressAutocomplete
+                  inputId="home-visit-address"
                   value={location}
                   onChange={(address, isValid) => {
                     setLocation(address);
@@ -716,23 +745,40 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 </label>
               ) : null}
             </div>
-            <div className="mt-6 grid gap-3">
+            <fieldset className="mt-6 grid gap-4" aria-describedby="medical-screening-help">
+              <legend className="text-sm font-semibold text-[#1F1F1F]">Medical screening</legend>
+              <p id="medical-screening-help" className="text-xs leading-5 text-[#5C574F]">
+                Answer every question. A Yes response needs a short detail so the doctor can review it safely.
+              </p>
               {intakeQuestions.map((question, index) => (
-                <label key={question} className="booking-checkbox-row flex items-start gap-3 p-4 text-sm text-[#4D4D4D]">
-                  <input
-                    className="mt-0.5 h-5 w-5 shrink-0 accent-[#8F5B67]"
-                    type="checkbox"
-                    checked={intake[index]}
-                    onChange={(event) =>
-                      setIntake((current) =>
-                        current.map((value, i) => (i === index ? event.target.checked : value)),
-                      )
-                    }
-                  />
-                  <span>{question}</span>
-                </label>
+                <div key={question} className="booking-checkbox-row p-4 text-sm text-[#4D4D4D]">
+                  <p className="font-medium text-[#1F1F1F]">{question}</p>
+                  <div className="mt-3 flex flex-wrap gap-3" role="radiogroup" aria-label={question}>
+                    {(["yes", "no", "not_sure"] as IntakeAnswer[]).map((answer) => (
+                      <label key={answer} className="inline-flex items-center gap-2">
+                        <input
+                          className="h-4 w-4 accent-[#8F5B67]"
+                          type="radio"
+                          name={`intake-${index}`}
+                          value={answer}
+                          checked={intake[question] === answer}
+                          onChange={() => setIntake((current) => ({ ...current, [question]: answer }))}
+                        />
+                        <span>{answer === "not_sure" ? "Not sure" : answer[0].toUpperCase() + answer.slice(1)}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {intake[question] === "yes" ? (
+                    <textarea
+                      className="field mt-3 min-h-20 w-full"
+                      value={intakeDetails[question] ?? ""}
+                      placeholder="Please share relevant details for the doctor."
+                      onChange={(event) => setIntakeDetails((current) => ({ ...current, [question]: event.target.value }))}
+                    />
+                  ) : null}
+                </div>
               ))}
-            </div>
+            </fieldset>
           </BookingStep>
         ) : null}
 
@@ -986,7 +1032,7 @@ function BookingStep({
 }) {
   return (
     <div className="booking-step-content">
-      <h2 className="font-serif text-4xl leading-tight text-[#1F1F1F] md:text-5xl">{title}</h2>
+      <h2 id="booking-step-heading" tabIndex={-1} className="font-serif text-4xl leading-tight text-[#1F1F1F] outline-none md:text-5xl">{title}</h2>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-[#595550]">{text}</p>
       <div className="mt-6">{children}</div>
     </div>

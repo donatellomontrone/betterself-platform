@@ -1257,9 +1257,11 @@ a {
   }
 }
 
-@media (max-width: 899px) {
+@media (max-width: 1099px) {
   .home-campaign-image {
-    object-position: 72% center;
+    /* The source image places the clinician on the right. `md:object-center`
+       would crop them out on tablet-sized heroes, leaving a blank composition. */
+    object-position: 72% center !important;
   }
 
   .home-campaign-wash {
@@ -2308,7 +2310,7 @@ body {
 
   .home-campaign-copy h1 {
     max-width: 11.5ch;
-    font-size: clamp(3.25rem, 14.5vw, 4.35rem);
+    font-size: clamp(2.7rem, 12.5vw, 3.6rem);
   }
 
   .home-story-section h2,

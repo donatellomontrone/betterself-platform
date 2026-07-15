@@ -42,7 +42,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
   const close = () => ref.current?.removeAttribute("open");
 
   return (
-    <details ref={ref} className="relative min-[900px]:hidden">
+    <details ref={ref} className="relative min-[1100px]:hidden">
       <summary className="inline-flex min-h-[44px] cursor-pointer list-none items-center gap-2 rounded-full border border-white/70 bg-white/70 px-4 text-sm font-bold text-[#3A2F2B] shadow-[0_14px_30px_rgb(80_64_53_/_0.10)] backdrop-blur-xl">
         <Menu className="h-4 w-4" />
         Menu

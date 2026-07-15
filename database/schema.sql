@@ -4,11 +4,12 @@ create type public.user_role as enum ('patient', 'doctor', 'admin');
 create type public.booking_status as enum (
   'pending_doctor_review',
   'needs_more_information',
+  'ready_for_payment',
   'confirmed',
   'completed',
   'cancelled'
 );
-create type public.payment_status as enum ('not_required', 'pending', 'paid', 'refunded');
+create type public.payment_status as enum ('not_required', 'pending', 'paid', 'refunded', 'failed');
 create type public.intake_review_status as enum (
   'not_started',
   'submitted',
@@ -104,6 +105,7 @@ create table public.messages (
   conversation_id uuid not null default gen_random_uuid(),
   sender_id text not null references public.user_profiles(id) on delete cascade,
   receiver_id text not null references public.user_profiles(id) on delete cascade,
+  booking_id uuid references public.bookings(id) on delete set null,
   message_text text not null,
   attachment_url text,
   created_at timestamptz not null default now()
@@ -150,7 +152,15 @@ create table public.payments (
   status public.payment_status not null default 'pending',
   transaction_reference text,
   paymongo_checkout_id text,
+  paymongo_event_id text,
+  paymongo_livemode boolean,
   created_at timestamptz not null default now()
+);
+
+create table public.paymongo_webhook_events (
+  id text primary key,
+  event_type text not null,
+  received_at timestamptz not null default now()
 );
 
 create table public.aftercare_instructions (
@@ -169,6 +179,7 @@ create index bookings_doctor_idx on public.bookings(doctor_id);
 create index bookings_status_idx on public.bookings(status);
 create index medical_intakes_booking_idx on public.medical_intakes(booking_id);
 create index messages_conversation_idx on public.messages(conversation_id, created_at);
+create index messages_booking_idx on public.messages(booking_id, created_at);
 create index if not exists messages_patient_team_idx
   on public.messages(sender_id, receiver_id, created_at);
 create index if not exists admin_audit_logs_target_idx
@@ -187,6 +198,12 @@ create unique index if not exists payments_transaction_reference_unique
 create unique index if not exists payments_paymongo_checkout_unique
   on public.payments(paymongo_checkout_id)
   where paymongo_checkout_id is not null;
+create unique index if not exists payments_one_pending_attempt_per_booking
+  on public.payments(booking_id)
+  where status = 'pending';
+create unique index if not exists payments_paymongo_event_unique
+  on public.payments(paymongo_event_id)
+  where paymongo_event_id is not null;
 
 with treatment_catalog (
   id, name, category, description, duration, starting_price, price_label,

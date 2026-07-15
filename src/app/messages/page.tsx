@@ -2,18 +2,13 @@ import { MessagesPage } from "@/components/betterself-pages";
 import type { ChatMessage } from "@/components/platform-widgets";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import { getPatientMessages } from "@/lib/db/queries";
 
 // Private route — keep it out of search indexes.
 export const metadata = { robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
-
-function primaryEmail(user: Awaited<ReturnType<typeof currentUser>>) {
-  return user?.emailAddresses.find((entry) => entry.id === user.primaryEmailAddressId)
-    ?.emailAddress;
-}
 
 function formatTime(value: string) {
   const date = new Date(value);
@@ -39,7 +34,12 @@ export default async function Messages({
   const patientIdParam = Array.isArray(requestedPatientId)
     ? requestedPatientId[0]
     : requestedPatientId;
-  const isAdmin = isAdminEmail(primaryEmail(user));
+  const primary = user.emailAddresses.find((entry) => entry.id === user.primaryEmailAddressId);
+  const isAdmin = isAdminUser({
+    userId: user.id,
+    email: primary?.emailAddress,
+    emailVerified: primary?.verification?.status === "verified",
+  });
   const patientId = isAdmin && patientIdParam ? patientIdParam : user.id;
 
   let messages: ChatMessage[] = [];

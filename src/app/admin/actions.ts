@@ -3,30 +3,27 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import { syncCalendlyBookings } from "@/lib/calendly-sync";
 import {
   createDoctorMessage,
+  markBookingReadyForPayment,
   recordAdminAuditLog,
   setBookingConfirmedAmount,
   updateBookingNotes,
-  updateBookingPaymentStatus,
   updateBookingSchedule,
   updateBookingStatus,
   updateMedicalIntakeReview,
   updatePatientAdminProfile,
 } from "@/lib/db/queries";
-import type { BookingStatus, IntakeReviewStatus, PaymentStatus } from "@/lib/db/types";
+import type { BookingStatus, IntakeReviewStatus } from "@/lib/db/types";
 
 const VALID_STATUSES: BookingStatus[] = [
   "pending_doctor_review",
   "needs_more_information",
-  "confirmed",
   "completed",
-  "cancelled",
 ];
 
-const VALID_PAYMENT_STATUSES: PaymentStatus[] = ["not_required", "pending", "paid", "refunded"];
 const VALID_INTAKE_STATUSES: IntakeReviewStatus[] = [
   "not_started",
   "submitted",
@@ -41,7 +38,14 @@ async function assertAdmin() {
     (entry) => entry.id === user.primaryEmailAddressId,
   )?.emailAddress;
 
-  if (!isAdminEmail(email)) return null;
+  const primaryEmail = user?.emailAddresses.find(
+    (entry) => entry.id === user.primaryEmailAddressId,
+  );
+  if (!isAdminUser({
+    userId: user?.id,
+    email,
+    emailVerified: primaryEmail?.verification?.status === "verified",
+  })) return null;
   return { id: user?.id ?? null, email: email ?? null };
 }
 
@@ -59,31 +63,12 @@ export async function updateBookingStatusAction(formData: FormData) {
   const status = String(formData.get("status") ?? "") as BookingStatus;
   if (!bookingId || !VALID_STATUSES.includes(status)) return;
 
-  await updateBookingStatus(bookingId, status);
+  const updated = await updateBookingStatus(bookingId, status);
+  if (!updated) return;
   await recordAdminAuditLog({
     actorId: actor.id,
     actorEmail: actor.email,
     action: "booking.status.update",
-    targetType: "booking",
-    targetId: bookingId,
-    metadata: { status },
-  });
-  revalidatePath("/admin");
-}
-
-export async function updateBookingPaymentStatusAction(formData: FormData) {
-  const actor = await assertAdmin();
-  if (!actor) return;
-
-  const bookingId = String(formData.get("bookingId") ?? "");
-  const status = String(formData.get("paymentStatus") ?? "") as PaymentStatus;
-  if (!bookingId || !VALID_PAYMENT_STATUSES.includes(status)) return;
-
-  await updateBookingPaymentStatus(bookingId, status);
-  await recordAdminAuditLog({
-    actorId: actor.id,
-    actorEmail: actor.email,
-    action: "booking.payment_status.update",
     targetType: "booking",
     targetId: bookingId,
     metadata: { status },
@@ -112,6 +97,26 @@ export async function updateIntakeReviewAction(formData: FormData) {
   revalidatePath("/admin");
 }
 
+export async function prepareBookingForPaymentAction(formData: FormData) {
+  const actor = await assertAdmin();
+  if (!actor) return;
+
+  const bookingId = String(formData.get("bookingId") ?? "");
+  if (!bookingId) return;
+
+  const opened = await markBookingReadyForPayment(bookingId);
+  await recordAdminAuditLog({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "booking.payment.open",
+    targetType: "booking",
+    targetId: bookingId,
+    metadata: { opened },
+  });
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}
+
 export async function updateBookingScheduleAction(formData: FormData) {
   const actor = await assertAdmin();
   if (!actor) return;
@@ -121,7 +126,15 @@ export async function updateBookingScheduleAction(formData: FormData) {
 
   const appointmentDate = cleanText(formData.get("appointmentDate"));
   const appointmentTime = cleanText(formData.get("appointmentTime"));
-  await updateBookingSchedule(bookingId, appointmentDate, appointmentTime);
+  if (Boolean(appointmentDate) !== Boolean(appointmentTime)) return;
+  if (appointmentDate && appointmentTime) {
+    const scheduledAt = new Date(`${appointmentDate}T${appointmentTime}:00+08:00`);
+    if (!Number.isFinite(scheduledAt.getTime()) || scheduledAt.getTime() < Date.now() - 5 * 60_000) {
+      return;
+    }
+  }
+  const updated = await updateBookingSchedule(bookingId, appointmentDate, appointmentTime);
+  if (!updated) return;
   await recordAdminAuditLog({
     actorId: actor.id,
     actorEmail: actor.email,
@@ -149,7 +162,8 @@ export async function setBookingAmountAction(formData: FormData) {
     amount = parsed;
   }
 
-  await setBookingConfirmedAmount(bookingId, amount);
+  const updated = await setBookingConfirmedAmount(bookingId, amount);
+  if (!updated) return;
   await recordAdminAuditLog({
     actorId: actor.id,
     actorEmail: actor.email,

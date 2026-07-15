@@ -7,7 +7,6 @@ import {
 import {
   clearInvalidEmailMatchedCalendlySchedules,
   clearBookingScheduleByPaymentReference,
-  updateLatestPaidConsultationScheduleByPatientEmail,
   updateBookingScheduleByPaymentReference,
 } from "@/lib/db/queries";
 
@@ -64,7 +63,6 @@ type CalendlySyncResult = {
   schedulesUpdated: number;
   schedulesCleared: number;
   invalidEmailMatchesCleared: number;
-  emailFallbacksUsed: number;
 };
 
 const referencePattern = /BS-[A-Z]+-\d+-[a-z0-9]+/i;
@@ -157,7 +155,6 @@ export async function syncCalendlyBookings(
     schedulesUpdated: 0,
     schedulesCleared: 0,
     invalidEmailMatchesCleared: 0,
-    emailFallbacksUsed: 0,
   };
   const token = process.env.CALENDLY_ACCESS_TOKEN?.trim();
 
@@ -235,15 +232,8 @@ export async function syncCalendlyBookings(
           return;
         }
 
-        if (invitee.email) {
-          const updated = await updateLatestPaidConsultationScheduleByPatientEmail({
-            inviteeEmail: invitee.email,
-            scheduledStartAt: event.start_time,
-            ...scheduleInput,
-          });
-          result.schedulesUpdated += updated;
-          result.emailFallbacksUsed += updated;
-        }
+        // A BetterSelf reference is mandatory. Matching by email can attach an
+        // unrelated Calendly appointment to the wrong medical record.
       });
     });
 

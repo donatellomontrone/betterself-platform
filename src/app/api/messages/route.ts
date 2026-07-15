@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import { isDatabaseConfigured } from "@/lib/db/client";
+import { limitAuthenticatedRequest } from "@/lib/server-rate-limit";
 import {
   createDoctorMessage,
   createPatientMessage,
@@ -22,6 +23,15 @@ function fullName(user: Awaited<ReturnType<typeof currentUser>>) {
   return user?.fullName || user?.firstName || primaryEmail(user) || "BetterSelf patient";
 }
 
+function isAdmin(user: Awaited<ReturnType<typeof currentUser>>) {
+  const primary = user?.emailAddresses.find((entry) => entry.id === user.primaryEmailAddressId);
+  return isAdminUser({
+    userId: user?.id,
+    email: primary?.emailAddress,
+    emailVerified: primary?.verification?.status === "verified",
+  });
+}
+
 function normalizeMessage(value: unknown) {
   const text = String(value ?? "").trim();
   if (!text) return null;
@@ -35,14 +45,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ messages: [], warning: "Database not configured" });
   }
 
+  const rateLimit = await limitAuthenticatedRequest({
+    scope: "messages-send",
+    userId: user.id,
+    maxRequests: 30,
+    windowSeconds: 10 * 60,
+  });
+  if (rateLimit.limited) {
+    return NextResponse.json(
+      { error: "Please wait a moment before sending another message." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+    );
+  }
+
   const url = new URL(request.url);
   const requestedPatientId = url.searchParams.get("patientId");
-  const email = primaryEmail(user);
-  const isAdmin = isAdminEmail(email);
-  const patientId = isAdmin && requestedPatientId ? requestedPatientId : user.id;
+  const admin = isAdmin(user);
+  const patientId = admin && requestedPatientId ? requestedPatientId : user.id;
 
   const messages = await getPatientMessages(patientId);
-  return NextResponse.json({ messages, patientId, isAdmin });
+  return NextResponse.json({ messages, patientId, isAdmin: admin });
 }
 
 export async function POST(request: Request) {
@@ -60,11 +82,11 @@ export async function POST(request: Request) {
   if (!message) return NextResponse.json({ error: "Message is required" }, { status: 400 });
 
   const email = primaryEmail(user);
-  const isAdmin = isAdminEmail(email);
+  const admin = isAdmin(user);
   const patientId =
-    isAdmin && body?.patientId ? String(body.patientId).trim().slice(0, 128) : user.id;
+    admin && body?.patientId ? String(body.patientId).trim().slice(0, 128) : user.id;
 
-  if (isAdmin && body?.patientId) {
+  if (admin && body?.patientId) {
     await createDoctorMessage(patientId, message);
     await recordAdminAuditLog({
       actorId: user.id,
@@ -87,5 +109,5 @@ export async function POST(request: Request) {
   revalidatePath("/messages");
   revalidatePath("/admin");
   const messages = await getPatientMessages(patientId);
-  return NextResponse.json({ messages, patientId, isAdmin });
+  return NextResponse.json({ messages, patientId, isAdmin: admin });
 }

@@ -1,6 +1,27 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { isDatabaseConfigured } from "@/lib/db/client";
+import { markPatientPendingPaymentAttemptFailed } from "@/lib/db/queries";
 
-export default function BookingCancelled() {
+export default async function BookingCancelled({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const reference = Array.isArray(params.reference) ? params.reference[0] : params.reference;
+  const { userId } = await auth();
+
+  if (reference && userId && isDatabaseConfigured()) {
+    try {
+      await markPatientPendingPaymentAttemptFailed(reference, userId);
+    } catch (error) {
+      // Preserve the clear cancellation screen; the dashboard can still retry or
+      // reconcile the checkout if a temporary database outage prevented cleanup.
+      console.error("[booking cancelled] could not close payment attempt", error);
+    }
+  }
+
   return (
     <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 text-[#1F1F1F]">
       <section className="card w-full max-w-xl p-8">
