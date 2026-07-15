@@ -37,8 +37,8 @@ export function Header() {
             <Image
               src="/betterself-mark-transparent.png"
               alt=""
-              width={128}
-              height={128}
+              width={580}
+              height={817}
               priority
               className="brand-mark-image"
             />

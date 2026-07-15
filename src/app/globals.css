@@ -1455,21 +1455,29 @@ body {
 }
 
 .brand-mark-wrap {
-  width: 4.75rem;
-  height: 4.75rem;
+  width: 3.1rem;
+  height: 4.3rem;
+  overflow: visible;
 }
 
 .brand-mark-image {
+  display: block;
+  width: 3.1rem !important;
+  max-width: none;
+  height: 4.3rem !important;
+  object-fit: contain;
   opacity: 0.92;
-  transform: scale(1.18);
+  transform: scale(1.02);
+  transform-origin: center;
 }
 
 .brand-lockup:hover .brand-mark-image {
-  transform: translateY(-1px) scale(1.2);
+  transform: translateY(-1px) scale(1.04);
 }
 
 .brand-wordmark {
-  transform: translateX(-0.18rem);
+  align-content: center;
+  transform: none;
 }
 
 .brand-name {
@@ -2264,8 +2272,13 @@ body {
   }
 
   .brand-mark-wrap {
-    width: 3.25rem;
-    height: 3.25rem;
+    width: 2.45rem;
+    height: 3.4rem;
+  }
+
+  .brand-mark-image {
+    width: 2.45rem !important;
+    height: 3.4rem !important;
   }
 
   .brand-name {
