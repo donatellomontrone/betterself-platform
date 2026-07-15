@@ -463,18 +463,6 @@ export function HomePage() {
                 Explore Treatments <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="home-hero-trust mt-9" aria-label="Service highlights">
-              <span>Doctor-led</span>
-              <span>Private home care</span>
-              <span>Metro Manila</span>
-            </div>
-          </div>
-          <div className="hidden lg:block">
-            <div className="home-campaign-note">
-              <span>Private doctor care</span>
-              <span>At home</span>
-              <span>By assessment</span>
-            </div>
           </div>
           <div className="home-scroll-cue" aria-hidden="true">
             <span>Discover</span>
@@ -482,75 +470,11 @@ export function HomePage() {
           </div>
         </div>
       </section>
-      <HomeBeautyStory />
-      <HomeConcernRibbon />
       <HomeSignatureTreatments />
       <HomeFluidProcess />
       <HomeTrustMoment />
       <FinalCta />
     </PageShell>
-  );
-}
-
-function HomeBeautyStory() {
-  return (
-    <section className="home-story-section premium-reveal px-5 py-20 lg:px-8 lg:py-28">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.86fr_1.14fr]">
-        <div className="home-story-image">
-          <Image
-            src="/betterself-doctor-kit.jpg"
-            alt="BetterSelf doctor preparing sterile home aesthetic care equipment"
-            fill
-            sizes="(min-width: 1024px) 42vw, 100vw"
-            className="object-cover"
-          />
-        </div>
-        <div className="max-w-2xl">
-          <p className="eyebrow">The feeling</p>
-          <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
-            A calm beauty appointment, without the clinic waiting room.
-          </h2>
-          <p className="mt-6 text-lg leading-8 text-[#595550]">
-            Your appointment is designed to feel considered, discreet, and
-            medically guided. Choose the concern, complete the doctor review, and
-            BetterSelf prepares the visit around your plan.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            {["Doctor-led", "Sterile setup", "Private home care", "Clear aftercare"].map((item) => (
-              <span key={item} className="home-soft-pill">
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function HomeConcernRibbon() {
-  const concerns = [
-    "Expression lines",
-    "Skin glow",
-    "Pores",
-    "Jawline",
-    "Acne scars",
-    "Sweating",
-    "Keloids",
-    "Whitening",
-    "Small lesions",
-  ];
-
-  return (
-    <section className="home-ribbon-section" aria-label="Common aesthetic concerns">
-      <div className="home-ribbon-track">
-        {[...concerns, ...concerns].map((concern, index) => (
-          <Link key={`${concern}-${index}`} href="/treatments#treatment-map" className="home-ribbon-item">
-            {concern}
-          </Link>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -677,20 +601,16 @@ function TreatmentsEditorialHero() {
     <section className="treatments-editorial-hero px-5 py-16 lg:px-8 lg:py-24">
       <div className="mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[0.88fr_1.12fr]">
         <div className="max-w-3xl">
-          <p className="eyebrow">Treatment edit</p>
+          <p className="eyebrow">BetterSelf treatments</p>
           <h1 className="mt-4 font-serif text-6xl leading-[0.92] text-[#1F1F1F] md:text-8xl">
-            Start with the concern, not the procedure.
+            Choose what you want to address.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-8 text-[#595550]">
-            Browse BetterSelf treatments through the area or concern you want to address.
-            Every request is still reviewed by the doctor before confirmation.
+            Explore the available treatments by area or concern. Every request is reviewed by the doctor before confirmation.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8">
             <Link className="premium-cta px-6" href="/booking">
-              Book Treatment
-            </Link>
-            <Link className="btn btn-secondary rounded-full px-6" href="/booking?treatment=doctor-consultation">
-              Start with Consultation
+              Book an appointment
             </Link>
           </div>
         </div>
@@ -703,11 +623,6 @@ function TreatmentsEditorialHero() {
             className="treatments-hero-photo object-cover"
             priority
           />
-          <div className="treatments-hero-card">
-            <span>Face</span>
-            <span>Body</span>
-            <span>Injectables</span>
-          </div>
         </div>
       </div>
     </section>

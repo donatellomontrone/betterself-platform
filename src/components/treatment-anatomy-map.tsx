@@ -165,6 +165,7 @@ const zones: TreatmentZone[] = [
 export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
   const [activeView, setActiveView] = useState<MapView>("face");
   const [activeZoneId, setActiveZoneId] = useState("pores-skin-quality");
+  const [showAllMatches, setShowAllMatches] = useState(false);
 
   const treatmentById = useMemo(() => {
     return new Map(treatments.map((treatment) => [treatment.id, treatment]));
@@ -180,6 +181,12 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
   function chooseView(view: MapView) {
     setActiveView(view);
     setActiveZoneId(zones.find((zone) => zone.view === view)?.id ?? activeZoneId);
+    setShowAllMatches(false);
+  }
+
+  function chooseZone(zoneId: string) {
+    setActiveZoneId(zoneId);
+    setShowAllMatches(false);
   }
 
   return (
@@ -244,7 +251,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
 	                          aria-pressed={isActive}
 	                          className={`treatment-map-hotspot absolute z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-[#6E444E] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isActive ? "is-active" : ""}`}
                           style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
-                          onClick={() => setActiveZoneId(zone.id)}
+                          onClick={() => chooseZone(zone.id)}
                         >
                           <span
                             className={`grid place-items-center rounded-full border-2 border-white shadow-md transition ${
@@ -279,12 +286,9 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                             ? "border-[#8F5B67] bg-[#8F5B67] text-white"
                             : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"
                         }`}
-                        onClick={() => setActiveZoneId(zone.id)}
+                        onClick={() => chooseZone(zone.id)}
                       >
-                        <span className={isActive ? "text-xs font-bold uppercase tracking-[0.18em] text-white" : "text-xs font-bold uppercase tracking-[0.18em] text-[#8F5B67]"}>
-                          {zone.tag}
-                        </span>
-                        <span className="mt-2 block font-serif text-2xl leading-tight">
+                        <span className="block font-serif text-xl leading-tight md:text-2xl">
                           {zone.label}
                         </span>
                       </button>
@@ -310,7 +314,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                 </span>
               </div>
 
-              <div className="mt-5 rounded-[1.15rem] border border-[#ECDCDE] bg-[#F6EDEA]/72 p-4">
+              <div className="mt-5 border-l-2 border-[#C68997] pl-4">
                 <div className="flex gap-3 text-sm leading-6 text-[#6E565A]">
                   <BadgeInfo className="mt-0.5 h-4 w-4 shrink-0 text-[#8F5B67]" />
                   <p>
@@ -320,7 +324,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
               </div>
 
               <div className="mt-6 grid gap-3">
-                {activeTreatments.map((treatment) => (
+                {(showAllMatches ? activeTreatments : activeTreatments.slice(0, 3)).map((treatment) => (
                   <article key={treatment.id} className="treatment-map-result-card p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -349,6 +353,17 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                   </article>
                 ))}
               </div>
+              {activeTreatments.length > 3 ? (
+                <button
+                  type="button"
+                  className="mt-5 text-sm font-semibold text-[#8F5B67] underline decoration-[#C68997]/60 underline-offset-4 transition hover:text-[#6E444E]"
+                  onClick={() => setShowAllMatches((showAll) => !showAll)}
+                >
+                  {showAllMatches
+                    ? "Show fewer treatments"
+                    : `Show ${activeTreatments.length - 3} more treatments`}
+                </button>
+              ) : null}
             </aside>
           </div>
         </div>
