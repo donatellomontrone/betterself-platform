@@ -31,7 +31,7 @@ export const patientNav = [
 export function Header() {
   return (
     <header className="premium-header sticky top-0 z-30">
-      <div className="mx-auto flex min-h-[96px] max-w-7xl items-center justify-between gap-5 px-5 py-3 lg:px-8">
+      <div className="premium-header-inner mx-auto flex min-h-[88px] max-w-[1440px] items-center justify-between gap-5 px-5 py-2.5 lg:px-10">
         <Link className="brand-lockup group" href="/" aria-label="BetterSelf home">
           <span className="brand-mark-wrap" aria-hidden="true">
             <Image
@@ -63,7 +63,7 @@ export function Header() {
           ))}
         </nav>
         <MobileMenu items={primaryNav} />
-        <div className="hidden items-center gap-2 rounded-full border border-white/70 bg-white/54 p-1.5 shadow-[0_18px_40px_rgb(80_64_53_/_0.08)] backdrop-blur-xl min-[900px]:flex">
+        <div className="premium-header-actions hidden items-center gap-3 min-[900px]:flex">
           <HeaderAuthControls />
           <Link className="premium-cta" href="/booking">
             Book Treatment
@@ -77,7 +77,7 @@ export function Header() {
 export function Footer() {
   return (
     <footer className="premium-footer">
-      <div className="premium-footer-inner mx-auto grid max-w-7xl gap-10 px-5 py-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr] lg:px-8">
+      <div className="premium-footer-inner mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.25fr_0.75fr_0.75fr_1fr] lg:px-8 lg:py-20">
         <div>
           <Link className="inline-flex items-center gap-2 text-[#1F1F1F]" href="/">
             <Image

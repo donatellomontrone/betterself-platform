@@ -183,7 +183,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
   }
 
   return (
-    <section id="treatment-map" className="treatment-map-section px-5 py-16 lg:px-8 lg:py-24">
+    <section id="treatment-map" className="treatment-map-section premium-reveal px-5 py-16 lg:px-8 lg:py-24">
       <div className="mx-auto max-w-7xl">
         <div className="treatment-map-shell overflow-hidden">
           <div className="grid gap-0 lg:grid-cols-[1fr_0.92fr]">
@@ -271,7 +271,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
 	                        key={zone.id}
 	                        type="button"
 	                        aria-pressed={isActive}
-	                        className={`rounded-[1.15rem] border p-4 text-left transition ${
+	                        className={`treatment-zone-button border p-4 text-left transition ${
                           isActive
                             ? "border-[#8F5B67] bg-[#8F5B67] text-white"
                             : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"

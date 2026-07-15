@@ -443,9 +443,7 @@ export function HomePage() {
           className="home-campaign-image object-cover object-[72%_center] md:object-center"
         />
         <div className="home-campaign-wash" />
-        <div className="home-campaign-orb home-campaign-orb-one" />
-        <div className="home-campaign-orb home-campaign-orb-two" />
-        <div className="relative mx-auto grid min-h-[720px] max-w-7xl items-center gap-8 px-5 pb-14 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:pb-16 lg:pt-20">
+        <div className="relative mx-auto grid min-h-[760px] max-w-[1440px] items-center gap-8 px-5 pb-14 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:pb-16 lg:pt-20">
           <div className="home-campaign-copy">
             <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.24em] text-[#8F5B67]">
               BetterSelf Home Aesthetics
@@ -461,20 +459,14 @@ export function HomePage() {
               <Link className="premium-cta px-6" href="/booking">
                 Book a Treatment
               </Link>
-              <Link className="btn btn-secondary rounded-full px-6" href="/treatments">
-                Explore Treatments
+              <Link className="editorial-text-link" href="/treatments">
+                Explore Treatments <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#6E565A]">
-              <span className="rounded-full border border-[#E6DFD5] bg-white/70 px-3 py-2 backdrop-blur">
-                Doctor-led
-              </span>
-              <span className="rounded-full border border-[#E6DFD5] bg-white/70 px-3 py-2 backdrop-blur">
-                Home visit
-              </span>
-              <span className="rounded-full border border-[#E6DFD5] bg-white/70 px-3 py-2 backdrop-blur">
-              Metro Manila
-              </span>
+            <div className="home-hero-trust mt-9" aria-label="Service highlights">
+              <span>Doctor-led</span>
+              <span>Private home care</span>
+              <span>Metro Manila</span>
             </div>
           </div>
           <div className="hidden lg:block">
@@ -484,10 +476,9 @@ export function HomePage() {
               <span>By assessment</span>
             </div>
           </div>
-          <div className="home-slider-dots" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+          <div className="home-scroll-cue" aria-hidden="true">
+            <span>Discover</span>
+            <i />
           </div>
         </div>
       </section>
@@ -503,7 +494,7 @@ export function HomePage() {
 
 function HomeBeautyStory() {
   return (
-    <section className="home-story-section px-5 py-20 lg:px-8 lg:py-28">
+    <section className="home-story-section premium-reveal px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.86fr_1.14fr]">
         <div className="home-story-image">
           <Image
@@ -567,7 +558,7 @@ function HomeSignatureTreatments() {
   const featured = getFeaturedTreatments().slice(0, 4);
 
   return (
-    <section className="home-signature-section px-5 py-20 lg:px-8 lg:py-28">
+    <section className="home-signature-section premium-reveal px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
           <div>
@@ -617,7 +608,7 @@ function HomeFluidProcess() {
   ];
 
   return (
-    <section className="home-process-section px-5 py-20 lg:px-8 lg:py-28">
+    <section className="home-process-section premium-reveal px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <p className="eyebrow">The journey</p>
@@ -641,7 +632,7 @@ function HomeFluidProcess() {
 
 function HomeTrustMoment() {
   return (
-    <section className="home-trust-moment px-5 py-20 lg:px-8 lg:py-28">
+    <section className="home-trust-moment premium-reveal px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="max-w-2xl">
           <p className="eyebrow">Safety, quietly visible</p>
@@ -684,7 +675,7 @@ export function TreatmentsPage() {
 function TreatmentsEditorialHero() {
   return (
     <section className="treatments-editorial-hero px-5 py-16 lg:px-8 lg:py-24">
-      <div className="mx-auto grid max-w-7xl items-end gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[0.88fr_1.12fr]">
         <div className="max-w-3xl">
           <p className="eyebrow">Treatment edit</p>
           <h1 className="mt-4 font-serif text-6xl leading-[0.92] text-[#1F1F1F] md:text-8xl">
@@ -705,11 +696,11 @@ function TreatmentsEditorialHero() {
         </div>
         <div className="treatments-hero-visual">
           <Image
-            src="/betterself-face-map.png"
-            alt="Illustrated face map for BetterSelf aesthetic treatments"
+            src="/betterself-doctor-kit.jpg"
+            alt="BetterSelf doctor preparing a private home aesthetic appointment"
             fill
             sizes="(min-width: 1024px) 44vw, 100vw"
-            className="object-contain"
+            className="treatments-hero-photo object-cover"
             priority
           />
           <div className="treatments-hero-card">
@@ -889,7 +880,7 @@ export function DashboardPage({
   ];
   return (
     <PageShell>
-      <section className="px-5 py-10 lg:px-8 lg:py-14">
+      <section className="dashboard-page px-5 py-12 lg:px-8 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <SectionHeading
@@ -920,14 +911,14 @@ export function DashboardPage({
           ) : null}
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat) => (
-              <article key={stat.label} className="card p-5">
+              <article key={stat.label} className="card dashboard-stat p-5">
                 <p className="text-sm text-[#595550]">{stat.label}</p>
                 <p className="mt-3 font-serif text-4xl text-[#1F1F1F]">{stat.value}</p>
               </article>
             ))}
           </div>
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-            <section className="card p-6">
+            <section className="card dashboard-primary p-6 md:p-8">
               <p className="eyebrow">{currentStep?.eyebrow ?? "Next step"}</p>
               {currentBooking && currentStep ? (
                 <>
@@ -1039,7 +1030,7 @@ export function DashboardPage({
                 </>
               )}
             </section>
-            <section id="aftercare" className="card bg-[#F6EDEA] p-6">
+            <section id="aftercare" className="card dashboard-side p-6 md:p-8">
               <p className="eyebrow">Flow</p>
               {hasCompleted ? (
                 <>
@@ -1151,7 +1142,7 @@ function DashboardBookingCard({
   });
 
   return (
-    <article className="card grid gap-4 p-5 lg:grid-cols-[1.25fr_1fr_auto] lg:items-center">
+    <article className="card dashboard-booking-row grid gap-4 p-5 lg:grid-cols-[1.25fr_1fr_auto] lg:items-center">
       <div>
         <p className="font-serif text-2xl text-[#1F1F1F]">{booking.treatment_name}</p>
         <p className="mt-1 text-sm text-[#595550]">
@@ -2431,7 +2422,7 @@ function PageHero({
   text: string;
 }) {
   return (
-    <section className="page-editorial-hero px-5 py-14 lg:px-8 lg:py-20">
+    <section className="page-editorial-hero premium-reveal px-5 py-16 lg:px-8 lg:py-24">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-4xl">
           <p className="eyebrow">{eyebrow}</p>
@@ -2458,7 +2449,7 @@ function HowItWorksSection() {
         />
         <div className="mt-8 grid gap-4 md:grid-cols-4">
           {howItWorksSteps.map((step, index) => (
-            <article key={step.title} className="card p-5">
+            <article key={step.title} className="card process-card p-5">
               <step.icon className="h-5 w-5 text-[#8F5B67]" />
               <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#5C574F]">
                 0{index + 1}
@@ -2496,7 +2487,7 @@ function HowItWorksSection() {
 
 function FinalCta() {
   return (
-    <section className="px-5 py-16 lg:px-8">
+    <section className="final-cta-section px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-4xl text-center">
         <h2 className="font-serif text-5xl leading-tight text-[#1F1F1F]">
           Book the treatment you want at home.

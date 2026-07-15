@@ -1407,3 +1407,824 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* 2026 editorial refinement: a quieter, more architectural luxury system. */
+:root {
+  --background: #f9f8f5;
+  --foreground: #181a17;
+  --accent: #9a6671;
+  --accent-strong: #714650;
+  --accent-weak: #f3e8ea;
+  --evergreen: #2f4a40;
+  --evergreen-deep: #20362e;
+  --paper: #fdfcf9;
+  --paper-muted: #f1efea;
+  --line: rgb(24 26 23 / 0.12);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.premium-header {
+  border-bottom-color: rgb(24 26 23 / 0.09);
+  background: rgb(249 248 245 / 0.9);
+  box-shadow: 0 8px 32px rgb(24 26 23 / 0.045);
+  backdrop-filter: blur(24px) saturate(1.1);
+}
+
+.premium-header::after {
+  display: none;
+}
+
+.premium-header-inner {
+  position: relative;
+}
+
+.brand-lockup {
+  gap: 0.35rem;
+  min-width: min(23rem, 56vw);
+}
+
+.brand-lockup::before,
+.brand-mark-wrap::after {
+  display: none;
+}
+
+.brand-mark-wrap {
+  width: 4.75rem;
+  height: 4.75rem;
+}
+
+.brand-mark-image {
+  opacity: 0.92;
+  transform: scale(1.18);
+}
+
+.brand-lockup:hover .brand-mark-image {
+  transform: translateY(-1px) scale(1.2);
+}
+
+.brand-wordmark {
+  transform: translateX(-0.18rem);
+}
+
+.brand-name {
+  color: #181a17;
+  font-size: clamp(2.35rem, 3.2vw, 3rem);
+  line-height: 0.78;
+}
+
+.brand-tagline {
+  margin-top: 0.55rem;
+  color: #5e625d;
+  letter-spacing: 0.32em;
+}
+
+.premium-nav {
+  gap: 0.25rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.premium-nav-link {
+  border-radius: 0;
+  padding: 0.8rem 1rem;
+  color: #4d514c;
+}
+
+.premium-nav-link::after {
+  content: "";
+  position: absolute;
+  right: 1rem;
+  bottom: 0.45rem;
+  left: 1rem;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 220ms ease;
+}
+
+.premium-nav-link:hover {
+  background: transparent;
+  color: #181a17;
+  transform: none;
+}
+
+.premium-nav-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.premium-header-actions {
+  padding-left: 1.1rem;
+  border-left: 1px solid var(--line);
+}
+
+.header-dashboard-link {
+  border-radius: 0;
+  padding-inline: 0.5rem;
+}
+
+.header-dashboard-link:hover {
+  background: transparent;
+  color: var(--accent-strong);
+}
+
+.premium-cta,
+.mobile-floating-cta-link {
+  border: 0;
+  border-radius: 0.35rem;
+  background: var(--evergreen);
+  box-shadow: 0 12px 28px rgb(32 54 46 / 0.18);
+}
+
+.premium-cta {
+  padding-inline: 1.25rem;
+}
+
+.premium-cta::before {
+  background: linear-gradient(105deg, transparent 25%, rgb(255 255 255 / 0.18) 50%, transparent 75%);
+  animation-duration: 7.5s;
+}
+
+.premium-cta:hover,
+.mobile-floating-cta-link:hover {
+  background: var(--evergreen-deep);
+  box-shadow: 0 16px 34px rgb(32 54 46 / 0.24);
+}
+
+.btn {
+  border-radius: 0.35rem;
+  padding: 0.82rem 1.08rem;
+}
+
+.btn-primary {
+  background: var(--evergreen);
+  box-shadow: 0 10px 22px rgb(32 54 46 / 0.14);
+}
+
+.btn-primary:hover {
+  background: var(--evergreen-deep);
+  box-shadow: 0 14px 28px rgb(32 54 46 / 0.2);
+}
+
+.btn-secondary {
+  border-color: rgb(24 26 23 / 0.18);
+  background: transparent;
+}
+
+.editorial-text-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding-inline: 0.25rem;
+  border-bottom: 1px solid rgb(24 26 23 / 0.46);
+  color: #181a17;
+  font-size: 0.9rem;
+  font-weight: 800;
+  transition: gap 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.editorial-text-link:hover {
+  gap: 0.95rem;
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.home-campaign {
+  min-height: 760px;
+  border-bottom: 0;
+  background: #ecebe7;
+}
+
+.home-campaign-image {
+  z-index: 0;
+  transform: scale(1.01);
+  filter: saturate(0.86) contrast(1.025);
+  animation: hero-drift 22s ease-in-out infinite alternate;
+}
+
+.home-campaign-wash {
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgb(248 247 243 / 0.98) 0%, rgb(248 247 243 / 0.9) 30%, rgb(248 247 243 / 0.28) 59%, rgb(248 247 243 / 0.04) 100%),
+    linear-gradient(0deg, rgb(24 26 23 / 0.16), transparent 32%);
+}
+
+.home-campaign > div.relative {
+  z-index: 2;
+}
+
+.home-campaign-copy {
+  max-width: 43rem;
+  text-shadow: none;
+}
+
+.home-campaign-copy h1 {
+  max-width: 12.8ch;
+  color: #181a17;
+  font-size: clamp(4rem, 6.2vw, 6.8rem);
+}
+
+.home-hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  color: #565b55;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.home-hero-trust span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.home-hero-trust span:not(:last-child)::after {
+  content: "";
+  width: 2.2rem;
+  height: 1px;
+  margin-inline: 0.85rem;
+  background: rgb(24 26 23 / 0.3);
+}
+
+.home-campaign-note {
+  gap: 0;
+  border: 0;
+  border-radius: 0.35rem;
+  background: rgb(249 248 245 / 0.82);
+  padding: 0;
+  box-shadow: 0 20px 48px rgb(24 26 23 / 0.11);
+  transform: translateY(13rem);
+}
+
+.home-campaign-note span {
+  border-radius: 0;
+  background: transparent;
+  padding: 1rem 1.15rem;
+  color: var(--evergreen-deep);
+}
+
+.home-campaign-note span + span {
+  border-left: 1px solid var(--line);
+}
+
+.home-scroll-cue {
+  position: absolute;
+  right: 2.5rem;
+  bottom: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: rgb(255 255 255 / 0.88);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.home-scroll-cue i {
+  display: block;
+  width: 4rem;
+  height: 1px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.45);
+}
+
+.home-story-section,
+.home-trust-moment,
+.home-process-section,
+.home-signature-section,
+.treatment-map-section,
+.treatment-edit-section,
+.treatment-detail-section,
+.page-editorial-hero {
+  background: var(--background);
+}
+
+.home-story-section::before,
+.treatment-booking-panel::before {
+  display: none;
+}
+
+.home-story-image,
+.home-trust-image {
+  min-height: clamp(30rem, 50vw, 45rem);
+  border-radius: 0.45rem;
+  background: #e9e7e1;
+  box-shadow: 0 24px 70px rgb(24 26 23 / 0.11);
+}
+
+.home-story-image img,
+.home-trust-image img,
+.treatments-hero-visual .treatments-hero-photo {
+  z-index: 0;
+  opacity: 1;
+  transform: scale(1.02);
+  animation: editorial-image-drift 18s ease-in-out infinite alternate;
+}
+
+.home-story-image::after,
+.home-trust-image::after {
+  background: linear-gradient(180deg, transparent 68%, rgb(24 26 23 / 0.18));
+}
+
+.home-soft-pill {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.65rem 0;
+  color: var(--evergreen);
+}
+
+.home-soft-pill + .home-soft-pill {
+  margin-left: 1.35rem;
+}
+
+.home-ribbon-section {
+  border-block: 0;
+  background: var(--evergreen-deep);
+  padding-block: 1.25rem;
+}
+
+.home-ribbon-item {
+  border-radius: 0;
+  background: transparent;
+  padding: 0.6rem 1.1rem;
+  color: #f7f2ed;
+}
+
+.home-ribbon-item::after {
+  content: "•";
+  margin-left: 2.2rem;
+  color: #cda8af;
+}
+
+.home-ribbon-item:hover {
+  background: transparent;
+  color: #e2bdc4;
+}
+
+.home-signature-section {
+  background: #f5f2f3;
+}
+
+.home-signature-list,
+.home-signature-row {
+  border-color: rgb(24 26 23 / 0.16);
+}
+
+.home-signature-arrow {
+  background: var(--evergreen);
+}
+
+.home-signature-row:hover .home-signature-arrow {
+  background: var(--accent-strong);
+}
+
+.home-process-line {
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.home-process-line::before {
+  top: 4.7rem;
+  background: rgb(24 26 23 / 0.18);
+}
+
+.home-process-step span {
+  width: auto;
+  height: auto;
+  place-items: start;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: clamp(4.5rem, 8vw, 7.5rem);
+  line-height: 0.8;
+  box-shadow: none;
+}
+
+.home-process-step h3 {
+  margin-top: 2rem;
+}
+
+.treatments-editorial-hero {
+  background: linear-gradient(120deg, #f6f1f2 0%, #f9f8f5 58%, #eef1ed 100%);
+}
+
+.treatments-editorial-hero h1 {
+  max-width: 10.5ch;
+  font-size: clamp(3.8rem, 5vw, 5.5rem);
+  letter-spacing: -0.025em;
+}
+
+.treatments-hero-visual {
+  min-height: clamp(30rem, 47vw, 45rem);
+  overflow: hidden;
+  border-radius: 0.45rem;
+  background: #e4e4df;
+  box-shadow: 0 28px 78px rgb(24 26 23 / 0.14);
+}
+
+.treatments-hero-visual img {
+  padding: 0;
+  filter: saturate(0.82) contrast(1.03);
+}
+
+.treatments-hero-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, transparent 58%, rgb(24 26 23 / 0.24));
+  pointer-events: none;
+}
+
+.treatments-hero-card {
+  z-index: 1;
+  bottom: 1.25rem;
+  border: 0;
+  border-radius: 0.3rem;
+  background: rgb(249 248 245 / 0.88);
+  padding: 0;
+  box-shadow: 0 18px 42px rgb(24 26 23 / 0.16);
+}
+
+.treatments-hero-card span {
+  border-radius: 0;
+  background: transparent;
+  padding: 0.9rem 1rem;
+  color: var(--evergreen-deep);
+}
+
+.treatments-hero-card span + span {
+  border-left: 1px solid var(--line);
+}
+
+.treatment-map-shell {
+  border-color: var(--line);
+  border-radius: 0.5rem;
+  background: var(--paper);
+  box-shadow: 0 26px 70px rgb(24 26 23 / 0.075);
+  backdrop-filter: none;
+}
+
+.treatment-map-visual-panel {
+  background: #f3f1ed;
+}
+
+.treatment-map-figure {
+  border-color: rgb(24 26 23 / 0.1);
+  border-radius: 0.4rem;
+  background: #fbfaf7;
+  box-shadow: none;
+}
+
+.treatment-map-results {
+  background: var(--paper);
+}
+
+.treatment-zone-button {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.treatment-section-nav,
+.treatment-edit-control,
+.treatment-spotlight,
+.treatment-detail-editorial,
+.treatment-booking-panel,
+.booking-main-panel,
+.booking-summary-panel,
+.booking-soft-panel,
+.booking-mobile-summary,
+.booking-total-panel,
+.booking-recommendation-panel,
+.booking-calendly-frame {
+  border-color: var(--line);
+  border-radius: 0.5rem;
+  background: var(--paper);
+  box-shadow: 0 22px 60px rgb(24 26 23 / 0.07);
+  backdrop-filter: none;
+}
+
+.treatment-section-button,
+.booking-choice-card,
+.booking-treatment-card,
+.booking-checkbox-row,
+.booking-manual-schedule {
+  border-color: var(--line);
+  border-radius: 0.4rem;
+  background: #fbfaf7;
+  box-shadow: none;
+}
+
+.treatment-section-button.is-active {
+  border-color: var(--evergreen);
+  background: var(--evergreen);
+  box-shadow: 0 12px 26px rgb(32 54 46 / 0.15);
+}
+
+.treatment-spotlight {
+  background: linear-gradient(120deg, #f6f1f2, #fdfcf9 64%);
+}
+
+.treatment-detail-editorial {
+  overflow: hidden;
+}
+
+.treatment-detail-block {
+  background: var(--paper);
+}
+
+.treatment-booking-panel,
+.booking-summary-panel {
+  border-top: 3px solid var(--evergreen);
+}
+
+.booking-choice-card.is-selected,
+.booking-treatment-card.is-selected,
+.booking-manual-schedule.is-selected {
+  border-color: var(--evergreen);
+  background: #f0f4f1;
+  box-shadow: 0 14px 30px rgb(32 54 46 / 0.08);
+}
+
+.booking-progress {
+  height: 0.25rem;
+  background: rgb(24 26 23 / 0.1);
+}
+
+.booking-progress-fill {
+  background: var(--evergreen);
+  box-shadow: none;
+}
+
+.page-editorial-hero {
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(110deg, #f6f1f2 0%, #f9f8f5 56%, #eef1ed 100%);
+}
+
+.page-editorial-hero h1 {
+  max-width: 17ch;
+  font-size: clamp(3.65rem, 5.6vw, 5.75rem);
+  letter-spacing: -0.02em;
+}
+
+.page-editorial-hero p:last-child {
+  max-width: 48rem;
+}
+
+.page-editorial-hero::after,
+.treatments-editorial-hero::after {
+  display: none;
+}
+
+.dashboard-page {
+  background: linear-gradient(180deg, #f9f8f5, #f3f1ed 48%, #f9f8f5);
+}
+
+.card {
+  border-color: var(--line);
+  border-radius: 0.5rem;
+  background: var(--paper);
+  box-shadow: 0 16px 42px rgb(24 26 23 / 0.055);
+}
+
+.dashboard-stat {
+  border: 0;
+  border-bottom: 1px solid rgb(24 26 23 / 0.18);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dashboard-primary {
+  border-top: 3px solid var(--evergreen);
+}
+
+.dashboard-side {
+  border: 0;
+  background: var(--evergreen-deep) !important;
+  color: #f9f8f5;
+}
+
+.dashboard-side .eyebrow,
+.dashboard-side h2,
+.dashboard-side li,
+.dashboard-side span {
+  color: #f9f8f5 !important;
+}
+
+.dashboard-booking-row {
+  box-shadow: none;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.dashboard-booking-row:hover {
+  border-color: rgb(47 74 64 / 0.36);
+  transform: translateY(-2px);
+}
+
+.process-card {
+  border-width: 1px 0 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.final-cta-section {
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  background: var(--evergreen-deep);
+}
+
+.final-cta-section h2,
+.final-cta-section p {
+  color: #f9f8f5 !important;
+}
+
+.final-cta-section .btn-primary {
+  background: #f9f8f5;
+  color: var(--evergreen-deep);
+}
+
+.premium-footer {
+  border-top: 0;
+  background: #172b24;
+  color: #f6f3ee;
+}
+
+.premium-footer::before {
+  display: none;
+}
+
+.premium-footer a,
+.premium-footer p,
+.premium-footer span {
+  color: rgb(246 243 238 / 0.78);
+}
+
+.premium-footer a:hover {
+  color: #ffffff;
+}
+
+.premium-footer .font-serif,
+.premium-footer > * .text-\[\#1F1F1F\] {
+  color: #ffffff;
+}
+
+.premium-footer img {
+  mix-blend-mode: screen;
+  filter: grayscale(1) brightness(1.7);
+}
+
+.premium-footer-note {
+  border: 0;
+  border-left: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: 0;
+  background: transparent;
+  padding: 0 0 0 1rem;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.premium-footer-bottom {
+  border-top-color: rgb(255 255 255 / 0.12);
+  background: transparent;
+}
+
+.cookie-consent {
+  border-color: rgb(24 26 23 / 0.12);
+  border-radius: 0.5rem;
+  background: rgb(253 252 249 / 0.96);
+  box-shadow: 0 24px 60px rgb(24 26 23 / 0.16);
+}
+
+.cookie-consent-primary,
+.cookie-consent-secondary {
+  border-radius: 0.35rem;
+}
+
+.cookie-consent-primary {
+  background: var(--evergreen);
+}
+
+.field {
+  border-color: rgb(24 26 23 / 0.16);
+  background: #fff;
+}
+
+.field:focus {
+  border-color: var(--evergreen);
+  box-shadow: 0 0 0 3px rgb(47 74 64 / 0.13);
+}
+
+.eyebrow {
+  color: var(--accent-strong);
+  letter-spacing: 0.24em;
+}
+
+@keyframes editorial-image-drift {
+  from {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.075) translate3d(-0.8%, -0.5%, 0);
+  }
+}
+
+@media (max-width: 899px) {
+  .premium-header-inner {
+    min-height: 76px;
+  }
+
+  .brand-mark-wrap {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .brand-name {
+    font-size: 1.85rem;
+  }
+
+  .brand-tagline {
+    margin-top: 0.35rem;
+    font-size: 0.48rem;
+    letter-spacing: 0.24em;
+  }
+
+  .home-campaign,
+  .home-campaign > div.relative {
+    min-height: 700px;
+  }
+
+  .home-campaign-copy {
+    margin-top: 13rem;
+  }
+
+  .home-campaign-wash {
+    background:
+      linear-gradient(180deg, rgb(249 248 245 / 0.16) 0%, rgb(249 248 245 / 0.24) 28%, rgb(249 248 245 / 0.96) 63%, #f9f8f5 100%),
+      linear-gradient(90deg, rgb(249 248 245 / 0.52), transparent 72%);
+  }
+
+  .home-campaign-copy h1 {
+    max-width: 10.5ch;
+    font-size: clamp(3.65rem, 17vw, 5.2rem);
+  }
+
+  .home-hero-trust span:not(:last-child)::after {
+    width: 1rem;
+    margin-inline: 0.55rem;
+  }
+
+  .home-scroll-cue {
+    display: none;
+  }
+
+  .home-story-image,
+  .home-trust-image,
+  .treatments-hero-visual {
+    min-height: 28rem;
+    border-radius: 0.35rem;
+  }
+
+  .home-soft-pill + .home-soft-pill {
+    margin-left: 0.85rem;
+  }
+
+  .treatment-map-shell,
+  .treatment-spotlight,
+  .treatment-detail-editorial,
+  .treatment-booking-panel,
+  .booking-main-panel,
+  .booking-summary-panel {
+    border-radius: 0.4rem;
+  }
+
+  .treatments-hero-card {
+    width: calc(100% - 2rem);
+    justify-content: center;
+  }
+
+  .treatments-editorial-hero h1,
+  .page-editorial-hero h1 {
+    max-width: none;
+    font-size: clamp(3.35rem, 14vw, 4.5rem);
+    letter-spacing: -0.018em;
+  }
+}
