@@ -72,7 +72,7 @@ type RecommendationResult = {
     confidence: "low" | "medium" | "high";
     reason: string;
     safetyNote: string;
-    source: "openai" | "fallback";
+    source: "anthropic" | "openai" | "fallback";
   };
   treatment: {
     id: string;

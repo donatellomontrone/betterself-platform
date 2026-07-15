@@ -1,6 +1,6 @@
 # BetterSelf Completed Work
 
-Last updated: 2026-07-04
+Last updated: 2026-07-15
 
 This is the concise list of work completed so far on BetterSelf Home Aesthetics.
 
@@ -91,10 +91,11 @@ This is the concise list of work completed so far on BetterSelf Home Aesthetics.
 
 ## AI / concern matching
 
-- Added OpenAI-ready treatment suggestion endpoint.
-- Added strict schema output and local fallback.
+- Added Claude Haiku treatment suggestion using the Costarax provider pattern.
+- Added tool-schema output, catalog allowlisting, OpenAI secondary-provider
+  support, and a local fallback.
 - Added red-flag/uncertain concern handling to steer toward consultation.
-- Added input-length cap before calling OpenAI.
+- Added input-length cap before calling an external AI provider.
 
 ## Documentation
 

@@ -1,6 +1,6 @@
 # Stack Setup: GitHub, Vercel, Clerk, Calendly, Neon, PayMongo
 
-Last updated: 2026-07-04
+Last updated: 2026-07-15
 
 BetterSelf uses:
 
@@ -11,7 +11,8 @@ BetterSelf uses:
 - Calendly for doctor-call scheduling.
 - PayMongo for QR Ph Hosted Checkout and payment webhooks.
 - Google Places for optional home-address search.
-- OpenAI for optional concern-to-treatment suggestions.
+- Anthropic Claude Haiku for optional concern-to-treatment suggestions, using
+  the same provider pattern as Costarax.
 
 ## 1. Vercel
 
@@ -30,6 +31,8 @@ NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL=
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 PAYMONGO_SECRET_KEY=
 PAYMONGO_WEBHOOK_SECRET=
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=claude-haiku-4-5-20251001
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
 NEXT_PUBLIC_SUPPORT_EMAIL=
@@ -44,6 +47,7 @@ Mark these as sensitive/server-only where Vercel allows it:
 - `ADMIN_EMAILS`
 - `PAYMONGO_SECRET_KEY`
 - `PAYMONGO_WEBHOOK_SECRET`
+- `ANTHROPIC_API_KEY`
 - `OPENAI_API_KEY`
 
 Redeploy after changing environment variables.
@@ -189,17 +193,27 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 The address search is optional and gated behind optional-cookie acceptance.
 Manual address entry still works when the key is absent or cookies are declined.
 
-## 7. OpenAI
+## 7. AI concern matching
 
-Set only if AI concern matching should call OpenAI:
+Preferred Costarax-compatible provider:
+
+```bash
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=claude-haiku-4-5-20251001
+```
+
+Optional secondary provider:
 
 ```bash
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
-If unset, BetterSelf uses the local fallback recommendation logic. The public
-recommendation endpoint caps patient concern input before calling OpenAI.
+Anthropic is attempted first and OpenAI second. If neither is configured or an
+external call fails, BetterSelf uses the local fallback recommendation logic.
+The public endpoint requires explicit AI consent, caps input, rate-limits calls,
+blocks red-flag concerns from the provider, and validates every returned service
+against the BetterSelf catalog.
 
 ## 8. GitHub
 

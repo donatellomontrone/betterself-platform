@@ -1,6 +1,6 @@
 # BetterSelf Features
 
-Last updated: 2026-07-14
+Last updated: 2026-07-15
 
 BetterSelf is a doctor-led home aesthetics platform for Metro Manila. Patients can
 create an account, describe their concern, book either a paid consultation or a
@@ -12,7 +12,7 @@ treatment request, and continue payment/scheduling from their dashboard.
 - Vercel project: `betterself-platform`
 - GitHub deploy branch: `main`
 - Stack: Next.js 16 App Router, React 19, Tailwind CSS v4, Vercel, Clerk, Neon,
-  PayMongo, Calendly, Google Places, optional OpenAI.
+  PayMongo, Calendly, Google Places, and optional Anthropic/OpenAI matching.
 
 ## Patient website
 
@@ -24,10 +24,12 @@ treatment request, and continue payment/scheduling from their dashboard.
 - Treatment explorer with search, category filtering, concern chips, and visual
   face/body anatomy maps.
 - Patient concern prompt: the patient describes the problem they want to address.
-- Optional OpenAI treatment recommendation endpoint with strict output schema,
-  red-flag fallback, 1000-character cap, and durable Neon-backed rate limiting.
-- If OpenAI is not configured or fails, the local heuristic fallback still
-  recommends a treatment or the doctor consultation.
+- Optional Claude Haiku treatment recommendation endpoint with tool-schema
+  output, server-side catalog validation, red-flag fallback, a 1000-character
+  cap, and durable Neon-backed rate limiting.
+- Anthropic follows the Costarax provider pattern. OpenAI can act as a secondary
+  provider; if neither provider is configured or both fail, the local heuristic
+  fallback still recommends a catalog treatment or doctor consultation.
 
 ## Booking flows
 
@@ -138,6 +140,8 @@ NEXT_PUBLIC_CALENDLY_URL=
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 PAYMONGO_SECRET_KEY=
 PAYMONGO_WEBHOOK_SECRET=
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=claude-haiku-4-5-20251001
 OPENAI_API_KEY=
 OPENAI_MODEL=
 NEXT_PUBLIC_SUPPORT_EMAIL=
@@ -146,8 +150,8 @@ NEXT_PUBLIC_WHATSAPP_URL=
 NEXT_PUBLIC_DOCTOR_VIDEO_CALL_URL=
 ```
 
-Keep server secrets marked sensitive in Vercel. Do not expose PayMongo, Clerk
-secret, database, or OpenAI keys as public variables.
+Keep server secrets marked sensitive in Vercel. Do not expose PayMongo, Clerk,
+database, Anthropic, or OpenAI keys as public variables.
 
 ## Known external go-live dependencies
 

@@ -41,7 +41,7 @@ There is no membership model. Pricing is per consultation or per treatment.
 - PayMongo Hosted Checkout for QR Ph payments
 - Calendly for doctor call scheduling
 - Google Places for optional address search
-- OpenAI optional recommendation API with local fallback
+- Anthropic Claude recommendation API, optional OpenAI secondary provider, and local fallback
 - Vercel hosting
 
 ## Important Next.js / Clerk conventions
@@ -132,6 +132,8 @@ CALENDLY_WEBHOOK_SIGNING_KEY=
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 PAYMONGO_SECRET_KEY=
 PAYMONGO_WEBHOOK_SECRET=
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=claude-haiku-4-5-20251001
 OPENAI_API_KEY=
 OPENAI_MODEL=
 NEXT_PUBLIC_SUPPORT_EMAIL=
@@ -147,6 +149,7 @@ Server-side/sensitive:
 - `PAYMONGO_SECRET_KEY`
 - `PAYMONGO_WEBHOOK_SECRET`
 - `CALENDLY_WEBHOOK_SIGNING_KEY`
+- `ANTHROPIC_API_KEY`
 - `OPENAI_API_KEY`
 - `ADMIN_EMAILS`
 

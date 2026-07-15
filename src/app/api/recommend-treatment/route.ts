@@ -5,7 +5,7 @@ import { consumeRateLimit, type RateLimitResult } from "@/lib/db/rate-limit";
 import { consultationService, treatments, type Treatment } from "@/lib/treatments";
 
 type RecommendationConfidence = "low" | "medium" | "high";
-type RecommendationSource = "openai" | "fallback";
+type RecommendationSource = "anthropic" | "openai" | "fallback";
 
 type ModelRecommendation = {
   recommendedTreatmentId: string;
@@ -130,6 +130,21 @@ function extractResponseText(payload: unknown): string {
   }
 
   return chunks.join("\n").trim();
+}
+
+function extractAnthropicToolInput(payload: unknown): unknown {
+  if (!isRecord(payload) || !Array.isArray(payload.content)) {
+    return null;
+  }
+
+  const toolUse = payload.content.find(
+    (item) =>
+      isRecord(item) &&
+      item.type === "tool_use" &&
+      item.name === "submit_treatment_recommendation",
+  );
+
+  return isRecord(toolUse) ? toolUse.input : null;
 }
 
 function coerceRecommendation(value: unknown): ModelRecommendation | null {
@@ -292,14 +307,63 @@ async function getRateLimit(request: NextRequest): Promise<RateLimitResult> {
   }
 }
 
-async function getTreatmentRecommendation(
-  concern: string,
-): Promise<{ recommendation: ModelRecommendation; source: RecommendationSource }> {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
+async function getAnthropicRecommendation(concern: string): Promise<ModelRecommendation | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) return null;
 
-  if (!apiKey) {
-    return { recommendation: fallbackRecommendation(concern), source: "fallback" };
+  const model = process.env.ANTHROPIC_MODEL?.trim() || "claude-haiku-4-5-20251001";
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    signal: AbortSignal.timeout(15_000),
+    body: JSON.stringify({
+      model,
+      max_tokens: 700,
+      system:
+        "You are a conservative medical-aesthetics concern-matching assistant for BetterSelf in Metro Manila. Match the patient's own words to exactly one service ID from the supplied catalog, or choose doctor-consultation when the concern is unclear, sensitive, risky, urgent, outside the catalog, or requires medical judgment first. Never diagnose, promise an outcome, invent a service, provide emergency advice beyond directing the patient to urgent care, or override doctor assessment. Use plain patient-friendly English.",
+      tools: [
+        {
+          name: "submit_treatment_recommendation",
+          description:
+            "Submit one catalog-constrained treatment match and up to three possible alternatives.",
+          input_schema: recommendationSchema,
+        },
+      ],
+      tool_choice: {
+        type: "tool",
+        name: "submit_treatment_recommendation",
+      },
+      messages: [
+        {
+          role: "user",
+          content: JSON.stringify({
+            patientConcern: concern,
+            services: allowedServices.map(summarizeService),
+          }),
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("[recommend-treatment] Anthropic request failed:", {
+      status: response.status,
+      requestId: response.headers.get("request-id"),
+    });
+    return null;
   }
+
+  const payload = (await response.json()) as unknown;
+  return coerceRecommendation(extractAnthropicToolInput(payload));
+}
+
+async function getOpenAiRecommendation(concern: string): Promise<ModelRecommendation | null> {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) return null;
 
   const model = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
   const response = await fetch("https://api.openai.com/v1/responses", {
@@ -308,6 +372,7 @@ async function getTreatmentRecommendation(
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
+    signal: AbortSignal.timeout(15_000),
     body: JSON.stringify({
       model,
       input: [
@@ -346,8 +411,11 @@ async function getTreatmentRecommendation(
   });
 
   if (!response.ok) {
-    console.error("[recommend-treatment] OpenAI request failed:", await response.text());
-    return { recommendation: fallbackRecommendation(concern), source: "fallback" };
+    console.error("[recommend-treatment] OpenAI request failed:", {
+      status: response.status,
+      requestId: response.headers.get("x-request-id"),
+    });
+    return null;
   }
 
   const payload = (await response.json()) as unknown;
@@ -355,16 +423,41 @@ async function getTreatmentRecommendation(
 
   try {
     const parsed = JSON.parse(outputText) as unknown;
-    const coerced = coerceRecommendation(parsed);
-
-    return {
-      recommendation: coerced ?? fallbackRecommendation(concern),
-      source: coerced ? "openai" : "fallback",
-    };
+    return coerceRecommendation(parsed);
   } catch (error) {
     console.error("[recommend-treatment] failed to parse OpenAI response:", error);
-    return { recommendation: fallbackRecommendation(concern), source: "fallback" };
+    return null;
   }
+}
+
+function hasConfiguredAiProvider() {
+  return Boolean(
+    process.env.ANTHROPIC_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim(),
+  );
+}
+
+async function getTreatmentRecommendation(
+  concern: string,
+): Promise<{ recommendation: ModelRecommendation; source: RecommendationSource }> {
+  try {
+    const anthropicRecommendation = await getAnthropicRecommendation(concern);
+    if (anthropicRecommendation) {
+      return { recommendation: anthropicRecommendation, source: "anthropic" };
+    }
+  } catch (error) {
+    console.error("[recommend-treatment] Anthropic request error:", error);
+  }
+
+  try {
+    const openAiRecommendation = await getOpenAiRecommendation(concern);
+    if (openAiRecommendation) {
+      return { recommendation: openAiRecommendation, source: "openai" };
+    }
+  } catch (error) {
+    console.error("[recommend-treatment] OpenAI request error:", error);
+  }
+
+  return { recommendation: fallbackRecommendation(concern), source: "fallback" };
 }
 
 export async function POST(request: NextRequest) {
@@ -414,7 +507,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  if (process.env.OPENAI_API_KEY?.trim() && body?.aiConsent !== true) {
+  if (hasConfiguredAiProvider() && body?.aiConsent !== true) {
     return NextResponse.json(
       {
         message:

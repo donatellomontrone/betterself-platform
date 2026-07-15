@@ -1,6 +1,6 @@
 # BetterSelf Handoff For Claude Code
 
-Last updated: 2026-07-04
+Last updated: 2026-07-15
 
 ## What BetterSelf is
 
@@ -46,7 +46,7 @@ The business does not sell memberships.
 - Payment retry with fresh QR Ph checkout.
 - PayMongo webhook hardening.
 - Cookie-consent gated Google Places.
-- OpenAI-ready concern matching with local fallback.
+- Claude Haiku concern matching with catalog validation and local fallback.
 - Legal pages and SEO pages.
 
 ## Main files to inspect first
@@ -58,7 +58,7 @@ The business does not sell memberships.
 - `src/app/api/bookings/route.ts` - booking creation.
 - `src/app/api/checkout/retry/route.ts` - dashboard Pay now retry.
 - `src/app/api/paymongo/webhook/route.ts` - PayMongo reconciliation.
-- `src/app/api/recommend-treatment/route.ts` - OpenAI/fallback matching.
+- `src/app/api/recommend-treatment/route.ts` - Anthropic/OpenAI/fallback matching.
 - `src/lib/treatments.ts` - services and prices.
 - `database/schema.sql` - database schema.
 
@@ -80,7 +80,7 @@ The business does not sell memberships.
 
 ## Notes
 
-- Keep PayMongo, Clerk secret, database, OpenAI, and admin env vars sensitive.
+- Keep PayMongo, Clerk, database, Anthropic/OpenAI, and admin env vars sensitive.
 - Do not reintroduce memberships/subscriptions.
 - Do not charge treatments before doctor review.
 - Do not expose doctor identity publicly unless the founder explicitly changes
