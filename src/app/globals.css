@@ -1631,9 +1631,17 @@ body {
 }
 
 .home-campaign-copy h1 {
-  max-width: 12.8ch;
+  max-width: 13.5ch;
   color: #181a17;
-  font-size: clamp(4rem, 6.2vw, 6.8rem);
+  font-size: clamp(3.7rem, 5.15vw, 5.65rem);
+}
+
+.home-story-section h2,
+.home-signature-section h2,
+.home-process-section h2,
+.home-trust-moment h2 {
+  font-size: clamp(3.15rem, 4.45vw, 4.55rem);
+  letter-spacing: -0.02em;
 }
 
 .home-hero-trust {
@@ -1787,6 +1795,10 @@ body {
   border-color: rgb(24 26 23 / 0.16);
 }
 
+.home-signature-name {
+  font-size: clamp(1.9rem, 3.15vw, 3.45rem);
+}
+
 .home-signature-arrow {
   background: var(--evergreen);
 }
@@ -1812,13 +1824,14 @@ body {
   border-radius: 0;
   background: transparent;
   color: var(--accent);
-  font-size: clamp(4.5rem, 8vw, 7.5rem);
+  font-size: clamp(3.8rem, 6.2vw, 5.8rem);
   line-height: 0.8;
   box-shadow: none;
 }
 
 .home-process-step h3 {
   margin-top: 2rem;
+  font-size: clamp(1.9rem, 2.5vw, 2.7rem);
 }
 
 .treatments-editorial-hero {
@@ -1827,7 +1840,7 @@ body {
 
 .treatments-editorial-hero h1 {
   max-width: 10.5ch;
-  font-size: clamp(3.8rem, 5vw, 5.5rem);
+  font-size: clamp(3.55rem, 4.55vw, 4.9rem);
   letter-spacing: -0.025em;
 }
 
@@ -1887,10 +1900,54 @@ body {
 }
 
 .treatment-map-figure {
+  isolation: isolate;
   border-color: rgb(24 26 23 / 0.1);
   border-radius: 0.4rem;
   background: #fbfaf7;
   box-shadow: none;
+}
+
+.treatment-map-figure::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(110deg, transparent 25%, rgb(255 255 255 / 0.36) 48%, transparent 70%);
+  transform: translateX(-110%);
+  animation: treatment-map-sheen 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.treatment-map-photo-stage {
+  animation: treatment-map-enter 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.treatment-map-photo {
+  filter: saturate(0.82) contrast(1.015);
+  transform: scale(1.01);
+  animation: treatment-map-breathe 9s ease-in-out infinite alternate;
+}
+
+.treatment-map-hotspot.is-active::before {
+  content: "";
+  position: absolute;
+  inset: 0.35rem;
+  border: 1px solid rgb(113 70 80 / 0.42);
+  border-radius: 999px;
+  animation: treatment-hotspot-pulse 2.4s ease-out infinite;
+}
+
+.treatment-map-result-intro {
+  animation: treatment-result-enter 420ms ease both;
+}
+
+.map-view-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+.treatment-map-visual-panel h2 {
+  font-size: clamp(2.9rem, 4.15vw, 3.9rem);
 }
 
 .treatment-map-results {
@@ -1981,7 +2038,7 @@ body {
 
 .page-editorial-hero h1 {
   max-width: 17ch;
-  font-size: clamp(3.65rem, 5.6vw, 5.75rem);
+  font-size: clamp(3.35rem, 4.85vw, 5rem);
   letter-spacing: -0.02em;
 }
 
@@ -2147,6 +2204,60 @@ body {
   }
 }
 
+@keyframes treatment-map-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0.75rem) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes treatment-map-breathe {
+  from {
+    transform: scale(1.01) translateY(0);
+  }
+  to {
+    transform: scale(1.025) translateY(-0.35rem);
+  }
+}
+
+@keyframes treatment-map-sheen {
+  0%,
+  58% {
+    transform: translateX(-110%);
+  }
+  76%,
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+@keyframes treatment-hotspot-pulse {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.72);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes treatment-result-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.45rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 899px) {
   .premium-header-inner {
     min-height: 76px;
@@ -2183,8 +2294,15 @@ body {
   }
 
   .home-campaign-copy h1 {
-    max-width: 10.5ch;
-    font-size: clamp(3.65rem, 17vw, 5.2rem);
+    max-width: 11.5ch;
+    font-size: clamp(3.25rem, 14.5vw, 4.35rem);
+  }
+
+  .home-story-section h2,
+  .home-signature-section h2,
+  .home-process-section h2,
+  .home-trust-moment h2 {
+    font-size: clamp(2.8rem, 12vw, 3.55rem);
   }
 
   .home-hero-trust span:not(:last-child)::after {
@@ -2224,7 +2342,11 @@ body {
   .treatments-editorial-hero h1,
   .page-editorial-hero h1 {
     max-width: none;
-    font-size: clamp(3.35rem, 14vw, 4.5rem);
+    font-size: clamp(3rem, 12.5vw, 3.85rem);
     letter-spacing: -0.018em;
+  }
+
+  .treatment-map-visual-panel h2 {
+    font-size: clamp(2.65rem, 11.5vw, 3.3rem);
   }
 }

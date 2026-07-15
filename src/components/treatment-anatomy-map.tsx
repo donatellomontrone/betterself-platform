@@ -96,7 +96,7 @@ const zones: TreatmentZone[] = [
     label: "Neck & lower-face skin",
     description: "Skin quality and contour options that may be considered after doctor review.",
     x: 50,
-    y: 76,
+    y: 70,
     treatmentIds: ["face-mesolipo", "crystal-pn-plus", "rejuran-h", "bi-dens"],
     tag: "Doctor review",
   },
@@ -105,8 +105,8 @@ const zones: TreatmentZone[] = [
     view: "body",
     label: "Underarms",
     description: "Options for excessive sweating and selected underarm tone concerns when suitable.",
-    x: 42,
-    y: 29,
+    x: 38,
+    y: 31,
     treatmentIds: ["sweatox", "underarm-whitening-injectable"],
     tag: "Injectable",
   },
@@ -156,7 +156,7 @@ const zones: TreatmentZone[] = [
     label: "Intimate-area tone concerns",
     description: "Discreet doctor-led treatment requests for selected intimate-area tone concerns.",
     x: 50,
-    y: 47,
+    y: 52,
     treatmentIds: ["intimate-area-whitening-injectable"],
     tag: "Discreet care",
   },
@@ -200,11 +200,11 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                 </div>
                 <div className="grid grid-cols-2 rounded-full border border-[#E6DFD5] bg-white/72 p-1 text-sm font-semibold backdrop-blur">
                   {(["face", "body"] as const).map((view) => (
-	                    <button
+                    <button
 	                      key={view}
 	                      type="button"
 	                      aria-pressed={activeView === view}
-	                      className={`min-h-11 rounded-full px-4 py-2 transition ${
+	                      className={`map-view-toggle min-h-11 rounded-full px-4 py-2 transition ${
 	                        activeView === view ? "bg-[#8F5B67] text-white" : "text-[#4D4D4D] hover:bg-[#F6EDEA]"
 	                      }`}
                       onClick={() => chooseView(view)}
@@ -221,13 +221,16 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                     <MousePointer2 className="h-3.5 w-3.5" />
                     Tap a point
                   </div>
-                  <div className="absolute left-1/2 top-20 aspect-[1088/1456] w-[92%] max-w-[330px] -translate-x-1/2">
+                  <div
+                    key={activeView}
+                    className="treatment-map-photo-stage absolute left-1/2 top-20 aspect-[2/3] w-[92%] max-w-[330px]"
+                  >
                     <Image
-                      src={activeView === "face" ? "/betterself-face-map.png" : "/betterself-body-map.png"}
-                      alt=""
+                      src={activeView === "face" ? "/betterself-face-photo-v2.jpg" : "/betterself-body-photo-v2.jpg"}
+                      alt={activeView === "face" ? "Front-facing BetterSelf facial treatment map model" : "Front-facing BetterSelf body treatment map model"}
                       fill
                       sizes="(min-width: 768px) 330px, 92vw"
-                      className="object-contain opacity-95"
+                      className="treatment-map-photo object-contain"
                       priority
                     />
                     {visibleZones.map((zone) => {
@@ -239,7 +242,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                           type="button"
 	                          aria-label={`Show treatments for ${zone.label}`}
 	                          aria-pressed={isActive}
-	                          className="absolute z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-[#6E444E] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+	                          className={`treatment-map-hotspot absolute z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none transition hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-[#6E444E] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isActive ? "is-active" : ""}`}
                           style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
                           onClick={() => setActiveZoneId(zone.id)}
                         >
@@ -292,7 +295,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
             </div>
 
             <aside className="treatment-map-results p-5 md:p-7">
-              <div className="flex items-start justify-between gap-4">
+              <div key={activeZone.id} className="treatment-map-result-intro flex items-start justify-between gap-4">
                 <div>
                   <p className="eyebrow">{activeView === "face" ? "Face area" : "Body area"}</p>
                   <h3 className="mt-3 font-serif text-4xl leading-tight text-[#1F1F1F]">
