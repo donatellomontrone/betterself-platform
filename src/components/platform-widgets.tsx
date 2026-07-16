@@ -405,19 +405,21 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       ) : null}
       <div className="booking-flow-shell grid gap-6 lg:grid-cols-[minmax(0,1fr)_390px]">
       <section className="booking-main-panel p-5 md:p-7">
-        <div className="booking-mobile-summary mb-5 flex items-center justify-between gap-3 px-4 py-3 lg:hidden">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5C574F]">
-              {isConsultation ? "Consultation fee" : "Starting price"}
-            </p>
-            <p className="font-serif text-2xl text-[#1F1F1F]">
-              {bookingIntent ? selectedService.priceLabel : "—"}
+        {bookingIntent ? (
+          <div className="booking-mobile-summary mb-5 flex items-center justify-between gap-3 px-4 py-3 lg:hidden">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5C574F]">
+                {isConsultation ? "Consultation fee" : "Starting price"}
+              </p>
+              <p className="font-serif text-2xl text-[#1F1F1F]">
+                {selectedService.priceLabel}
+              </p>
+            </div>
+            <p className="max-w-[55%] text-right text-xs text-[#595550]">
+              {selectedService.name}
             </p>
           </div>
-          <p className="max-w-[55%] text-right text-xs text-[#595550]">
-            {bookingIntent ? selectedService.name : "Choose booking path"}
-          </p>
-        </div>
+        ) : null}
         <div className="mb-6">
           <div
             className="booking-progress h-2 overflow-hidden rounded-full"
@@ -446,8 +448,8 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
 
         {step === 0 ? (
           <BookingStep
-            title="How would you like to book?"
-            text="Choose the path that matches the patient. If they already know the treatment, they can request that service. If they are unsure, they can start with a doctor consultation call."
+            title="How would you like to begin?"
+            text="Choose the route that best matches where you are today."
           >
             <div className="grid gap-4 md:grid-cols-2">
               <button
@@ -469,8 +471,8 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                   Book a treatment
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-[#595550]">
-                  Choose the exact service, complete intake, schedule the doctor
-                  review call, then pay from the dashboard after confirmation.
+                  Choose the service, complete private intake, and let the doctor
+                  confirm the plan before payment opens in your dashboard.
                 </p>
                 <p className="mt-4 text-sm font-bold text-[#1F1F1F]">
                   Treatment price applies
@@ -495,8 +497,8 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                   Book a consultation
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-[#595550]">
-                  Talk with the doctor first, discuss goals and suitability, then
-                  decide the right treatment later.
+                  Speak with the doctor about your goals and suitability before
+                  deciding on a treatment.
                 </p>
                 <p className="mt-4 text-sm font-bold text-[#1F1F1F]">
                   {consultationService.priceLabel}

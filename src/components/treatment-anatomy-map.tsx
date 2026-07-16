@@ -222,7 +222,7 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-5 md:grid-cols-[0.95fr_1fr] md:items-center">
+              <div className="mt-6">
                 <div className="treatment-map-figure relative min-h-[520px] overflow-hidden p-4">
                   <div className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-[#8F5B67] shadow-sm">
                     <MousePointer2 className="h-3.5 w-3.5" />
@@ -271,30 +271,23 @@ export function TreatmentAnatomyMap({ treatments }: TreatmentAnatomyMapProps) {
                     })}
                   </div>
                 </div>
-
-                <div className="grid gap-3">
-                  {visibleZones.map((zone) => {
-                    const isActive = zone.id === activeZone.id;
-
-                    return (
-	                      <button
-	                        key={zone.id}
-	                        type="button"
-	                        aria-pressed={isActive}
-	                        className={`treatment-zone-button border p-4 text-left transition ${
-                          isActive
-                            ? "border-[#8F5B67] bg-[#8F5B67] text-white"
-                            : "border-[#E6DFD5] bg-white text-[#1F1F1F] hover:border-[#8F5B67]"
-                        }`}
-                        onClick={() => chooseZone(zone.id)}
-                      >
-                        <span className="block font-serif text-xl leading-tight md:text-2xl">
-                          {zone.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+              </div>
+              <div className="treatment-map-area-picker mt-4">
+                <label className="sr-only" htmlFor="treatment-area">
+                  Select a treatment area
+                </label>
+                <select
+                  id="treatment-area"
+                  className="field w-full"
+                  value={activeZone.id}
+                  onChange={(event) => chooseZone(event.target.value)}
+                >
+                  {visibleZones.map((zone) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

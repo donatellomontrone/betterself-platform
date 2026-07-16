@@ -12,6 +12,7 @@ import { Treatment } from "@/lib/treatments";
 import { HeaderAuthControls } from "@/components/header-auth";
 import { MobileMenu } from "@/components/mobile-menu";
 import { MobileBottomCta } from "@/components/mobile-cta";
+import { PrimaryNav } from "@/components/primary-nav";
 import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
 
 export const primaryNav = [
@@ -52,16 +53,7 @@ export function Header() {
             </span>
           </span>
         </Link>
-        <nav
-          className="premium-nav hidden items-center gap-1 text-sm font-semibold text-[#4D4D4D] min-[1100px]:flex"
-          aria-label="Primary navigation"
-        >
-          {primaryNav.map((item) => (
-            <Link key={item.href} className="premium-nav-link" href={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <PrimaryNav items={primaryNav} />
         <MobileMenu items={primaryNav} />
         <div className="premium-header-actions hidden items-center gap-3 min-[1100px]:flex">
           <HeaderAuthControls />

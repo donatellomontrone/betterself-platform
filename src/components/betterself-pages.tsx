@@ -470,15 +470,15 @@ export function HomePage() {
           className="home-campaign-image object-cover object-[72%_center] md:object-center"
         />
         <div className="home-campaign-wash" />
-        <div className="relative mx-auto grid min-h-[760px] max-w-[1440px] items-center gap-8 px-5 pb-14 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:pb-16 lg:pt-20">
+        <div className="relative mx-auto grid min-h-[680px] max-w-[1440px] items-end gap-8 px-5 pb-12 pt-12 lg:min-h-[760px] lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:px-10 lg:pb-16 lg:pt-20">
           <div className="home-campaign-copy">
             <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.24em] text-[#8F5B67]">
               BetterSelf Home Aesthetics
             </p>
-            <h1 className="mt-5 font-serif text-5xl leading-[0.95] text-[#1F1F1F] md:text-7xl lg:text-8xl">
+            <h1 className="mt-4 font-serif text-5xl leading-[0.95] text-[#1F1F1F] md:text-7xl lg:text-8xl">
               Doctor-led beauty, brought home.
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-8 text-[#595550] md:text-lg">
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#595550] md:text-lg md:leading-8">
               A private aesthetic experience for Metro Manila: medical intake,
               doctor review, secure payment, and discreet home treatment when suitable.
             </p>
@@ -515,13 +515,12 @@ function HomeSignatureTreatments() {
           <div>
             <p className="eyebrow">Signature requests</p>
             <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
-              Treatments that feel selected, not stacked.
+            Treatments selected around your concern.
             </h2>
           </div>
           <p className="max-w-2xl text-base leading-8 text-[#595550] lg:ml-auto">
-            Browse by concern, review clear pricing, and request the option that
-            fits your goals. Every treatment still depends on medical suitability
-            and doctor confirmation.
+            Start with the area or goal you want to address, then request the
+            treatment that feels right. Every plan remains subject to medical review.
           </p>
         </div>
         <div className="home-signature-list mt-12">
@@ -754,19 +753,28 @@ export function BookingPage({
 
   return (
     <PageShell>
-      <PageHero
-        eyebrow="Book appointment"
-        title={
-          isDirectBooking
-            ? `Book ${selectedTreatment?.name}.`
-            : "Choose a treatment directly or start with a doctor consultation."
-        }
-        text={
-          isDirectBooking
-            ? "Complete your details and medical intake. The doctor reviews suitability and confirms the plan before treatment payment opens."
-            : "Submit your request first, schedule a doctor call or review, then pay from your dashboard only after BetterSelf confirms the service."
-        }
-      />
+      <section className="booking-intro px-5 pb-7 pt-10 lg:px-8 lg:pb-8 lg:pt-14">
+        <div className="mx-auto max-w-7xl">
+          <p className="eyebrow">Book appointment</p>
+          <div className="mt-3 grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-end">
+            <div>
+              <h1 className="font-serif text-4xl leading-[0.98] text-[#1F1F1F] md:text-6xl">
+                {isDirectBooking ? `Book ${selectedTreatment?.name}.` : "Start with what feels right."}
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#595550] md:text-base md:leading-7">
+                {isDirectBooking
+                  ? "Complete a private intake. The doctor reviews suitability before confirming your plan and payment."
+                  : "Choose a treatment when you know what you want, or book a private doctor consultation for guidance first."}
+              </p>
+            </div>
+            {!isDirectBooking ? (
+              <p className="booking-intro-note text-sm leading-6 text-[#595550]">
+                No treatment payment is taken until the doctor confirms your plan.
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </section>
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <BookingFlow initialTreatmentId={treatmentId} startAtDetails={startAtDetails} prefill={prefill} />
@@ -2265,11 +2273,29 @@ export function LoginPage({ status }: { status?: string }) {
 export function HowItWorksPage() {
   return (
     <PageShell>
-      <PageHero
-        eyebrow="How it works"
-        title="A simple process that keeps medical review visible."
-        text="Patients can book in minutes, but BetterSelf still keeps intake, doctor review, consent, and aftercare as core parts of the journey."
-      />
+      <section className="how-it-works-hero px-5 py-10 lg:px-8 lg:py-14">
+        <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
+          <div className="max-w-2xl">
+            <p className="eyebrow">How it works</p>
+            <h1 className="mt-4 font-serif text-5xl leading-[0.96] text-[#1F1F1F] md:text-7xl">
+              A calm path from question to appointment.
+            </h1>
+            <p className="mt-5 text-base leading-7 text-[#595550] md:text-lg md:leading-8">
+              BetterSelf keeps the important things visible: private intake, doctor review, clear payment, and considered aftercare.
+            </p>
+          </div>
+          <div className="how-it-works-hero-image">
+            <Image
+              src="/betterself-home-visit-kit.jpg"
+              alt="BetterSelf home visit kit prepared beside a private appointment schedule"
+              fill
+              sizes="(min-width: 1024px) 52vw, 100vw"
+              className="object-cover"
+              loading="eager"
+            />
+          </div>
+        </div>
+      </section>
       <section className="px-5 pb-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <HowItWorksSection />
@@ -2392,8 +2418,8 @@ function HowItWorksSection() {
       <div className="mx-auto max-w-7xl">
         <SectionHeading
           eyebrow="How BetterSelf works"
-          title="A structured, doctor-led path from booking to aftercare."
-          text="The journey is intentionally calm: treatment request, intake, doctor call or review, confirmation, dashboard payment, home visit, and follow-up."
+          title="Clear at every step."
+          text="Choose your route, complete a private intake, speak with the doctor when needed, and confirm the plan before a home visit is prepared."
         />
         <div className="mt-8 grid gap-4 md:grid-cols-4">
           {howItWorksSteps.map((step, index) => (
