@@ -247,7 +247,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       return;
     }
 
-    if (step === 2 && (!intakeComplete || intakeNeedsDetail)) {
+    if (step === 2 && isDirectTreatment && (!intakeComplete || intakeNeedsDetail)) {
       setCheckoutState("error");
       setCheckoutNote(
         "Please answer every medical screening question. Add a short detail for each Yes answer.",
@@ -363,12 +363,14 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
           appointmentType,
           location: requiresAddress ? location : "Online consultation",
           patientConcern: patientConcern.trim() || undefined,
-          intakeAnswers: Object.fromEntries(
-            intakeQuestions.map((question) => [
-              question,
-              { answer: intake[question], detail: intakeDetails[question]?.trim() || undefined },
-            ]),
-          ),
+          intakeAnswers: isDirectTreatment
+            ? Object.fromEntries(
+                intakeQuestions.map((question) => [
+                  question,
+                  { answer: intake[question], detail: intakeDetails[question]?.trim() || undefined },
+                ]),
+              )
+            : undefined,
           discountCode: isConsultation ? discountCode.trim() || undefined : undefined,
           consentConfirmed: allConsented,
           customer: {
@@ -811,40 +813,49 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 </label>
               ) : null}
             </div>
-            <fieldset className="mt-6 grid gap-4" aria-describedby="medical-screening-help">
-              <legend className="text-sm font-semibold text-[#1F1F1F]">Medical screening</legend>
-              <p id="medical-screening-help" className="text-xs leading-5 text-[#5C574F]">
-                Answer every question. A Yes response needs a short detail so the doctor can review it safely.
-              </p>
-              {intakeQuestions.map((question, index) => (
-                <div key={question} className="booking-checkbox-row p-4 text-sm text-[#4D4D4D]">
-                  <p className="font-medium text-[#1F1F1F]">{question}</p>
-                  <div className="mt-3 flex flex-wrap gap-3" role="radiogroup" aria-label={question}>
-                    {(["yes", "no", "not_sure"] as IntakeAnswer[]).map((answer) => (
-                      <label key={answer} className="inline-flex items-center gap-2">
-                        <input
-                          className="h-4 w-4 accent-[#8F5B67]"
-                          type="radio"
-                          name={`intake-${index}`}
-                          value={answer}
-                          checked={intake[question] === answer}
-                          onChange={() => setIntake((current) => ({ ...current, [question]: answer }))}
-                        />
-                        <span>{answer === "not_sure" ? "Not sure" : answer[0].toUpperCase() + answer.slice(1)}</span>
-                      </label>
-                    ))}
+            {isDirectTreatment ? (
+              <fieldset className="mt-6 grid gap-4" aria-describedby="medical-screening-help">
+                <legend className="text-sm font-semibold text-[#1F1F1F]">Medical screening</legend>
+                <p id="medical-screening-help" className="text-xs leading-5 text-[#5C574F]">
+                  Answer every question. A Yes response needs a short detail so the doctor can review it safely.
+                </p>
+                {intakeQuestions.map((question, index) => (
+                  <div key={question} className="booking-checkbox-row p-4 text-sm text-[#4D4D4D]">
+                    <p className="font-medium text-[#1F1F1F]">{question}</p>
+                    <div className="mt-3 flex flex-wrap gap-3" role="radiogroup" aria-label={question}>
+                      {(["yes", "no", "not_sure"] as IntakeAnswer[]).map((answer) => (
+                        <label key={answer} className="inline-flex items-center gap-2">
+                          <input
+                            className="h-4 w-4 accent-[#8F5B67]"
+                            type="radio"
+                            name={`intake-${index}`}
+                            value={answer}
+                            checked={intake[question] === answer}
+                            onChange={() => setIntake((current) => ({ ...current, [question]: answer }))}
+                          />
+                          <span>{answer === "not_sure" ? "Not sure" : answer[0].toUpperCase() + answer.slice(1)}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {intake[question] === "yes" ? (
+                      <textarea
+                        className="field mt-3 min-h-20 w-full"
+                        value={intakeDetails[question] ?? ""}
+                        placeholder="Please share relevant details for the doctor."
+                        onChange={(event) => setIntakeDetails((current) => ({ ...current, [question]: event.target.value }))}
+                      />
+                    ) : null}
                   </div>
-                  {intake[question] === "yes" ? (
-                    <textarea
-                      className="field mt-3 min-h-20 w-full"
-                      value={intakeDetails[question] ?? ""}
-                      placeholder="Please share relevant details for the doctor."
-                      onChange={(event) => setIntakeDetails((current) => ({ ...current, [question]: event.target.value }))}
-                    />
-                  ) : null}
-                </div>
-              ))}
-            </fieldset>
+                ))}
+              </fieldset>
+            ) : (
+              <div className="booking-soft-panel mt-6 p-4">
+                <p className="text-sm font-semibold text-[#1F1F1F]">Medical history is reviewed with the doctor</p>
+                <p className="mt-2 text-sm leading-6 text-[#595550]">
+                  Your private consultation is the place to discuss medical history, suitability, and the right treatment plan. No screening questionnaire is required before booking this call.
+                </p>
+              </div>
+            )}
           </BookingStep>
         ) : null}
 

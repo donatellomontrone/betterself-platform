@@ -136,7 +136,10 @@ export async function POST(request: NextRequest) {
 
   const isConsultation = isConsultationBooking(treatment);
   const patientConcern = getPatientConcern(body);
-  const intake = sanitizeIntake(body.intakeAnswers);
+  // A consultation is the clinical conversation itself. Requiring a full intake
+  // before the patient can pay for that call was blocking the consultation flow.
+  // Treatment requests still require the complete screening before submission.
+  const intake = isConsultation ? null : sanitizeIntake(body.intakeAnswers);
 
   if (!body.consentConfirmed) {
     return NextResponse.json(
@@ -145,7 +148,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!intake) {
+  if (!isConsultation && !intake) {
     return NextResponse.json(
       { message: "Please complete every medical screening response before submitting." },
       { status: 400 },
@@ -228,8 +231,8 @@ export async function POST(request: NextRequest) {
       notes,
       answers: {
         flow: isConsultation ? "consultation_paid_upfront" : "doctor_review_before_payment",
-        screening: intake.answers,
-        flagged: intake.flagged,
+        screening: intake?.answers ?? {},
+        flagged: intake?.flagged ?? [],
         patientConcern: patientConcern || null,
       },
       consentConfirmed: true,

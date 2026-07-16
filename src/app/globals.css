@@ -158,6 +158,15 @@
   box-shadow: none !important;
 }
 
+/* Keep account access dependable until BetterSelf's Google OAuth client is
+   configured. GitHub and Vercel are not patient sign-in methods. */
+.auth-clerk-card .cl-socialButtonsBlock,
+.auth-clerk-card .cl-dividerRow,
+.auth-clerk-card [class*="socialButtons"],
+.auth-clerk-card [class*="dividerRow"] {
+  display: none !important;
+}
+
 .auth-privacy-note {
   max-width: 27rem;
   margin-top: 1.5rem;
@@ -183,11 +192,13 @@
   }
 
   .auth-visual-panel {
-    min-height: 15rem;
+    min-height: 20rem;
+    aspect-ratio: 4 / 5;
   }
 
   .auth-visual-panel img {
-    object-position: 50% 36%;
+    object-position: 50% 28%;
+    animation: none;
   }
 
   .auth-visual-copy p {
@@ -214,7 +225,8 @@
   }
 
   .auth-visual-panel {
-    min-height: 12rem;
+    min-height: 19rem;
+    aspect-ratio: 4 / 5;
   }
 
   .auth-visual-copy {
