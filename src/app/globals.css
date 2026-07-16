@@ -1483,7 +1483,8 @@ body {
   overflow: hidden;
   min-height: 760px;
   border-bottom: 0;
-  background: #ecebe7;
+  background:
+    linear-gradient(112deg, #f5f0ee 0%, #f8f7f3 44%, #e8ece6 100%);
 }
 
 .home-campaign-image {
@@ -1498,8 +1499,9 @@ body {
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(90deg, rgb(248 247 243 / 0.98) 0%, rgb(248 247 243 / 0.88) 32%, rgb(248 247 243 / 0.23) 62%, rgb(248 247 243 / 0.03) 100%),
-    linear-gradient(0deg, rgb(24 26 23 / 0.16), transparent 32%);
+    linear-gradient(90deg, rgb(248 247 243 / 0.99) 0%, rgb(248 247 243 / 0.91) 31%, rgb(248 247 243 / 0.28) 61%, rgb(248 247 243 / 0.04) 100%),
+    linear-gradient(0deg, rgb(24 26 23 / 0.2), transparent 36%),
+    linear-gradient(145deg, rgb(193 139 151 / 0.1), transparent 38%);
 }
 
 .home-campaign > div.relative {
@@ -1622,7 +1624,24 @@ body {
 }
 
 .home-signature-section {
-  background: #f5f2f3;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(120deg, #f5f1f2 0%, #f9f8f5 54%, #edf1ed 100%);
+}
+
+.home-signature-section::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.34), transparent 44%);
+  content: "";
+  pointer-events: none;
+}
+
+.home-signature-section > * {
+  position: relative;
+  z-index: 1;
 }
 
 .home-signature-list,
@@ -1651,6 +1670,11 @@ body {
   background: rgb(24 26 23 / 0.18);
 }
 
+.home-process-section {
+  background:
+    linear-gradient(180deg, #faf9f6 0%, #f3f0ea 100%);
+}
+
 .home-process-step span {
   width: auto;
   height: auto;
@@ -1670,7 +1694,8 @@ body {
 }
 
 .treatments-editorial-hero {
-  background: linear-gradient(120deg, #f6f1f2 0%, #f9f8f5 58%, #eef1ed 100%);
+  background:
+    linear-gradient(120deg, #f2eaeb 0%, #f9f8f5 52%, #e9eee8 100%);
 }
 
 .treatments-editorial-hero h1 {
@@ -1684,7 +1709,9 @@ body {
   overflow: hidden;
   border-radius: 0.45rem;
   background: #e4e4df;
-  box-shadow: 0 28px 78px rgb(24 26 23 / 0.14);
+  box-shadow:
+    0 30px 78px rgb(24 26 23 / 0.14),
+    0 1px 0 rgb(255 255 255 / 0.68) inset;
 }
 
 .treatments-hero-visual img {
@@ -1725,13 +1752,16 @@ body {
 .treatment-map-shell {
   border-color: var(--line);
   border-radius: 0.5rem;
-  background: var(--paper);
-  box-shadow: 0 26px 70px rgb(24 26 23 / 0.075);
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.9), rgb(249 247 243 / 0.96));
+  box-shadow:
+    0 26px 70px rgb(24 26 23 / 0.075),
+    0 1px 0 rgb(255 255 255 / 0.72) inset;
   backdrop-filter: none;
 }
 
 .treatment-map-visual-panel {
-  background: #f3f1ed;
+  background:
+    linear-gradient(145deg, #f4efee 0%, #f4f2ed 55%, #edf0eb 100%);
 }
 
 .treatment-map-figure {
@@ -1888,7 +1918,8 @@ body {
 
 .booking-intro {
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(100deg, #f7f2f1 0%, #faf9f6 58%, #f1f3ef 100%);
+  background:
+    linear-gradient(100deg, #f4ebec 0%, #faf9f6 53%, #edf1ed 100%);
 }
 
 .booking-intro-note {
@@ -1898,7 +1929,8 @@ body {
 
 .how-it-works-hero {
   border-bottom: 1px solid var(--line);
-  background: #f7f5f1;
+  background:
+    linear-gradient(112deg, #f5eeee 0%, #f8f7f3 48%, #edf0ea 100%);
 }
 
 .how-it-works-hero-image {
@@ -1907,7 +1939,9 @@ body {
   overflow: hidden;
   border-radius: 0.45rem;
   background: #e7e6df;
-  box-shadow: 0 24px 60px rgb(24 26 23 / 0.1);
+  box-shadow:
+    0 24px 60px rgb(24 26 23 / 0.1),
+    0 1px 0 rgb(255 255 255 / 0.72) inset;
 }
 
 .how-it-works-hero-image img {
@@ -1926,8 +1960,10 @@ body {
 .card {
   border-color: var(--line);
   border-radius: 0.5rem;
-  background: var(--paper);
-  box-shadow: 0 16px 42px rgb(24 26 23 / 0.055);
+  background: linear-gradient(145deg, #fffefa, #f9f7f2);
+  box-shadow:
+    0 16px 42px rgb(24 26 23 / 0.055),
+    0 1px 0 rgb(255 255 255 / 0.76) inset;
 }
 
 .dashboard-stat {
