@@ -72,7 +72,7 @@ const otherExpect = [
 export const treatments: Treatment[] = [
   {
     id: "neurotoxin-face",
-    name: "Neurotoxin (Face)",
+    name: "Botox (Face)",
     category: "Toxin-Based",
     description:
       "A doctor-led facial neurotoxin treatment that may help soften the appearance of expression lines after assessment.",
