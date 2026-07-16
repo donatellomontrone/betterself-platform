@@ -108,19 +108,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const rateLimit = await limitAuthenticatedRequest({
-    scope: "booking-submit",
-    userId,
-    maxRequests: 5,
-    windowSeconds: 10 * 60,
-  });
-  if (rateLimit.limited) {
-    return NextResponse.json(
-      { message: `Please wait ${rateLimit.retryAfterSeconds} seconds before creating another request.` },
-      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
-    );
-  }
-
   const body = (await request.json().catch(() => null)) as BookingRequest | null;
   if (!body) {
     return NextResponse.json({ message: "Invalid request body." }, { status: 400 });
@@ -180,6 +167,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { message: "Please add an email address to your account before submitting." },
       { status: 400 },
+    );
+  }
+
+  // Validate first, then rate limit only real booking attempts. A patient fixing
+  // an address, consent, or screening answer must not get locked out of payment.
+  // The v2 scope also releases requests counted by the overly strict previous rule.
+  const rateLimit = await limitAuthenticatedRequest({
+    scope: "booking-submit-v2",
+    userId,
+    maxRequests: 20,
+    windowSeconds: 10 * 60,
+  });
+  if (rateLimit.limited) {
+    return NextResponse.json(
+      { message: "Too many booking attempts in a short time. Please try again in a few minutes." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
     );
   }
 
