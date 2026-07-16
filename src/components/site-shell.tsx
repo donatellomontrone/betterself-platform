@@ -124,6 +124,9 @@ export function Footer() {
             <Link className="transition hover:text-[#1F1F1F]" href="/consent">
               Consent
             </Link>
+            <Link className="transition hover:text-[#1F1F1F]" href="/admin">
+              Admin access
+            </Link>
           </div>
         </div>
       </div>
