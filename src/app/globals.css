@@ -184,6 +184,25 @@
 @media (max-width: 959px) {
   .auth-page {
     padding: 1rem;
+    overflow-x: clip;
+  }
+
+  .auth-page-header,
+  .auth-page-layout {
+    width: 100%;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .auth-page-header {
+    gap: 1rem;
+  }
+
+  .auth-brand {
+    min-width: 0;
+  }
+
+  .auth-back-link {
+    flex-shrink: 0;
   }
 
   .auth-page-layout {
