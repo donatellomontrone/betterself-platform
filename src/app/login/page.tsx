@@ -1,4 +1,4 @@
-import { LoginPage } from "@/components/betterself-pages";
+import { redirect } from "next/navigation";
 
 export default async function Login({
   searchParams,
@@ -6,7 +6,12 @@ export default async function Login({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const status = Array.isArray(params.status) ? params.status[0] : params.status;
+  const entries = Object.entries(params)
+    .flatMap(([key, value]) =>
+      Array.isArray(value) ? value.map((item) => [key, item]) : value ? [[key, value]] : [],
+    )
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+  const query = entries.length > 0 ? `?${entries.join("&")}` : "";
 
-  return <LoginPage status={status} />;
+  redirect(`/sign-in${query}`);
 }

@@ -4,18 +4,20 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AccountConsentGate } from "@/components/account-consent-gate";
 import { hasValidClerkPublishableKey } from "@/lib/clerk-env";
+import { AuthShell } from "@/components/auth-shell";
 
 export default async function SignUpPage() {
   if (!hasValidClerkPublishableKey()) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 py-10">
-        <section className="max-w-md rounded-lg border border-[#E6DFD5] bg-white p-6 text-center">
+      <AuthShell
+        eyebrow="Patient account"
+        title="Account creation is almost ready."
+        description="Patient account registration is being configured for BetterSelf."
+      >
+        <section className="auth-setup-notice">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7A746E]">
             Clerk setup required
           </p>
-          <h1 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
-            Account creation is almost ready.
-          </h1>
           <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">
             Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in
             Vercel to enable patient registration.
@@ -24,7 +26,7 @@ export default async function SignUpPage() {
             Back to site
           </Link>
         </section>
-      </main>
+      </AuthShell>
     );
   }
 
@@ -36,19 +38,27 @@ export default async function SignUpPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 py-10">
+    <AuthShell
+      eyebrow="Create account"
+      title="A private space for your care."
+      description="Create an account to keep bookings, messages, payments, and aftercare in one secure place."
+    >
       <AccountConsentGate>
         <SignUp
           signInUrl="/sign-in"
           fallbackRedirectUrl="/dashboard"
           appearance={{
             variables: {
-              colorPrimary: "#8F5B67",
-              borderRadius: "8px",
+              colorPrimary: "#2F4A40",
+              borderRadius: "6px",
+            },
+            elements: {
+              card: "auth-clerk-card",
+              rootBox: "auth-clerk-root",
             },
           }}
         />
       </AccountConsentGate>
-    </main>
+    </AuthShell>
   );
 }

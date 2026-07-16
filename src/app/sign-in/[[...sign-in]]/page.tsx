@@ -3,18 +3,20 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { hasValidClerkPublishableKey } from "@/lib/clerk-env";
+import { AuthShell } from "@/components/auth-shell";
 
 export default async function SignInPage() {
   if (!hasValidClerkPublishableKey()) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 py-10">
-        <section className="max-w-md rounded-lg border border-[#E6DFD5] bg-white p-6 text-center">
+      <AuthShell
+        eyebrow="Patient account"
+        title="Sign in is almost ready."
+        description="Patient account access is being configured for BetterSelf."
+      >
+        <section className="auth-setup-notice">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7A746E]">
             Clerk setup required
           </p>
-          <h1 className="mt-3 font-serif text-4xl text-[#1F1F1F]">
-            Sign in is almost ready.
-          </h1>
           <p className="mt-3 text-sm leading-6 text-[#6F6F6F]">
             Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in
             Vercel to enable patient accounts.
@@ -23,7 +25,7 @@ export default async function SignInPage() {
             Back to site
           </Link>
         </section>
-      </main>
+      </AuthShell>
     );
   }
 
@@ -35,17 +37,25 @@ export default async function SignInPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#FAF8F4] px-5 py-10">
+    <AuthShell
+      eyebrow="Patient account"
+      title="Welcome back."
+      description="Sign in to manage appointments, messages, and payments in one private place."
+    >
       <SignIn
         signUpUrl="/sign-up"
         fallbackRedirectUrl="/dashboard"
         appearance={{
           variables: {
-            colorPrimary: "#8F5B67",
-            borderRadius: "8px",
+            colorPrimary: "#2F4A40",
+            borderRadius: "6px",
+          },
+          elements: {
+            card: "auth-clerk-card",
+            rootBox: "auth-clerk-root",
           },
         }}
       />
-    </main>
+    </AuthShell>
   );
 }
