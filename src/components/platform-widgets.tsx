@@ -7,9 +7,11 @@ import {
   Check,
   CreditCard,
   Paperclip,
+  Search,
   Send,
   ShieldCheck,
   WandSparkles,
+  X,
 } from "lucide-react";
 import { FormEvent, useEffect, useId, useMemo, useState } from "react";
 import {
@@ -125,6 +127,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
       ? initialTreatmentId
       : treatments[0].id,
   );
+  const [treatmentSearchQuery, setTreatmentSearchQuery] = useState("");
   const [location, setLocation] = useState(prefill?.address ?? "");
   const [locationValid, setLocationValid] = useState(Boolean(prefill?.address));
   const [patientConcern, setPatientConcern] = useState("");
@@ -159,6 +162,25 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
     () => getTreatmentById(treatmentId) ?? treatments[0],
     [treatmentId],
   );
+
+  const matchingTreatments = useMemo(() => {
+    const query = treatmentSearchQuery.trim().toLowerCase();
+
+    if (!query) return treatments;
+
+    return treatments.filter((treatment) =>
+      [
+        treatment.name,
+        treatment.category,
+        treatment.description,
+        treatment.priceLabel,
+        treatment.duration,
+        treatment.detailNote ?? "",
+        ...treatment.concerns,
+        ...treatment.mayHelpWith,
+      ].some((value) => value.toLowerCase().includes(query)),
+    );
+  }, [treatmentSearchQuery]);
 
   const isConsultation = bookingIntent === "consultation";
   const isDirectTreatment = bookingIntent === "treatment";
@@ -515,8 +537,35 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
 
         {step === 1 && isDirectTreatment ? (
           <BookingStep title="Select treatment to book" text="Choose the treatment you want to book directly. The doctor still reviews suitability before confirming or performing it.">
-            <div className="grid gap-3 md:grid-cols-2">
-              {treatments.map((treatment) => (
+            <label className="relative mt-6 block">
+              <span className="sr-only">Search treatments</span>
+              <Search
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5C574F]"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                className="field h-12 w-full rounded-md !py-0 !pl-11 !pr-11 text-sm"
+                placeholder="Search treatment, concern, or price"
+                value={treatmentSearchQuery}
+                onChange={(event) => setTreatmentSearchQuery(event.target.value)}
+              />
+              {treatmentSearchQuery ? (
+                <button
+                  type="button"
+                  aria-label="Clear treatment search"
+                  className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-[#6E444E] transition hover:bg-[#F6EDEA]"
+                  onClick={() => setTreatmentSearchQuery("")}
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              ) : null}
+            </label>
+            <p className="mt-3 text-xs font-medium text-[#5C574F]" aria-live="polite">
+              {matchingTreatments.length} treatment{matchingTreatments.length === 1 ? "" : "s"} shown
+            </p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {matchingTreatments.map((treatment) => (
                 <button
                   key={treatment.id}
                   className={`booking-treatment-card text-left ${
@@ -540,6 +589,21 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                 </button>
               ))}
             </div>
+            {matchingTreatments.length === 0 ? (
+              <div className="mt-5 border-t border-[#E6DFD5] pt-5">
+                <p className="font-serif text-2xl text-[#1F1F1F]">No treatments found</p>
+                <p className="mt-1 text-sm leading-6 text-[#595550]">
+                  Try a different concern, treatment name, or price. Not sure what fits? A doctor consultation can help.
+                </p>
+                <button
+                  type="button"
+                  className="mt-3 text-sm font-semibold text-[#6E444E] underline underline-offset-4"
+                  onClick={() => setTreatmentSearchQuery("")}
+                >
+                  Clear search
+                </button>
+              </div>
+            ) : null}
           </BookingStep>
         ) : null}
 
