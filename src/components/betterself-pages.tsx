@@ -35,7 +35,6 @@ import {
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
-import { ScrollHeroScene } from "@/components/scroll-hero-scene";
 import type { AdminBookingView, MessageThreadView, PatientBookingView } from "@/lib/db/queries";
 import { buildCalendlySchedulingUrl } from "@/lib/calendly";
 import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
@@ -461,7 +460,43 @@ const faqs = [
 export function HomePage() {
   return (
     <PageShell>
-      <ScrollHeroScene />
+      <section className="home-campaign">
+        <Image
+          src="/betterself-hero-home.jpg"
+          alt="BetterSelf doctor preparing a sterile home aesthetic treatment kit in a private residence"
+          fill
+          priority
+          sizes="100vw"
+          className="home-campaign-image object-cover object-[72%_center] md:object-center"
+        />
+        <div className="home-campaign-wash" />
+        <div className="relative mx-auto grid min-h-[680px] max-w-[1440px] items-end gap-8 px-5 pb-12 pt-12 lg:min-h-[760px] lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:px-10 lg:pb-16 lg:pt-20">
+          <div className="home-campaign-copy">
+            <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.24em] text-[#8F5B67]">
+              BetterSelf Home Aesthetics
+            </p>
+            <h1 className="mt-4 font-serif text-5xl leading-[0.95] text-[#1F1F1F] md:text-7xl lg:text-8xl">
+              Doctor-led beauty, brought home.
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#595550] md:text-lg md:leading-8">
+              A private aesthetic experience for Metro Manila: medical intake,
+              doctor review, secure payment, and discreet home treatment when suitable.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link className="premium-cta px-6" href="/booking">
+                Book a Treatment
+              </Link>
+              <Link className="editorial-text-link" href="/treatments">
+                Explore Treatments <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+          <div className="home-scroll-cue" aria-hidden="true">
+            <span>Discover</span>
+            <i />
+          </div>
+        </div>
+      </section>
       <HomeSignatureTreatments />
       <HomeFluidProcess />
       <HomeTrustMoment />
