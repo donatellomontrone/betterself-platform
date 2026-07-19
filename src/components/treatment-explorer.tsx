@@ -145,7 +145,6 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
               <article
                 key={treatment.id}
                 className="treatment-premium-card card flex h-full flex-col p-6"
-                data-reveal
               >
                 <div className="flex items-start justify-between gap-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8F5B67]">{treatment.category}</p>
