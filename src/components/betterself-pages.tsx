@@ -2391,49 +2391,146 @@ export function SafetyPage() {
 }
 
 export function AboutPage() {
+  const principles = [
+    {
+      icon: Stethoscope,
+      title: "Medical first",
+      text: "Every request starts with private medical information, a doctor review, and a plan that is appropriate for you.",
+    },
+    {
+      icon: Home,
+      title: "Private by design",
+      text: "Care is brought to your home so the appointment feels quieter, more personal, and shaped around your day.",
+    },
+    {
+      icon: PackageCheck,
+      title: "Prepared with intention",
+      text: "Verified products, sterile preparation, clear documentation, and aftercare are part of every confirmed visit.",
+    },
+  ];
+
   return (
     <PageShell>
-      <section className="px-5 py-10 lg:px-8 lg:py-14">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="card p-5">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F1ECE4]">
+      <section className="about-hero px-5 py-14 lg:px-8 lg:py-24" data-reveal>
+        <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20">
+          <div className="max-w-2xl">
+            <p className="eyebrow">Our story</p>
+            <h1 className="mt-5 font-serif text-5xl leading-[0.96] text-[#1F1F1F] md:text-7xl">
+              A more personal way to access aesthetic care.
+            </h1>
+            <p className="mt-7 max-w-xl text-lg leading-8 text-[#595550]">
+              BetterSelf brings doctor-led aesthetic care into the comfort of home, so a considered appointment can feel private, calm, and genuinely personal.
+            </p>
+            <p className="mt-5 max-w-xl text-base leading-8 text-[#595550]">
+              We were created for people who want the reassurance of medical standards without the rush, waiting rooms, or impersonality that can surround a traditional clinic visit.
+            </p>
+            <TrackedLink className="premium-cta mt-9 px-7" href="/booking" eventName="request_treatment" eventData={{ placement: "about_hero" }}>
+              Request a Treatment <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </TrackedLink>
+          </div>
+          <div className="about-hero-visual">
+            <div className="relative min-h-[390px] overflow-hidden rounded-[1.125rem] md:min-h-[530px]">
               <Image
-                src="/betterself-doctor-kit.jpg"
-                alt="BetterSelf doctor preparing a sterile home-visit aesthetic kit"
+                src="/betterself-hero-home.jpg"
+                alt="BetterSelf physician preparing a private home aesthetic appointment"
                 fill
                 priority
-                sizes="(min-width: 1024px) 420px, 90vw"
-                className="object-cover object-center"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover object-[72%_center]"
               />
             </div>
-            <div className="mt-5 grid gap-3">
-              <StatusBadge>Doctor-led care</StatusBadge>
-              <StatusBadge>Licensed medical doctor</StatusBadge>
-              <StatusBadge>Aesthetic &amp; injectable treatments</StatusBadge>
+            <div className="about-hero-caption">
+              <p>BetterSelf Home Aesthetics</p>
+              <span>Doctor-led private care, selected Metro Manila areas.</span>
             </div>
-          </div>
-          <div>
-            <Badge>Our approach</Badge>
-            <h1 className="mt-5 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
-              Private aesthetic care, guided by a licensed medical doctor.
-            </h1>
-            <div className="mt-6 grid gap-5 text-base leading-8 text-[#595550]">
-              <p>
-                BetterSelf was created to make medical aesthetic care more private, structured and convenient without compromising medical standards.
-              </p>
-              <p>
-                Led by a licensed physician, BetterSelf provides selected aesthetic treatments through medical screening, suitability review, treatment planning, sterile home preparation and professional aftercare.
-              </p>
-              <p>
-                Our goal is simple: help patients look refreshed, feel confident and receive safe medical care in the comfort of their home.
-              </p>
-            </div>
-            <TrackedLink className="btn btn-primary mt-8" href="/booking" eventName="request_treatment" eventData={{ placement: "about" }}>
-              Request a Treatment
-            </TrackedLink>
           </div>
         </div>
       </section>
+
+      <section className="about-origin px-5 py-20 lg:px-8 lg:py-32" data-reveal>
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
+          <div>
+            <p className="eyebrow">Why BetterSelf exists</p>
+            <h2 className="mt-4 max-w-lg font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-6xl">
+              Beauty care should not feel rushed or impersonal.
+            </h2>
+          </div>
+          <div className="grid max-w-3xl gap-5 text-base leading-8 text-[#595550] md:text-lg">
+            <p>
+              Aesthetic medicine is personal. It begins with a concern, but it should end with clarity: what is appropriate, what is not, and what a safe, realistic plan looks like for you.
+            </p>
+            <p>
+              BetterSelf was built to make that conversation more human. Instead of asking patients to fit into a clinic routine, we bring a structured medical appointment to a setting where they can feel at ease.
+            </p>
+            <p>
+              The result is not simply a home visit. It is a deliberate care experience: medical assessment first, a private appointment when suitable, and support that continues after treatment.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="about-principles px-5 py-20 lg:px-8 lg:py-28" data-reveal>
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="eyebrow">Our standard</p>
+            <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
+              Care that feels personal. Standards that remain medical.
+            </h2>
+          </div>
+          <div className="about-principles-grid mt-14">
+            {principles.map(({ icon: Icon, title, text }) => (
+              <article key={title} className="about-principle" data-reveal>
+                <Icon className="h-5 w-5 text-[#8F5B67]" aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="about-prepared px-5 py-20 lg:px-8 lg:py-32" data-reveal>
+        <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          <div className="about-prepared-image relative min-h-[360px] overflow-hidden rounded-[1.125rem] lg:min-h-[500px]">
+            <Image
+              src="/betterself-safety-kit.jpg"
+              alt="Sterile BetterSelf medical supplies and procedure checklist prepared for a home visit"
+              fill
+              loading="eager"
+              sizes="(min-width: 1024px) 52vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="max-w-xl lg:py-8">
+            <p className="eyebrow">The BetterSelf visit</p>
+            <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-6xl">
+              Considered before the doctor arrives.
+            </h2>
+            <p className="mt-6 text-base leading-8 text-[#595550]">
+              Before a visit is confirmed, the doctor reviews your request and intake. When appropriate, the appointment is planned around the treatment area, your questions, and your schedule.
+            </p>
+            <div className="about-visit-list mt-8">
+              <span>Private medical intake</span>
+              <span>Doctor suitability review</span>
+              <span>Verified products and sterile preparation</span>
+              <span>Clear aftercare and follow-up support</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="about-closing px-5 py-20 lg:px-8 lg:py-28" data-reveal>
+        <div className="mx-auto max-w-7xl border-y border-[#D8D0C7] py-12 text-center lg:py-16">
+          <p className="eyebrow">Our promise</p>
+          <h2 className="mx-auto mt-4 max-w-4xl font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
+            Discreet care. Clear decisions. Professional follow-through.
+          </h2>
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-[#595550]">
+            We do not promise a one-size-fits-all outcome. We promise a doctor-led process where your safety, suitability, privacy, and expectations stay visible from the first request onward.
+          </p>
+        </div>
+      </section>
+      <FinalCta />
     </PageShell>
   );
 }
