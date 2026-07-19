@@ -706,9 +706,16 @@ function HomeFluidProcess() {
 
 function HomeTrustMoment() {
   return (
-    <section className="home-trust-moment premium-reveal px-5 py-24 lg:px-8 lg:py-36" data-reveal>
-      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="max-w-2xl">
+    <section className="home-trust-moment premium-reveal" data-reveal>
+      <Image
+        src="/betterself-safety-kit.jpg"
+        alt="Sterile supplies prepared for BetterSelf doctor-led home aesthetic care"
+        fill
+        sizes="100vw"
+        className="home-trust-background object-cover"
+      />
+      <div className="home-trust-content mx-auto max-w-[1440px] px-5 lg:px-10">
+        <div className="home-trust-copy max-w-2xl">
           <p className="eyebrow">Safety, quietly visible</p>
           <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
             Premium does not mean vague. It means everything is prepared.
@@ -719,15 +726,6 @@ function HomeTrustMoment() {
           <Link className="btn btn-secondary mt-8 rounded-full px-6" href="/safety">
             Read the safety approach
           </Link>
-        </div>
-        <div className="home-trust-image">
-          <Image
-            src="/betterself-safety-kit.jpg"
-            alt="Sterile supplies prepared for BetterSelf doctor-led home aesthetic care"
-            fill
-            sizes="(min-width: 1024px) 42vw, 100vw"
-            className="object-cover"
-          />
         </div>
       </div>
     </section>

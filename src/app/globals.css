@@ -3426,3 +3426,82 @@ select:focus {
     transform: translateY(-2px);
   }
 }
+
+/* Home safety moment: keep the proof of preparation as an immersive editorial scene. */
+.home-trust-moment {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  min-height: clamp(37rem, 68vh, 49rem);
+  align-items: flex-end;
+  overflow: hidden;
+  border: 0;
+  background: #e7e8e5;
+  isolation: isolate;
+}
+
+.home-trust-background {
+  z-index: -2;
+  object-position: 76% center;
+  opacity: 0.7;
+  filter: saturate(0.67) contrast(0.96) brightness(1.08);
+  transform: scale(1.025);
+}
+
+.home-trust-moment::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgb(251 249 246 / 0.96) 0%, rgb(251 249 246 / 0.87) 32%, rgb(251 249 246 / 0.47) 55%, rgb(251 249 246 / 0.08) 100%),
+    linear-gradient(180deg, rgb(250 248 245 / 0.18), transparent 46%, rgb(250 248 245 / 0.2));
+  content: "";
+}
+
+.home-trust-content {
+  width: 100%;
+  padding-top: clamp(8.5rem, 15vh, 11rem);
+  padding-bottom: clamp(4.5rem, 8vh, 6.5rem);
+}
+
+.home-trust-copy {
+  text-shadow: 0 1px 18px rgb(255 255 255 / 0.46);
+}
+
+.home-trust-moment h2 {
+  max-width: 11ch;
+  font-size: clamp(3.4rem, 5vw, 5.75rem);
+  letter-spacing: -0.028em;
+}
+
+.home-trust-moment .eyebrow {
+  color: #784b57;
+}
+
+@media (max-width: 899px) {
+  .home-trust-moment {
+    min-height: 42rem;
+    align-items: flex-end;
+  }
+
+  .home-trust-background {
+    object-position: 73% center;
+    opacity: 0.52;
+  }
+
+  .home-trust-moment::before {
+    background:
+      linear-gradient(180deg, rgb(251 249 246 / 0.78) 0%, rgb(251 249 246 / 0.86) 30%, rgb(251 249 246 / 0.95) 68%, rgb(251 249 246 / 0.98) 100%),
+      linear-gradient(90deg, rgb(251 249 246 / 0.38), transparent);
+  }
+
+  .home-trust-content {
+    padding-top: 11rem;
+    padding-bottom: 4.5rem;
+  }
+
+  .home-trust-moment h2 {
+    max-width: 10ch;
+    font-size: clamp(2.9rem, 11.5vw, 4.1rem);
+  }
+}
