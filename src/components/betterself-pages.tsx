@@ -2744,8 +2744,8 @@ function HowItWorksSection() {
         <div className="mt-14 grid gap-4 rounded-[1.125rem] border border-[#E6DFD5] bg-white p-3 shadow-sm lg:mt-16 lg:gap-5 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="relative min-h-[270px] overflow-hidden rounded-[0.875rem] lg:min-h-[360px]">
             <Image
-              src="/betterself-home-visit-kit.jpg"
-              alt="BetterSelf home-visit kit prepared with appointment calendar and medical notes"
+              src="/betterself-doctor-kit.jpg"
+              alt="A BetterSelf clinician preparing sterile equipment for a private home visit"
               fill
               sizes="(min-width: 1024px) 58vw, 100vw"
               className="object-cover"
