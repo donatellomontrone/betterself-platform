@@ -40,9 +40,16 @@
   opacity: 0.85;
 }
 
+.auth-brand-wordmark {
+  display: grid;
+  width: max-content;
+  justify-items: center;
+}
+
 .auth-brand-name,
 .auth-brand-tagline {
   display: block;
+  width: max-content;
 }
 
 .auth-brand-name {
@@ -51,6 +58,7 @@
 }
 
 .auth-brand-tagline {
+  justify-self: center;
   margin-top: 0.32rem;
   color: #756a61;
   font-size: 0.54rem;

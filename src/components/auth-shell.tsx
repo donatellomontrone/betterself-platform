@@ -21,7 +21,7 @@ export function AuthShell({ eyebrow, title, description, children }: AuthShellPr
             height={96}
             className="auth-brand-mark"
           />
-          <span>
+          <span className="auth-brand-wordmark">
             <span className="auth-brand-name font-serif">BetterSelf</span>
             <span className="auth-brand-tagline">Home Aesthetics</span>
           </span>
