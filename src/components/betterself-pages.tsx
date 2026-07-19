@@ -794,9 +794,17 @@ export function TreatmentsPage() {
 
 function TreatmentsEditorialHero() {
   return (
-    <section className="treatments-editorial-hero px-5 py-20 lg:px-8 lg:py-32" data-reveal>
-      <div className="mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[0.88fr_1.12fr]">
-        <div className="max-w-3xl">
+    <section className="treatments-editorial-hero" data-reveal>
+      <Image
+        src="/betterself-doctor-kit.jpg"
+        alt="BetterSelf doctor preparing a private home aesthetic appointment"
+        fill
+        sizes="100vw"
+        className="treatments-hero-background object-cover"
+        priority
+      />
+      <div className="treatments-hero-content mx-auto max-w-[1440px] px-5 lg:px-10">
+        <div className="treatments-hero-copy max-w-3xl">
           <p className="eyebrow">BetterSelf treatments</p>
           <h1 className="mt-4 font-serif text-6xl leading-[0.92] text-[#1F1F1F] md:text-8xl">
             Find the right treatment for your concern.
@@ -809,16 +817,6 @@ function TreatmentsEditorialHero() {
               Request a Treatment
             </TrackedLink>
           </div>
-        </div>
-        <div className="treatments-hero-visual">
-          <Image
-            src="/betterself-doctor-kit.jpg"
-            alt="BetterSelf doctor preparing a private home aesthetic appointment"
-            fill
-            sizes="(min-width: 1024px) 44vw, 100vw"
-            className="treatments-hero-photo object-cover"
-            priority
-          />
         </div>
       </div>
     </section>
