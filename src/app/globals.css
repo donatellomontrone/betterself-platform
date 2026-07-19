@@ -3017,6 +3017,10 @@ select:focus {
   gap: clamp(1rem, 2.7vw, 2.7rem);
 }
 
+.home-process-line::before {
+  top: 2.7rem;
+}
+
 @media (hover: hover) {
   .home-benefit-card:hover {
     border-color: rgb(47 74 64 / 0.2);

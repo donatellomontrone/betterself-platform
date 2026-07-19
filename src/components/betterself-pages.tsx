@@ -2648,8 +2648,8 @@ function HowItWorksSection() {
             </article>
           ))}
         </div>
-        <div className="mt-6 grid overflow-hidden rounded-lg border border-[#E6DFD5] bg-white shadow-sm lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative min-h-[270px] lg:min-h-[360px]">
+        <div className="mt-14 grid gap-4 rounded-[1.125rem] border border-[#E6DFD5] bg-white p-3 shadow-sm lg:mt-16 lg:gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative min-h-[270px] overflow-hidden rounded-[0.875rem] lg:min-h-[360px]">
             <Image
               src="/betterself-home-visit-kit.jpg"
               alt="BetterSelf home-visit kit prepared with appointment calendar and medical notes"
@@ -2658,7 +2658,7 @@ function HowItWorksSection() {
               className="object-cover"
             />
           </div>
-          <div className="flex flex-col justify-center p-6 md:p-8">
+          <div className="flex flex-col justify-center rounded-[0.875rem] bg-[#FCFBF8] p-6 md:p-8">
             <p className="eyebrow">Prepared visit</p>
             <h3 className="font-serif mt-3 text-4xl leading-tight text-[#1F1F1F]">
               Scheduling, intake, equipment, and aftercare stay in one flow.
