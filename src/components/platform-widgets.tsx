@@ -23,6 +23,7 @@ import { Notice, StatusBadge } from "@/components/site-shell";
 import { useUser } from "@clerk/nextjs";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from "@/lib/contact";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { trackBetterSelfEvent } from "@/components/tracked-link";
 
 const directTreatmentAppointment = "Doctor review call";
 const consultationAppointment = "Doctor consultation call";
@@ -224,7 +225,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
 
     if (step === 0 && !bookingIntent) {
       setCheckoutState("error");
-      setCheckoutNote("Please choose whether you want to book a treatment or a consultation.");
+      setCheckoutNote("Please choose whether you want to request a treatment or book a doctor consultation.");
       return;
     }
 
@@ -405,6 +406,16 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
         throw new Error(payload.message ?? "Booking request is not available yet.");
       }
 
+      trackBetterSelfEvent(isConsultation ? "consultation_started" : "request_treatment", {
+        treatment: selectedService.id,
+        flow: isConsultation ? "consultation" : "treatment_request",
+      });
+      if (payload.checkoutUrl) {
+        trackBetterSelfEvent("payment_started", {
+          treatment: selectedService.id,
+          payment_type: "consultation",
+        });
+      }
       window.location.href = nextUrl;
     } catch (error) {
       setCheckoutState("error");
@@ -492,7 +503,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                   I know what I want
                 </p>
                 <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
-                  Book a treatment
+                  Request a treatment
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-[#595550]">
                   Choose the service, complete private intake, and let the doctor
@@ -518,7 +529,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                   I need guidance
                 </p>
                 <h2 className="mt-3 font-serif text-3xl text-[#1F1F1F]">
-                  Book a consultation
+                  Book a Doctor Consultation
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-[#595550]">
                   Speak with the doctor about your goals and suitability before
@@ -538,7 +549,7 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
         ) : null}
 
         {step === 1 && isDirectTreatment ? (
-          <BookingStep title="Select treatment to book" text="Choose the treatment you want to book directly. The doctor still reviews suitability before confirming or performing it.">
+          <BookingStep title="Select a treatment to request" text="Choose the treatment you want to request directly. The doctor still reviews suitability before confirming a plan or payment.">
             <label className="relative mt-6 block">
               <span className="sr-only">Search treatments</span>
               <Search
@@ -723,14 +734,14 @@ export function BookingFlow({ initialTreatmentId, startAtDetails = false, prefil
                         setStep(2);
                       }}
                     >
-                      Book this treatment
+                      Request this treatment
                     </button>
                     <button
                       className="btn btn-secondary justify-center"
                       type="button"
                       onClick={handleNextStep}
                     >
-                      Continue with consultation
+                      Book a Doctor Consultation
                     </button>
                   </div>
                 ) : null}

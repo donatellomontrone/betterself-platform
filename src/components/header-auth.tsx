@@ -33,12 +33,6 @@ export function HeaderAuthControls({
           >
             Dashboard
           </Link>
-          <Link
-            className="flex min-h-[44px] items-center rounded-xl px-4 py-2 text-sm font-semibold text-[#4D4D4D] transition hover:bg-[#F6EDEA] hover:text-[#6E444E]"
-            href="/messages"
-          >
-            Messages
-          </Link>
         </>
       );
     }

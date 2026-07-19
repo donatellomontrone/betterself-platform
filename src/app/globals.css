@@ -803,7 +803,7 @@ a {
   position: relative;
   display: grid;
   gap: 2rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .home-process-line::before {
@@ -841,13 +841,13 @@ a {
   margin-top: 1.4rem;
   color: #1f1f1f;
   font-family: var(--font-serif);
-  font-size: clamp(2rem, 3vw, 3.4rem);
+  font-size: clamp(1.55rem, 2.25vw, 2.7rem);
   line-height: 1;
 }
 
 .home-process-step p {
   margin-top: 0.8rem;
-  max-width: 18rem;
+  max-width: 15rem;
   color: #595550;
   font-size: 0.95rem;
   line-height: 1.7;
@@ -2419,6 +2419,16 @@ body {
 @media (max-width: 899px) {
   .premium-header-inner {
     min-height: 76px;
+    gap: 0.75rem;
+  }
+
+  .brand-lockup {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .premium-header-inner > details {
+    flex: 0 0 auto;
   }
 
   .brand-mark-wrap {

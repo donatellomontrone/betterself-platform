@@ -11,6 +11,7 @@ import {
   markPendingPaymentAttemptFailed,
 } from "@/lib/db/queries";
 import { applyDiscount } from "@/lib/discounts";
+import { track } from "@vercel/analytics/server";
 
 // QR Ph only. A booking has one active payment attempt at a time; a repeated
 // click deliberately reuses its PayMongo idempotency key instead of making a
@@ -170,6 +171,10 @@ export async function POST(request: NextRequest) {
   await attachPayMongoCheckout({
     transactionReference: referenceNumber,
     paymongoCheckoutId: payload.data.id,
+  });
+  await track("payment_started", {
+    payment_type: booking.payment_type,
+    retry: true,
   });
 
   return NextResponse.redirect(payload.data.attributes.checkout_url, 303);

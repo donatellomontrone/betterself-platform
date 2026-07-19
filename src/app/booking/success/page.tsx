@@ -67,7 +67,7 @@ export default async function BookingSuccess({
               target="_blank"
               rel="noreferrer"
             >
-              Book your call time
+              Choose call time
             </a>
           ) : null}
           {bookCall && canScheduleCall && !calendlyUrl ? (

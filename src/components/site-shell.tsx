@@ -14,6 +14,10 @@ import { MobileMenu } from "@/components/mobile-menu";
 import { MobileBottomCta } from "@/components/mobile-cta";
 import { PrimaryNav } from "@/components/primary-nav";
 import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
+import { TrackedExternalLink, TrackedLink } from "@/components/tracked-link";
+
+const serviceAreaCopy =
+  "Selected Metro Manila areas including BGC, Makati, Rockwell, Ortigas, Alabang and nearby locations, subject to availability.";
 
 export const primaryNav = [
   { href: "/treatments", label: "Treatments" },
@@ -24,8 +28,7 @@ export const primaryNav = [
 
 export const patientNav = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/booking", label: "Book" },
-  { href: "/messages", label: "Messages" },
+  { href: "/booking", label: "Request" },
   { href: "/dashboard#aftercare", label: "Aftercare" },
 ];
 
@@ -57,9 +60,14 @@ export function Header() {
         <MobileMenu items={primaryNav} />
         <div className="premium-header-actions hidden items-center gap-3 min-[1100px]:flex">
           <HeaderAuthControls />
-          <Link className="premium-cta" href="/booking">
-            Book Treatment
-          </Link>
+          <TrackedLink
+            className="premium-cta"
+            href="/booking"
+            eventName="request_treatment"
+            eventData={{ placement: "header" }}
+          >
+            Request a Treatment
+          </TrackedLink>
         </div>
       </div>
     </header>
@@ -82,8 +90,7 @@ export function Footer() {
             <span className="font-serif text-4xl leading-none">BetterSelf</span>
           </Link>
           <p className="mt-3 max-w-sm text-sm leading-6 text-[#595550]">
-            Doctor-led aesthetic services. Private home appointments in selected
-            Metro Manila areas, subject to medical suitability and availability.
+            Doctor-led aesthetic services. {serviceAreaCopy}
           </p>
           <p className="premium-footer-note mt-5 text-xs leading-5 text-[#6E565A]">
             BetterSelf provides doctor-led aesthetic services. All treatments are
@@ -95,9 +102,8 @@ export function Footer() {
           title="Platform"
           links={[
             ["Treatments", "/treatments"],
-            ["Book Appointment", "/booking"],
-            ["Patient Dashboard", "/dashboard"],
-            ["Messages", "/messages"],
+            ["Request a Treatment", "/booking"],
+            ["Patient Login", "/login"],
           ]}
         />
         <FooterColumn
@@ -123,9 +129,6 @@ export function Footer() {
             </Link>
             <Link className="transition hover:text-[#1F1F1F]" href="/consent">
               Consent
-            </Link>
-            <Link className="transition hover:text-[#1F1F1F]" href="/admin">
-              Admin access
             </Link>
           </div>
         </div>
@@ -159,14 +162,16 @@ function FooterContact() {
           </a>
         ) : null}
         {whatsapp ? (
-          <a
+          <TrackedExternalLink
             className="transition hover:text-[#1F1F1F]"
             href={whatsapp}
             target="_blank"
             rel="noreferrer"
+            eventName="whatsapp_click"
+            eventData={{ placement: "footer" }}
           >
             WhatsApp
-          </a>
+          </TrackedExternalLink>
         ) : null}
         <Link className="transition hover:text-[#1F1F1F]" href="/contact">
           Contact page
@@ -316,12 +321,22 @@ export function TreatmentCard({ treatment }: { treatment: Treatment }) {
           </div>
         </div>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <Link className="btn btn-secondary flex-1" href={`/treatments/${treatment.id}`}>
-            View Treatment
-          </Link>
-          <Link className="btn btn-primary flex-1" href={`/booking?treatment=${treatment.id}&direct=1`}>
-            Book Treatment
-          </Link>
+          <TrackedLink
+            className="btn btn-secondary flex-1"
+            href={`/treatments/${treatment.id}`}
+            eventName="view_treatment"
+            eventData={{ treatment: treatment.id, placement: "card" }}
+          >
+            View Details
+          </TrackedLink>
+          <TrackedLink
+            className="btn btn-primary flex-1"
+            href={`/booking?treatment=${treatment.id}&direct=1`}
+            eventName="request_treatment"
+            eventData={{ treatment: treatment.id, placement: "card" }}
+          >
+            Request Treatment
+          </TrackedLink>
         </div>
       </div>
     </article>

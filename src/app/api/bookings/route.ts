@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { track } from "@vercel/analytics/server";
 import { consultationService, getTreatmentById, type Treatment } from "@/lib/treatments";
 import { applyDiscount } from "@/lib/discounts";
 import { hasValidClerkServerKeys } from "@/lib/clerk-env";
@@ -243,6 +244,7 @@ export async function POST(request: NextRequest) {
 
     // Treatment: request first, pay later from the dashboard once confirmed.
     if (!isConsultation) {
+      await track("request_treatment", { treatment: treatment.id });
       return NextResponse.json(
         {
           bookingId: booking.id,
@@ -346,6 +348,8 @@ export async function POST(request: NextRequest) {
       transactionReference: referenceNumber,
       paymongoCheckoutId: payload.data.id,
     });
+    await track("consultation_started", { treatment: treatment.id });
+    await track("payment_started", { payment_type: "consultation" });
 
     return NextResponse.json(
       {

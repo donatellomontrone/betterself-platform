@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 import { Cormorant_Garamond, Geist_Mono, Manrope } from "next/font/google";
 import { AccountConsentRecorder } from "@/components/account-consent-recorder";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
@@ -24,12 +25,12 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://betterself.health";
 const SITE_DESCRIPTION =
-  "Private doctor-led aesthetic treatments — neurotoxin, skin boosters, scar care, and selected medical aesthetic services — with intake, consent, and home visits across Metro Manila.";
+  "Private doctor-led aesthetic treatments delivered to your home with medical screening, personalized treatment planning and professional aftercare.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "BetterSelf | Doctor-led aesthetic care at your doorstep",
+    default: "BetterSelf Home Aesthetics | Doctor-Led Home Treatments in Metro Manila",
     template: "%s | BetterSelf",
   },
   description: SITE_DESCRIPTION,
@@ -38,17 +39,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "BetterSelf",
-    title: "BetterSelf | Doctor-led aesthetic care at your doorstep",
+    title: "BetterSelf Home Aesthetics | Doctor-Led Home Treatments in Metro Manila",
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     locale: "en_PH",
-    images: [{ url: "/betterself-hero-home.jpg", width: 1200, height: 630, alt: "BetterSelf" }],
+    images: [{ url: "/betterself-logo-lockup.jpg", width: 1300, height: 1050, alt: "BetterSelf Home Aesthetics" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "BetterSelf | Doctor-led aesthetic care at your doorstep",
+    title: "BetterSelf Home Aesthetics | Doctor-Led Home Treatments in Metro Manila",
     description: SITE_DESCRIPTION,
-    images: ["/betterself-hero-home.jpg"],
+    images: ["/betterself-logo-lockup.jpg"],
   },
 };
 
@@ -74,6 +75,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {content}
         <CookieConsentBanner />
+        <Analytics />
       </body>
     </html>
   );

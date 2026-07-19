@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Menu } from "lucide-react";
 import { HeaderAuthControls } from "@/components/header-auth";
+import { TrackedLink } from "@/components/tracked-link";
 
 type NavItem = { href: string; label: string };
 
@@ -59,9 +60,15 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
           </Link>
         ))}
         <HeaderAuthControls variant="mobile" />
-        <Link className="premium-cta mt-1 justify-center" href="/booking" onClick={close}>
-          Book Treatment
-        </Link>
+        <TrackedLink
+          className="premium-cta mt-1 justify-center"
+          href="/booking"
+          onClick={close}
+          eventName="request_treatment"
+          eventData={{ placement: "mobile_menu" }}
+        >
+          Request a Treatment
+        </TrackedLink>
       </div>
     </details>
   );

@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { isDatabaseConfigured } from "@/lib/db/client";
+import { track } from "@vercel/analytics/server";
 import {
   clearBookingScheduleByPaymentReference,
   updateBookingScheduleByPaymentReference,
@@ -213,5 +214,8 @@ export async function POST(request: NextRequest) {
   });
 
   console.info("[calendly webhook] invitee created", { referenceNumber, updated });
+  if (updated) {
+    await track("consultation_completed", { scheduling_provider: "calendly" });
+  }
   return NextResponse.json({ received: true, action: "schedule_saved", updated });
 }

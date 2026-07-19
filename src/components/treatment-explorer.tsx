@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Treatment, TreatmentCategory } from "@/lib/treatments";
+import { TrackedLink } from "@/components/tracked-link";
 
 type TreatmentExplorerProps = {
   categories: TreatmentCategory[];
@@ -152,12 +152,24 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3 md:flex-col md:items-stretch">
-                  <Link className="btn btn-secondary justify-center rounded-full" href={`/treatments/${treatment.id}`} aria-label={`View details for ${treatment.name}`}>
-                    View treatment
-                  </Link>
-                  <Link className="btn btn-primary justify-center rounded-full" href={`/booking?treatment=${treatment.id}&direct=1`} aria-label={`Request ${treatment.name}`}>
-                    Request
-                  </Link>
+                  <TrackedLink
+                    className="btn btn-secondary justify-center rounded-full"
+                    href={`/treatments/${treatment.id}`}
+                    aria-label={`View details for ${treatment.name}`}
+                    eventName="view_treatment"
+                    eventData={{ treatment: treatment.id, placement: "explorer" }}
+                  >
+                    View Details
+                  </TrackedLink>
+                  <TrackedLink
+                    className="btn btn-primary justify-center rounded-full"
+                    href={`/booking?treatment=${treatment.id}&direct=1`}
+                    aria-label={`Request ${treatment.name}`}
+                    eventName="request_treatment"
+                    eventData={{ treatment: treatment.id, placement: "explorer" }}
+                  >
+                    Request Treatment
+                  </TrackedLink>
                 </div>
               </article>
             ))}

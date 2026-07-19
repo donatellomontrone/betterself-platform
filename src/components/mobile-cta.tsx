@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCookieConsentVisible } from "@/components/cookie-consent-banner";
+import { trackBetterSelfEvent } from "@/components/tracked-link";
 
 // Pages where a fixed "Book" bar would cover the real primary action.
 const HIDDEN_ON = ["/booking", "/messages", "/dashboard"];
@@ -30,8 +31,12 @@ export function MobileBottomCta() {
       className="mobile-floating-cta fixed inset-x-3 bottom-3 z-40 md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <Link className="mobile-floating-cta-link" href="/booking">
-        <span>Book Treatment</span>
+      <Link
+        className="mobile-floating-cta-link"
+        href="/booking"
+        onClick={() => trackBetterSelfEvent("request_treatment", { placement: "mobile_sticky" })}
+      >
+        <span>Request a Treatment</span>
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </Link>
     </div>

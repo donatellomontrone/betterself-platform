@@ -4,9 +4,14 @@ import type { ReactNode } from "react";
 import {
   ArrowRight,
   CalendarDays,
+  CheckCircle2,
   FileText,
   Home,
   Sparkles,
+  Stethoscope,
+  ShieldCheck,
+  PackageCheck,
+  HeartHandshake,
 } from "lucide-react";
 import {
   categories,
@@ -37,7 +42,8 @@ import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
 import type { AdminBookingView, MessageThreadView, PatientBookingView } from "@/lib/db/queries";
 import { buildCalendlySchedulingUrl } from "@/lib/calendly";
-import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from "@/lib/contact";
+import { TrackedExternalLink, TrackedLink } from "@/components/tracked-link";
 import type { Json } from "@/lib/db/types";
 import {
   setBookingAmountAction,
@@ -401,23 +407,28 @@ function formatBookingDate(value: string) {
 
 const howItWorksSteps = [
   {
-    title: "Choose your treatment",
-    text: "Browse doctor-led aesthetic treatments and book the option you want directly.",
+    title: "Choose Your Treatment",
+    text: "Browse available treatments or request a private doctor consultation.",
     icon: Sparkles,
   },
   {
-    title: "Complete medical intake",
-    text: "Answer a short health and aesthetic assessment before your appointment.",
+    title: "Complete Medical Intake",
+    text: "Provide your medical history, treatment goals and relevant health information.",
     icon: FileText,
   },
   {
-    title: "Speak with the doctor",
-    text: "Choose a video call or phone review so the doctor can confirm the right next step.",
+    title: "Doctor Review",
+    text: "Our physician reviews your submission and confirms whether the treatment is appropriate.",
+    icon: Stethoscope,
+  },
+  {
+    title: "Confirm Payment & Schedule",
+    text: "After medical approval, complete payment and choose your appointment.",
     icon: CalendarDays,
   },
   {
-    title: "Pay after confirmation",
-    text: "When the service is confirmed, pay from your dashboard to secure the home visit.",
+    title: "Home Treatment",
+    text: "Your doctor arrives with verified products, sterile equipment and complete aftercare instructions.",
     icon: Home,
   },
 ];
@@ -432,28 +443,32 @@ const faqs = [
     "Treatments are performed or supervised by a licensed medical doctor.",
   ],
   [
-    "Can I book Botox at home?",
-    "Yes. You can book the treatment request directly online. Medical intake and doctor assessment are still required before the doctor confirms and performs any injectable treatment.",
+    "What happens before treatment?",
+    "You submit a treatment request, complete medical intake and consent, and the doctor reviews whether the requested service is appropriate before payment or scheduling opens.",
   ],
   [
-    "Is home treatment safe?",
-    "Home treatment is only offered when medically appropriate. BetterSelf uses medical intake, consent, sterile preparation, and aftercare guidance.",
+    "Are the products authentic?",
+    "BetterSelf uses verified products selected and checked by the licensed physician before treatment.",
   ],
   [
-    "Can I chat with the doctor?",
-    "Yes. You can reach the BetterSelf medical team before or after appointments via WhatsApp or email — that's the fastest way to get a reply. The in-app message box is for noting questions about your booking; it is not for emergencies.",
+    "What if the doctor decides treatment isn't appropriate?",
+    "The doctor may decline, delay, or recommend a different option when treatment is not medically suitable. No treatment payment is taken before approval.",
   ],
   [
-    "What if I am not suitable for treatment?",
-    "The doctor may refuse, delay, or redirect treatment if it is not medically appropriate.",
+    "Is there an additional home service fee?",
+    "Any applicable home-visit fee is confirmed by the doctor as part of the treatment plan before payment is requested.",
   ],
   [
-    "Do results vary?",
-    "Yes. Results vary per patient and depend on individual assessment, treatment type, and aftercare.",
+    "What is the cancellation policy?",
+    "You may cancel an unpaid request from your dashboard. For paid consultations or confirmed appointments, contact BetterSelf as soon as possible so the doctor can review the available options.",
+  ],
+  [
+    "Who is not eligible for treatment?",
+    "Eligibility depends on your medical history, current health, treatment area and the requested procedure. The doctor confirms suitability after review.",
   ],
   [
     "What areas do you serve?",
-    "BetterSelf currently serves selected areas in Metro Manila, including BGC, Makati, Rockwell, Alabang, Ortigas, and nearby areas subject to availability.",
+    "Selected Metro Manila areas including BGC, Makati, Rockwell, Ortigas, Alabang and nearby locations, subject to availability.",
   ],
 ];
 
@@ -479,13 +494,12 @@ export function HomePage() {
               Doctor-led beauty, brought home.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-[#595550] md:text-lg md:leading-8">
-              A private aesthetic experience for Metro Manila: medical intake,
-              doctor review, secure payment, and discreet home treatment when suitable.
+              Private, doctor-led aesthetic treatments in selected Metro Manila areas, with medical screening, personalized treatment planning, secure payment, and discreet home appointments.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link className="premium-cta px-6" href="/booking">
-                Book a Treatment
-              </Link>
+              <TrackedLink className="premium-cta px-6" href="/booking" eventName="hero_request">
+                Request a Treatment
+              </TrackedLink>
               <Link className="editorial-text-link" href="/treatments">
                 Explore Treatments <ArrowRight className="h-4 w-4" />
               </Link>
@@ -497,11 +511,36 @@ export function HomePage() {
           </div>
         </div>
       </section>
+      <HomeTrustSignals />
       <HomeSignatureTreatments />
       <HomeFluidProcess />
       <HomeTrustMoment />
       <FinalCta />
     </PageShell>
+  );
+}
+
+function HomeTrustSignals() {
+  const signals = [
+    [Stethoscope, "Licensed Physician"],
+    [CheckCircle2, "Medical Assessment"],
+    [ShieldCheck, "Sterile Equipment"],
+    [PackageCheck, "Verified Products"],
+    [Home, "Private Home Visits"],
+    [HeartHandshake, "Professional Aftercare"],
+  ] as const;
+
+  return (
+    <section className="border-b border-[#E6DFD5] bg-white px-5 py-8 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-6">
+        {signals.map(([Icon, label]) => (
+          <div key={label} className="flex items-center gap-3 text-sm font-semibold text-[#3F4540]">
+            <Icon className="h-5 w-5 shrink-0 text-[#8F5B67]" aria-hidden="true" />
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -525,10 +564,12 @@ function HomeSignatureTreatments() {
         </div>
         <div className="home-signature-list mt-12">
           {featured.map((treatment, index) => (
-            <Link
+            <TrackedLink
               key={treatment.id}
               href={`/booking?treatment=${treatment.id}&direct=1`}
               className="home-signature-row group"
+              eventName="request_treatment"
+              eventData={{ treatment: treatment.id, placement: "home_signature" }}
             >
               <span className="home-signature-number">{String(index + 1).padStart(2, "0")}</span>
               <span className="home-signature-name">{treatment.name}</span>
@@ -537,12 +578,12 @@ function HomeSignatureTreatments() {
               <span className="home-signature-arrow">
                 <ArrowRight className="h-4 w-4" />
               </span>
-            </Link>
+            </TrackedLink>
           ))}
         </div>
         <div className="mt-8">
           <Link className="inline-flex items-center gap-2 text-sm font-bold text-[#6E444E]" href="/treatments">
-            View the full treatment edit <ArrowRight className="h-4 w-4" />
+            Explore all treatments <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>
@@ -551,25 +592,19 @@ function HomeSignatureTreatments() {
 }
 
 function HomeFluidProcess() {
-  const steps = [
-    ["01", "Tell us the concern", "Choose a treatment or start with a consultation."],
-    ["02", "Doctor reviews", "Suitability, intake, and expected plan are checked first."],
-    ["03", "Confirm beautifully", "Pay only when the plan is clear, then prepare for the visit."],
-  ];
-
   return (
     <section className="home-process-section premium-reveal px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <p className="eyebrow">The journey</p>
           <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
-            A flow that feels as considered as the treatment.
+            A considered path from request to home treatment.
           </h2>
         </div>
         <div className="home-process-line mt-14">
-          {steps.map(([number, title, text]) => (
-            <div key={number} className="home-process-step">
-              <span>{number}</span>
+          {howItWorksSteps.map(({ title, text }, index) => (
+            <div key={title} className="home-process-step">
+              <span>{String(index + 1).padStart(2, "0")}</span>
               <h3>{title}</h3>
               <p>{text}</p>
             </div>
@@ -590,9 +625,7 @@ function HomeTrustMoment() {
             Premium does not mean vague. It means everything is prepared.
           </h2>
           <p className="mt-6 text-lg leading-8 text-[#595550]">
-            Medical intake, consent, sterile preparation, appointment notes, and
-            aftercare are part of the experience. The website should make that
-            feel reassuring, not heavy.
+            Every appointment includes medical intake, consent, sterile preparation, treatment documentation, and clear aftercare.
           </p>
           <Link className="btn btn-secondary mt-8 rounded-full px-6" href="/safety">
             Read the safety approach
@@ -629,15 +662,15 @@ function TreatmentsEditorialHero() {
         <div className="max-w-3xl">
           <p className="eyebrow">BetterSelf treatments</p>
           <h1 className="mt-4 font-serif text-6xl leading-[0.92] text-[#1F1F1F] md:text-8xl">
-            Choose what you want to address.
+            Find the right treatment for your concern.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-8 text-[#595550]">
-            Explore the available treatments by area or concern. Every request is reviewed by the doctor before confirmation.
+            Explore treatments based on your goals. Every request is reviewed by a licensed physician before confirmation.
           </p>
           <div className="mt-8">
-            <Link className="premium-cta px-6" href="/booking">
-              Book an appointment
-            </Link>
+            <TrackedLink className="premium-cta px-6" href="/booking" eventName="request_treatment" eventData={{ placement: "treatments_hero" }}>
+              Request a Treatment
+            </TrackedLink>
           </div>
         </div>
         <div className="treatments-hero-visual">
@@ -702,7 +735,7 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
           </article>
           <aside className="lg:sticky lg:top-28 lg:self-start">
             <section className="treatment-booking-panel">
-              <p className="eyebrow">{isConsultation ? "Book this consultation" : "Book this treatment"}</p>
+              <p className="eyebrow">{isConsultation ? "Doctor consultation" : "Request treatment"}</p>
               <p className="mt-3 font-serif text-5xl leading-none text-[#1F1F1F]">
                 {treatment.priceLabel}
               </p>
@@ -721,13 +754,31 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
                 )}
               </div>
               <div className="mt-6 grid gap-2">
-                <Link className="premium-cta min-h-12 justify-center" href={`/booking?treatment=${treatment.id}&direct=1`}>
-                  {isConsultation ? "Book consultation" : "Book Treatment"}
-                </Link>
-                <Link className="btn btn-secondary justify-center rounded-full" href="/messages">
-                  Ask Doctor
-                </Link>
+                <TrackedLink
+                  className="premium-cta min-h-12 justify-center"
+                  href={`/booking?treatment=${treatment.id}&direct=1`}
+                  eventName={isConsultation ? "consultation_started" : "request_treatment"}
+                  eventData={{ treatment: treatment.id, placement: "treatment_detail" }}
+                >
+                  {isConsultation ? "Book a Doctor Consultation" : "Request Treatment"}
+                </TrackedLink>
+                {!isConsultation ? (
+                  <TrackedLink
+                    className="btn btn-secondary justify-center rounded-full"
+                    href={`/booking?treatment=${consultationService.id}&direct=1`}
+                    eventName="consultation_started"
+                    eventData={{ placement: "treatment_detail" }}
+                  >
+                    Book a Doctor Consultation
+                  </TrackedLink>
+                ) : null}
               </div>
+              {isConsultation ? (
+                <div className="mt-5 text-xs leading-5 text-[#756A61]">
+                  <p>The consultation fee covers the doctor&apos;s assessment and personalized treatment recommendations. Treatment fees are separate unless otherwise stated.</p>
+                  <p className="mt-2 font-semibold">Consultation only — no obligation to proceed with treatment.</p>
+                </div>
+              ) : null}
               <p className="mt-5 text-xs leading-5 text-[#756A61]">
                 The doctor reviews medical answers before confirming any in-home treatment.
               </p>
@@ -755,11 +806,11 @@ export function BookingPage({
     <PageShell>
       <section className="booking-intro px-5 pb-7 pt-10 lg:px-8 lg:pb-8 lg:pt-14">
         <div className="mx-auto max-w-7xl">
-          <p className="eyebrow">Book appointment</p>
+          <p className="eyebrow">Request a treatment</p>
           <div className="mt-3 grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-end">
             <div>
               <h1 className="font-serif text-4xl leading-[0.98] text-[#1F1F1F] md:text-6xl">
-                {isDirectBooking ? `Book ${selectedTreatment?.name}.` : "Start with what feels right."}
+                {isDirectBooking ? `Request ${selectedTreatment?.name}.` : "Start with what feels right."}
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-[#595550] md:text-base md:leading-7">
                 {isDirectBooking
@@ -839,9 +890,9 @@ export function DashboardPage({
               title={viewerName ? `Welcome back, ${viewerName}.` : "Welcome back."}
               text="Your bookings, schedule, payments, and aftercare in one private place."
             />
-            <Link className="btn btn-primary" href="/booking">
-              Book Appointment
-            </Link>
+            <TrackedLink className="btn btn-primary" href="/booking" eventName="request_treatment" eventData={{ placement: "dashboard" }}>
+              Request a Treatment
+            </TrackedLink>
           </div>
           {loadFailed ? (
             <div className="mt-6 rounded-lg border border-[#E7C6C2] bg-[#FBEDEB] p-4 text-sm leading-6 text-[#9B2C2C]">
@@ -939,7 +990,7 @@ export function DashboardPage({
                       </span>
                     ) : (
                       <Link className="btn btn-secondary" href="/booking">
-                        Book Again
+                        Request another treatment
                       </Link>
                     )}
                     <Link
@@ -969,13 +1020,13 @@ export function DashboardPage({
                     No appointments yet
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-[#595550]">
-                    Once you book a treatment it will appear here, with its doctor-review
+                    Once you request a treatment it will appear here, with its doctor-review
                     status, schedule, and payment.
                   </p>
                   <div className="mt-6">
-                    <Link className="btn btn-primary" href="/booking">
-                      Book Your First Appointment
-                    </Link>
+                    <TrackedLink className="btn btn-primary" href="/booking" eventName="request_treatment" eventData={{ placement: "dashboard_empty" }}>
+                      Request a Treatment
+                    </TrackedLink>
                   </div>
                 </>
               )}
@@ -2131,12 +2182,11 @@ export function SafetyPage() {
         </div>
       </section>
       <section className="px-5 pb-14 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2">
+        <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
           {[
-            ["Before treatment", ["Medical intake", "Doctor assessment", "Treatment suitability check", "Consent form"]],
-            ["During treatment", ["Sterile setup", "Product verification", "Medical documentation", "Patient comfort"]],
-            ["After treatment", ["Aftercare instructions", "Follow-up support", "Warning signs", "Review if needed"]],
-            ["When home treatment is not suitable", ["Some procedures may require a clinic setting", "BetterSelf may refuse, delay, or redirect care", "Patient safety comes before convenience"]],
+            ["Before Treatment", ["Medical questionnaire", "Doctor assessment", "Consent", "Suitability review"]],
+            ["During Treatment", ["Sterile preparation", "Product verification", "Medical documentation", "Patient comfort"]],
+            ["After Treatment", ["Written aftercare", "Follow-up support", "Warning signs", "Doctor contact if required"]],
           ].map(([title, items]) => (
             <section key={title as string} className="card p-6">
               <h2 className="font-serif text-3xl text-[#1F1F1F]">{title as string}</h2>
@@ -2180,24 +2230,18 @@ export function AboutPage() {
             </h1>
             <div className="mt-6 grid gap-5 text-base leading-8 text-[#595550]">
               <p>
-                BetterSelf was created to make aesthetic care more private,
-                structured, and convenient without removing the medical standards
-                that patients deserve.
+                BetterSelf was created to make medical aesthetic care more private, structured and convenient without compromising medical standards.
               </p>
               <p>
-                Led by a licensed medical doctor, BetterSelf offers selected
-                aesthetic treatments through a careful process of booking,
-                medical intake, doctor review, treatment planning, and aftercare.
+                Led by a licensed physician, BetterSelf provides selected aesthetic treatments through medical screening, suitability review, treatment planning, sterile home preparation and professional aftercare.
               </p>
               <p>
-                The goal is not to change how patients look. The goal is to help
-                them look refreshed, feel confident, and receive care in a safe
-                and discreet way.
+                Our goal is simple: help patients look refreshed, feel confident and receive safe medical care in the comfort of their home.
               </p>
             </div>
-            <Link className="btn btn-primary mt-8" href="/booking">
-              Book Treatment
-            </Link>
+            <TrackedLink className="btn btn-primary mt-8" href="/booking" eventName="request_treatment" eventData={{ placement: "about" }}>
+              Request a Treatment
+            </TrackedLink>
           </div>
         </div>
       </section>
@@ -2210,7 +2254,7 @@ export function FaqPage() {
     <PageShell>
       <PageHero
         eyebrow="FAQ"
-        title="Clear answers before you book."
+        title="Clear answers before you request treatment."
         text="Clear answers about how BetterSelf works, who performs your treatment, safety, and what to expect at a home visit."
       />
       <section className="px-5 pb-14 lg:px-8">
@@ -2313,15 +2357,14 @@ export function ContactPage() {
           <div>
             <Badge>Contact</Badge>
             <h1 className="mt-5 font-serif text-5xl leading-tight text-[#1F1F1F] md:text-6xl">
-              Book a treatment or ask the doctor.
+              Speak with BetterSelf.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-[#595550]">
-              Choose the treatment you want, complete medical intake, and keep
-              the doctor involved before and after your home appointment.
+              Request a treatment, ask about a consultation, or contact the medical team before and after your appointment.
             </p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="mt-7 grid gap-5 sm:grid-cols-2">
               <div className="grid gap-1">
-                <p className="eyebrow">Email us</p>
+                <p className="eyebrow">Email</p>
                 <a
                   className="text-lg font-semibold text-[#1F1F1F] underline decoration-[#CAA6AD] underline-offset-4"
                   href={`mailto:${SUPPORT_EMAIL}`}
@@ -2329,54 +2372,42 @@ export function ContactPage() {
                   {SUPPORT_EMAIL}
                 </a>
               </div>
-              {SUPPORT_PHONE ? (
-                <div className="grid gap-1">
-                  <p className="eyebrow">Call or text</p>
-                  <a
-                    className="text-lg font-semibold text-[#1F1F1F]"
-                    href={`tel:${SUPPORT_PHONE.replace(/\s+/g, "")}`}
-                  >
-                    {SUPPORT_PHONE}
-                  </a>
-                </div>
-              ) : null}
               {SUPPORT_WHATSAPP ? (
                 <div className="grid gap-1">
                   <p className="eyebrow">WhatsApp</p>
-                  <a
+                  <TrackedExternalLink
                     className="text-lg font-semibold text-[#1F1F1F] underline decoration-[#CAA6AD] underline-offset-4"
                     href={SUPPORT_WHATSAPP}
                     target="_blank"
                     rel="noreferrer"
+                    eventName="whatsapp_click"
+                    eventData={{ placement: "contact" }}
                   >
                     Chat on WhatsApp
-                  </a>
+                  </TrackedExternalLink>
                 </div>
               ) : null}
+              <div className="grid gap-1">
+                <p className="eyebrow">Business Hours</p>
+                <p className="text-lg font-semibold text-[#1F1F1F]">Monday – Saturday<br />9:00 AM – 6:00 PM</p>
+              </div>
+              <div className="grid gap-1">
+                <p className="eyebrow">Expected response time</p>
+                <p className="text-lg font-semibold text-[#1F1F1F]">Within one business day.</p>
+              </div>
             </div>
-            <p className="mt-3 text-sm text-[#595550]">
-              We typically reply within one business day.
-            </p>
-            <Link className="btn btn-primary mt-8" href="/booking">
-              Book Treatment
-            </Link>
+            <TrackedLink className="btn btn-primary mt-8" href="/booking" eventName="request_treatment" eventData={{ placement: "contact" }}>
+              Request a Treatment
+            </TrackedLink>
           </div>
           <section className="card p-6">
             <h2 className="font-serif text-3xl text-[#1F1F1F]">Service areas</h2>
-            <SafetyChecklist
-              items={[
-                "BGC",
-                "Makati",
-                "Rockwell",
-                "Alabang",
-                "Ortigas",
-                "Nearby Metro Manila areas subject to availability",
-              ]}
-            />
+            <p className="mt-5 text-sm leading-6 text-[#595550]">
+              Selected Metro Manila areas including BGC, Makati, Rockwell, Ortigas, Alabang and nearby locations, subject to availability.
+            </p>
             <div className="mt-6 border-t border-[#E6DFD5] pt-6">
               <Notice title="Support">
-                Once you&apos;ve booked, you can message the doctor anytime from your
-                patient dashboard.
+                For time-sensitive questions, contact BetterSelf by email or WhatsApp. This website is not for emergency medical care.
               </Notice>
             </div>
           </section>
@@ -2419,9 +2450,9 @@ function HowItWorksSection() {
         <SectionHeading
           eyebrow="How BetterSelf works"
           title="Clear at every step."
-          text="Choose your route, complete a private intake, speak with the doctor when needed, and confirm the plan before a home visit is prepared."
+          text="Choose a treatment or consultation, complete your private intake, then let the physician confirm the right plan before payment and scheduling."
         />
-        <div className="mt-8 grid gap-4 md:grid-cols-4">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {howItWorksSteps.map((step, index) => (
             <article key={step.title} className="card process-card p-5">
               <step.icon className="h-5 w-5 text-[#8F5B67]" />
@@ -2464,15 +2495,15 @@ function FinalCta() {
     <section className="final-cta-section px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-4xl text-center">
         <h2 className="font-serif text-5xl leading-tight text-[#1F1F1F]">
-          Book the treatment you want at home.
+          Request the treatment you want at home.
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#595550]">
           Select a service, complete intake, and let the doctor confirm the plan
           before your private home appointment.
         </p>
-        <Link className="btn btn-primary mt-8" href="/booking">
-          Book Treatment
-        </Link>
+        <TrackedLink className="btn btn-primary mt-8" href="/booking" eventName="request_treatment" eventData={{ placement: "final_cta" }}>
+          Request a Treatment
+        </TrackedLink>
       </div>
     </section>
   );

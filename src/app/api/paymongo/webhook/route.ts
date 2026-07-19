@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import { markPaidByReference } from "@/lib/db/queries";
+import { track } from "@vercel/analytics/server";
 
 function safeCompare(left: string, right: string) {
   const leftBuffer = Buffer.from(left);
@@ -163,6 +164,9 @@ export async function POST(request: NextRequest) {
       eventId,
       bookingsMarkedPaid,
     });
+    if (bookingsMarkedPaid > 0) {
+      await track("payment_completed", { payment_method: "qrph" });
+    }
 
     return NextResponse.json({
       received: true,
