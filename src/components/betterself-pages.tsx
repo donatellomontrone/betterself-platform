@@ -3,10 +3,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   ArrowRight,
+  CalendarClock,
   CalendarDays,
   CheckCircle2,
   FileText,
   Home,
+  LockKeyhole,
   Sparkles,
   Stethoscope,
   PackageCheck,
@@ -433,6 +435,33 @@ const howItWorksSteps = [
   },
 ];
 
+const homeExpectationSteps = [
+  {
+    title: "Request Treatment",
+    text: "Tell us the concern or treatment you would like to discuss.",
+  },
+  {
+    title: "Medical Review",
+    text: "The doctor reviews your intake and medical suitability privately.",
+  },
+  {
+    title: "Doctor Consultation",
+    text: "Speak with the doctor to confirm the right plan for your goals.",
+  },
+  {
+    title: "Payment",
+    text: "Secure payment opens only after your treatment plan is confirmed.",
+  },
+  {
+    title: "Home Treatment",
+    text: "Your doctor arrives prepared for your confirmed private appointment.",
+  },
+  {
+    title: "Aftercare",
+    text: "Receive clear instructions and follow-up support after treatment.",
+  },
+];
+
 const faqs: Array<readonly [string, string]> = [
   [
     "Is BetterSelf a clinic?",
@@ -490,11 +519,18 @@ export function HomePage() {
             <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.24em] text-[#8F5B67]">
               BetterSelf Home Aesthetics
             </p>
+            <span className="hero-trust-badge mt-5">
+              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+              Licensed Physician
+            </span>
             <h1 className="mt-4 font-serif text-5xl leading-[0.95] text-[#1F1F1F] md:text-7xl lg:text-8xl">
               Doctor-led beauty, brought home.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-[#595550] md:text-lg md:leading-8">
               Private, doctor-led aesthetic treatments in selected Metro Manila areas, with medical screening, personalized treatment planning, secure payment, and discreet home appointments.
+            </p>
+            <p className="mt-7 text-sm font-medium text-[#756A61]">
+              Consultation required before treatment.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <TrackedLink className="premium-cta px-6" href="/booking" eventName="hero_request">
@@ -513,6 +549,7 @@ export function HomePage() {
       </section>
       <HomeTrustSignals />
       <HomeSignatureTreatments />
+      <HomeWhyHomeTreatment />
       <HomeFluidProcess />
       <HomeTrustMoment />
       <HomeDoctorProfile />
@@ -524,7 +561,7 @@ export function HomePage() {
 function HomeTrustSignals() {
   const signals = [
     [Stethoscope, "Licensed Physician"],
-    [CheckCircle2, "Medical Assessment First"],
+    [CheckCircle2, "Medical Assessment"],
     [PackageCheck, "Verified Products"],
     [Home, "Private Home Visits"],
     [HeartHandshake, "Professional Aftercare"],
@@ -539,6 +576,58 @@ function HomeTrustSignals() {
             <span>{label}</span>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function HomeWhyHomeTreatment() {
+  const benefits = [
+    {
+      icon: LockKeyhole,
+      title: "Private experience",
+      text: "Receive thoughtful care in the familiarity and privacy of your own home.",
+    },
+    {
+      icon: Home,
+      title: "No waiting rooms",
+      text: "A considered appointment without reception desks or crowded waiting rooms.",
+    },
+    {
+      icon: CalendarClock,
+      title: "Flexible scheduling",
+      text: "Choose a suitable time around your day, subject to doctor availability.",
+    },
+    {
+      icon: Stethoscope,
+      title: "Doctor-led care",
+      text: "Every request is medically reviewed before a plan is confirmed.",
+    },
+  ];
+
+  return (
+    <section className="home-why-section px-5 py-24 lg:px-8 lg:py-36" data-reveal>
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
+          <div>
+            <p className="eyebrow">Care, considered</p>
+            <h2 className="mt-4 max-w-xl font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
+              Why choose home aesthetic treatments?
+            </h2>
+          </div>
+          <p className="max-w-2xl text-base leading-8 text-[#595550] lg:ml-auto">
+            BetterSelf brings the same care and preparation to a more personal setting, with the physician&apos;s assessment guiding every step.
+          </p>
+        </div>
+        <div className="home-benefit-grid mt-12">
+          {benefits.map(({ icon: Icon, title, text }) => (
+            <article key={title} className="home-benefit-card" data-reveal>
+              <span className="home-benefit-icon"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -602,7 +691,7 @@ function HomeFluidProcess() {
           </h2>
         </div>
         <div className="home-process-line mt-14">
-          {howItWorksSteps.map(({ title, text }, index) => (
+          {homeExpectationSteps.map(({ title, text }, index) => (
             <div key={title} className="home-process-step">
               <span>{String(index + 1).padStart(2, "0")}</span>
               <h3>{title}</h3>
@@ -738,6 +827,10 @@ function TreatmentsEditorialHero() {
 
 export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
   const isConsultation = treatment.id === consultationService.id;
+  const relatedTreatments = treatments
+    .filter((candidate) => candidate.category === treatment.category && candidate.id !== treatment.id)
+    .slice(0, 3);
+
   return (
     <PageShell>
       <section className="treatment-detail-section px-5 py-10 lg:px-8 lg:py-16">
@@ -780,6 +873,54 @@ export function TreatmentDetailPage({ treatment }: { treatment: Treatment }) {
                 intake and doctor confirmation are required before treatment.
               </Notice>
             </div>
+            <section className="treatment-detail-questions mt-10 border-t border-[#E6DFD5] pt-10">
+              <p className="eyebrow">Before you request</p>
+              <h2 className="mt-3 font-serif text-4xl leading-[0.98] text-[#1F1F1F] md:text-5xl">
+                Questions about {treatment.name}.
+              </h2>
+              <div className="mt-7">
+                <FaqAccordion
+                  items={[
+                    [
+                      "Who decides whether this treatment is right for me?",
+                      "A licensed physician reviews your medical intake and discusses suitability with you before treatment is confirmed.",
+                    ],
+                    [
+                      "When is payment collected?",
+                      isConsultation
+                        ? "The consultation fee is paid securely before you choose a call time. Any treatment fees are separate."
+                        : "Treatment payment is only requested after the doctor confirms your treatment plan and final amount.",
+                    ],
+                    [
+                      "What happens after I submit a request?",
+                      "You can track the review in your private dashboard. The doctor may confirm, request more information, or recommend a consultation first.",
+                    ],
+                  ]}
+                />
+              </div>
+            </section>
+            {relatedTreatments.length > 0 ? (
+              <section className="treatment-detail-related mt-10 border-t border-[#E6DFD5] pt-10">
+                <p className="eyebrow">Explore more</p>
+                <h2 className="mt-3 font-serif text-4xl leading-[0.98] text-[#1F1F1F] md:text-5xl">
+                  Related treatments.
+                </h2>
+                <div className="mt-7 grid gap-3 sm:grid-cols-3">
+                  {relatedTreatments.map((related) => (
+                    <TrackedLink
+                      key={related.id}
+                      href={`/treatments/${related.id}`}
+                      className="treatment-related-link"
+                      eventName="view_treatment"
+                      eventData={{ treatment: related.id, placement: "related_treatments" }}
+                    >
+                      <span>{related.name}</span>
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </TrackedLink>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </article>
           <aside className="lg:sticky lg:top-28 lg:self-start">
             <section className="treatment-booking-panel">

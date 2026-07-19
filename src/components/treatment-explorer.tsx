@@ -205,9 +205,9 @@ function TreatmentFacts({ treatment }: { treatment: Treatment }) {
   const items = [
     ["Duration", treatment.duration],
     ["Downtime", facts.downtime],
-    ["Results", facts.results],
-    ["Lasts", facts.lasts],
-    ["From", treatment.priceLabel],
+    ["Results begin", facts.results],
+    ["Results last", facts.lasts],
+    ["Starting price", treatment.priceLabel],
   ];
 
   return (

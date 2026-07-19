@@ -34,6 +34,11 @@ export const patientNav = [
 export function Header() {
   return (
     <header className="premium-header sticky top-0 z-30" data-site-header>
+      <div className="announcement-bar" role="status">
+        <div className="mx-auto flex h-full max-w-[1440px] items-center justify-center px-5 text-center lg:px-10">
+          Doctor-led home aesthetic treatments across selected Metro Manila areas.
+        </div>
+      </div>
       <div className="premium-header-inner mx-auto flex min-h-[88px] max-w-[1440px] items-center justify-between gap-5 px-5 py-2.5 lg:px-10">
         <Link className="brand-lockup group" href="/" aria-label="BetterSelf home">
           <span className="brand-mark-wrap" aria-hidden="true">
