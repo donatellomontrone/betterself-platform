@@ -2565,30 +2565,6 @@ html {
   backdrop-filter: blur(22px) saturate(1.08);
 }
 
-.premium-header.is-scrolled .premium-header-inner {
-  min-height: 68px !important;
-  padding-top: 0.35rem;
-  padding-bottom: 0.35rem;
-}
-
-.premium-header.is-scrolled .brand-mark-wrap,
-.premium-header.is-scrolled .brand-mark-image {
-  height: 3.45rem !important;
-}
-
-.premium-header.is-scrolled .brand-mark-wrap,
-.premium-header.is-scrolled .brand-mark-image {
-  width: 2.5rem !important;
-}
-
-.premium-header.is-scrolled .brand-name {
-  font-size: clamp(2rem, 2.7vw, 2.55rem);
-}
-
-.premium-header.is-scrolled .brand-tagline {
-  margin-top: 0.35rem;
-}
-
 .premium-header .premium-nav-link,
 .footer-link {
   position: relative;
@@ -2896,20 +2872,6 @@ select:focus {
 }
 
 @media (max-width: 899px) {
-  .premium-header.is-scrolled .premium-header-inner {
-    min-height: 64px !important;
-  }
-
-  .premium-header.is-scrolled .brand-mark-wrap,
-  .premium-header.is-scrolled .brand-mark-image {
-    width: 2.25rem !important;
-    height: 3.1rem !important;
-  }
-
-  .premium-header.is-scrolled .brand-name {
-    font-size: 1.7rem;
-  }
-
   .home-signature-section,
   .home-process-section,
   .home-trust-moment,
