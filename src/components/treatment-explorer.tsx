@@ -2,7 +2,12 @@
 
 import { Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Treatment, TreatmentCategory } from "@/lib/treatments";
+import {
+  getTreatmentAtAGlance,
+  getTreatmentBadge,
+  type Treatment,
+  type TreatmentCategory,
+} from "@/lib/treatments";
 import { TrackedLink } from "@/components/tracked-link";
 
 type TreatmentExplorerProps = {
@@ -135,25 +140,26 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
             </p>
           </div>
 
-          <div className="border-t border-[#E6DFD5]">
+          <div className="grid gap-5 sm:grid-cols-2">
             {filteredTreatments.map((treatment) => (
               <article
                 key={treatment.id}
-                className="grid gap-4 border-b border-[#E6DFD5] py-6 md:grid-cols-[1fr_auto] md:items-center md:gap-8"
+                className="treatment-premium-card card flex h-full flex-col p-6"
+                data-reveal
               >
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8F5B67]">
-                    {treatment.priceLabel}
-                  </p>
-                  <h3 className="mt-2 font-serif text-3xl leading-tight text-[#1F1F1F]">{treatment.name}</h3>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#595550]">{treatment.description}</p>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#807971]">
-                    {treatment.duration}
-                  </p>
+                <div className="flex items-start justify-between gap-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8F5B67]">{treatment.category}</p>
+                  {getTreatmentBadge(treatment) ? (
+                    <span className="treatment-card-badge">{getTreatmentBadge(treatment)}</span>
+                  ) : null}
                 </div>
-                <div className="flex flex-wrap gap-3 md:flex-col md:items-stretch">
+                <h3 className="mt-4 font-serif text-3xl leading-tight text-[#1F1F1F]">{treatment.name}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#595550]">{treatment.description}</p>
+                <TreatmentFacts treatment={treatment} />
+                <p className="mt-4 text-xs leading-5 text-[#756A61]">Timings are indicative and confirmed during your medical assessment.</p>
+                <div className="mt-6 grid gap-2 sm:grid-cols-2">
                   <TrackedLink
-                    className="btn btn-secondary justify-center rounded-full"
+                    className="btn btn-secondary justify-center"
                     href={`/treatments/${treatment.id}`}
                     aria-label={`View details for ${treatment.name}`}
                     eventName="view_treatment"
@@ -162,7 +168,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
                     View Details
                   </TrackedLink>
                   <TrackedLink
-                    className="btn btn-primary justify-center rounded-full"
+                    className="btn btn-primary justify-center"
                     href={`/booking?treatment=${treatment.id}&direct=1`}
                     aria-label={`Request ${treatment.name}`}
                     eventName="request_treatment"
@@ -175,7 +181,7 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
             ))}
 
             {filteredTreatments.length === 0 ? (
-              <div className="py-12">
+              <div className="py-12 sm:col-span-2">
                 <h3 className="font-serif text-3xl text-[#1F1F1F]">No treatments found</h3>
                 <p className="mt-2 text-sm leading-6 text-[#595550]">Try a different search or choose another category.</p>
                 <button
@@ -191,5 +197,27 @@ export function TreatmentExplorer({ categories, treatments }: TreatmentExplorerP
         </div>
       </div>
     </section>
+  );
+}
+
+function TreatmentFacts({ treatment }: { treatment: Treatment }) {
+  const facts = getTreatmentAtAGlance(treatment);
+  const items = [
+    ["Duration", treatment.duration],
+    ["Downtime", facts.downtime],
+    ["Results", facts.results],
+    ["Lasts", facts.lasts],
+    ["From", treatment.priceLabel],
+  ];
+
+  return (
+    <dl className="treatment-facts mt-6">
+      {items.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

@@ -10,14 +10,13 @@ import {
 } from "lucide-react";
 import { Treatment } from "@/lib/treatments";
 import { HeaderAuthControls } from "@/components/header-auth";
+import { HeaderScrollState } from "@/components/header-scroll-state";
 import { MobileMenu } from "@/components/mobile-menu";
 import { MobileBottomCta } from "@/components/mobile-cta";
 import { PrimaryNav } from "@/components/primary-nav";
-import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_WHATSAPP } from "@/lib/contact";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { SUPPORT_EMAIL, SUPPORT_INSTAGRAM, SUPPORT_WHATSAPP } from "@/lib/contact";
 import { TrackedExternalLink, TrackedLink } from "@/components/tracked-link";
-
-const serviceAreaCopy =
-  "Selected Metro Manila areas including BGC, Makati, Rockwell, Ortigas, Alabang and nearby locations, subject to availability.";
 
 export const primaryNav = [
   { href: "/treatments", label: "Treatments" },
@@ -34,7 +33,7 @@ export const patientNav = [
 
 export function Header() {
   return (
-    <header className="premium-header sticky top-0 z-30">
+    <header className="premium-header sticky top-0 z-30" data-site-header>
       <div className="premium-header-inner mx-auto flex min-h-[88px] max-w-[1440px] items-center justify-between gap-5 px-5 py-2.5 lg:px-10">
         <Link className="brand-lockup group" href="/" aria-label="BetterSelf home">
           <span className="brand-mark-wrap" aria-hidden="true">
@@ -77,8 +76,8 @@ export function Header() {
 export function Footer() {
   return (
     <footer className="premium-footer">
-      <div className="premium-footer-inner mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.25fr_0.75fr_0.75fr_1fr] lg:px-8 lg:py-20">
-        <div>
+      <div className="premium-footer-inner mx-auto flex max-w-7xl flex-col gap-8 px-5 py-12 lg:flex-row lg:items-end lg:justify-between lg:px-8 lg:py-14">
+        <div className="max-w-md">
           <Link className="inline-flex items-center gap-2 text-[#1F1F1F]" href="/">
             <Image
               src="/betterself-mark-transparent.png"
@@ -89,46 +88,19 @@ export function Footer() {
             />
             <span className="font-serif text-4xl leading-none">BetterSelf</span>
           </Link>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-[#595550]">
-            Doctor-led aesthetic services. {serviceAreaCopy}
-          </p>
-          <p className="premium-footer-note mt-5 text-xs leading-5 text-[#6E565A]">
-            BetterSelf provides doctor-led aesthetic services. All treatments are
-            subject to medical assessment. Results vary per patient. This website
-            is not a substitute for medical advice, diagnosis, or emergency care.
-          </p>
+          <p className="mt-3 text-sm leading-6 text-[#595550]">Doctor-led aesthetic care at home.</p>
         </div>
-        <FooterColumn
-          title="Platform"
-          links={[
-            ["Treatments", "/treatments"],
-            ["Request a Treatment", "/booking"],
-            ["Patient Login", "/login"],
-          ]}
-        />
-        <FooterColumn
-          title="Trust"
-          links={[
-            ["Safety", "/safety"],
-            ["Our approach", "/about"],
-            ["FAQ", "/faq"],
-            ["Contact", "/contact"],
-          ]}
-        />
         <FooterContact />
       </div>
       <div className="premium-footer-bottom">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-5 text-xs text-[#5C574F] sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <p>© 2026 BetterSelf. Doctor-led aesthetic care, Metro Manila.</p>
           <div className="flex flex-wrap gap-4">
-            <Link className="transition hover:text-[#1F1F1F]" href="/privacy">
-              Privacy
+            <Link className="footer-link" href="/privacy">
+              Privacy Policy
             </Link>
-            <Link className="transition hover:text-[#1F1F1F]" href="/terms">
-              Terms
-            </Link>
-            <Link className="transition hover:text-[#1F1F1F]" href="/consent">
-              Consent
+            <Link className="footer-link" href="/terms">
+              Terms &amp; Conditions
             </Link>
           </div>
         </div>
@@ -140,30 +112,17 @@ export function Footer() {
 
 function FooterContact() {
   const email = SUPPORT_EMAIL;
-  const phone = SUPPORT_PHONE;
   const whatsapp = SUPPORT_WHATSAPP;
   return (
-    <div>
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#5C574F]">
-        Contact
-      </p>
-      <div className="mt-4 grid gap-3 text-sm text-[#4D4D4D]">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-[#4D4D4D]">
         {email ? (
-          <a className="transition hover:text-[#1F1F1F]" href={`mailto:${email}`}>
+          <a className="footer-link" href={`mailto:${email}`}>
             {email}
-          </a>
-        ) : null}
-        {phone ? (
-          <a
-            className="transition hover:text-[#1F1F1F]"
-            href={`tel:${phone.replace(/\s+/g, "")}`}
-          >
-            {phone}
           </a>
         ) : null}
         {whatsapp ? (
           <TrackedExternalLink
-            className="transition hover:text-[#1F1F1F]"
+            className="footer-link"
             href={whatsapp}
             target="_blank"
             rel="noreferrer"
@@ -173,33 +132,18 @@ function FooterContact() {
             WhatsApp
           </TrackedExternalLink>
         ) : null}
-        <Link className="transition hover:text-[#1F1F1F]" href="/contact">
-          Contact page
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function FooterColumn({
-  title,
-  links,
-}: {
-  title: string;
-  links: [string, string][];
-}) {
-  return (
-    <div>
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#5C574F]">
-        {title}
-      </p>
-      <div className="mt-4 grid gap-3 text-sm text-[#4D4D4D]">
-        {links.map(([label, href]) => (
-          <Link key={href} className="transition hover:text-[#1F1F1F]" href={href}>
-            {label}
-          </Link>
-        ))}
-      </div>
+        {SUPPORT_INSTAGRAM ? (
+          <TrackedExternalLink
+            className="footer-link"
+            href={SUPPORT_INSTAGRAM}
+            target="_blank"
+            rel="noreferrer"
+            eventName="instagram_click"
+            eventData={{ placement: "footer" }}
+          >
+            Instagram
+          </TrackedExternalLink>
+        ) : null}
     </div>
   );
 }
@@ -207,6 +151,8 @@ function FooterColumn({
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-[#FAF8F4] text-[#1F1F1F]">
+      <HeaderScrollState />
+      <ScrollReveal />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow"

@@ -9,7 +9,6 @@ import {
   Home,
   Sparkles,
   Stethoscope,
-  ShieldCheck,
   PackageCheck,
   HeartHandshake,
 } from "lucide-react";
@@ -40,6 +39,7 @@ import {
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { TreatmentAnatomyMap } from "@/components/treatment-anatomy-map";
 import { TreatmentExplorer } from "@/components/treatment-explorer";
+import { FaqAccordion } from "@/components/faq-accordion";
 import type { AdminBookingView, MessageThreadView, PatientBookingView } from "@/lib/db/queries";
 import { buildCalendlySchedulingUrl } from "@/lib/calendly";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from "@/lib/contact";
@@ -433,7 +433,7 @@ const howItWorksSteps = [
   },
 ];
 
-const faqs = [
+const faqs: Array<readonly [string, string]> = [
   [
     "Is BetterSelf a clinic?",
     "No — BetterSelf is a doctor-led home-visit service. Most treatments are done at your home. A few machine-based treatments are performed at one of our partner clinics, only in specific cases when that's clinically safer. The doctor will let you know if that applies to you.",
@@ -486,7 +486,7 @@ export function HomePage() {
         />
         <div className="home-campaign-wash" />
         <div className="relative mx-auto grid min-h-[680px] max-w-[1440px] items-end gap-8 px-5 pb-12 pt-12 lg:min-h-[760px] lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:px-10 lg:pb-16 lg:pt-20">
-          <div className="home-campaign-copy">
+          <div className="home-campaign-copy" data-reveal>
             <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.24em] text-[#8F5B67]">
               BetterSelf Home Aesthetics
             </p>
@@ -515,6 +515,7 @@ export function HomePage() {
       <HomeSignatureTreatments />
       <HomeFluidProcess />
       <HomeTrustMoment />
+      <HomeDoctorProfile />
       <FinalCta />
     </PageShell>
   );
@@ -523,8 +524,7 @@ export function HomePage() {
 function HomeTrustSignals() {
   const signals = [
     [Stethoscope, "Licensed Physician"],
-    [CheckCircle2, "Medical Assessment"],
-    [ShieldCheck, "Sterile Equipment"],
+    [CheckCircle2, "Medical Assessment First"],
     [PackageCheck, "Verified Products"],
     [Home, "Private Home Visits"],
     [HeartHandshake, "Professional Aftercare"],
@@ -532,9 +532,9 @@ function HomeTrustSignals() {
 
   return (
     <section className="border-b border-[#E6DFD5] bg-white px-5 py-8 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="mx-auto grid max-w-7xl gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-5">
         {signals.map(([Icon, label]) => (
-          <div key={label} className="flex items-center gap-3 text-sm font-semibold text-[#3F4540]">
+          <div key={label} className="flex items-center gap-3 text-sm font-semibold text-[#3F4540]" data-reveal>
             <Icon className="h-5 w-5 shrink-0 text-[#8F5B67]" aria-hidden="true" />
             <span>{label}</span>
           </div>
@@ -548,7 +548,7 @@ function HomeSignatureTreatments() {
   const featured = getFeaturedTreatments().slice(0, 4);
 
   return (
-    <section className="home-signature-section premium-reveal px-5 py-20 lg:px-8 lg:py-28">
+    <section className="home-signature-section premium-reveal px-5 py-24 lg:px-8 lg:py-36" data-reveal>
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
           <div>
@@ -593,12 +593,12 @@ function HomeSignatureTreatments() {
 
 function HomeFluidProcess() {
   return (
-    <section className="home-process-section premium-reveal px-5 py-20 lg:px-8 lg:py-28">
+    <section className="home-process-section premium-reveal px-5 py-24 lg:px-8 lg:py-36" data-reveal>
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
-          <p className="eyebrow">The journey</p>
+          <p className="eyebrow">What to expect</p>
           <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-7xl">
-            A considered path from request to home treatment.
+            From request to aftercare.
           </h2>
         </div>
         <div className="home-process-line mt-14">
@@ -617,7 +617,7 @@ function HomeFluidProcess() {
 
 function HomeTrustMoment() {
   return (
-    <section className="home-trust-moment premium-reveal px-5 py-20 lg:px-8 lg:py-28">
+    <section className="home-trust-moment premium-reveal px-5 py-24 lg:px-8 lg:py-36" data-reveal>
       <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="max-w-2xl">
           <p className="eyebrow">Safety, quietly visible</p>
@@ -645,6 +645,54 @@ function HomeTrustMoment() {
   );
 }
 
+function HomeDoctorProfile() {
+  return (
+    <section className="doctor-profile-section px-5 py-24 lg:px-8 lg:py-36" data-reveal>
+      <div className="doctor-profile-card mx-auto grid max-w-7xl overflow-hidden lg:grid-cols-[0.82fr_1.18fr]">
+        <div className="doctor-profile-image relative min-h-[360px] lg:min-h-[490px]">
+          <Image
+            src="/betterself-hero-home.jpg"
+            alt="BetterSelf physician preparing a sterile kit for a private home appointment"
+            fill
+            sizes="(min-width: 1024px) 42vw, 100vw"
+            className="object-cover object-[68%_center]"
+          />
+        </div>
+        <div className="flex flex-col justify-center p-7 md:p-10 lg:p-14">
+          <p className="eyebrow">Doctor-led care</p>
+          <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-6xl">
+            Your treatment is guided by a licensed physician.
+          </h2>
+          <p className="mt-6 max-w-2xl text-base leading-8 text-[#595550]">
+            BetterSelf pairs discreet home appointments with medical screening, treatment planning, sterile preparation, and professional aftercare.
+          </p>
+          <dl className="doctor-profile-facts mt-8 grid gap-5 sm:grid-cols-2">
+            <div>
+              <dt>Physician</dt>
+              <dd>BetterSelf Medical Doctor</dd>
+            </div>
+            <div>
+              <dt>Credential</dt>
+              <dd>Licensed Physician</dd>
+            </div>
+            <div>
+              <dt>PRC license</dt>
+              <dd>Verified before appointment</dd>
+            </div>
+            <div>
+              <dt>Areas of expertise</dt>
+              <dd>Injectables, skin quality, scar care</dd>
+            </div>
+          </dl>
+          <Link className="btn btn-secondary mt-9 w-full sm:w-fit" href="/about">
+            Learn More
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function TreatmentsPage() {
   return (
     <PageShell>
@@ -657,7 +705,7 @@ export function TreatmentsPage() {
 
 function TreatmentsEditorialHero() {
   return (
-    <section className="treatments-editorial-hero px-5 py-16 lg:px-8 lg:py-24">
+    <section className="treatments-editorial-hero px-5 py-20 lg:px-8 lg:py-32" data-reveal>
       <div className="mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[0.88fr_1.12fr]">
         <div className="max-w-3xl">
           <p className="eyebrow">BetterSelf treatments</p>
@@ -2257,14 +2305,9 @@ export function FaqPage() {
         title="Clear answers before you request treatment."
         text="Clear answers about how BetterSelf works, who performs your treatment, safety, and what to expect at a home visit."
       />
-      <section className="px-5 pb-14 lg:px-8">
-        <div className="mx-auto grid max-w-4xl gap-4">
-          {faqs.map(([question, answer]) => (
-            <article key={question} className="card p-5">
-              <h2 className="font-serif text-2xl text-[#1F1F1F]">{question}</h2>
-              <p className="mt-3 text-sm leading-6 text-[#595550]">{answer}</p>
-            </article>
-          ))}
+      <section className="px-5 pb-20 lg:px-8 lg:pb-28">
+        <div className="mx-auto max-w-4xl">
+          <FaqAccordion items={faqs} />
         </div>
       </section>
     </PageShell>
@@ -2492,17 +2535,16 @@ function HowItWorksSection() {
 
 function FinalCta() {
   return (
-    <section className="final-cta-section px-5 py-20 lg:px-8 lg:py-28">
+    <section className="final-cta-section px-5 py-24 lg:px-8 lg:py-32" data-reveal>
       <div className="mx-auto max-w-4xl text-center">
         <h2 className="font-serif text-5xl leading-tight text-[#1F1F1F]">
-          Request the treatment you want at home.
+          Ready to begin your aesthetic journey?
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#595550]">
-          Select a service, complete intake, and let the doctor confirm the plan
-          before your private home appointment.
+          Book a consultation with a licensed physician and receive a personalized treatment plan designed around your goals.
         </p>
-        <TrackedLink className="btn btn-primary mt-8" href="/booking" eventName="request_treatment" eventData={{ placement: "final_cta" }}>
-          Request a Treatment
+        <TrackedLink className="btn btn-primary mt-8" href="/booking?treatment=doctor-consultation&direct=1" eventName="consultation_started" eventData={{ placement: "final_cta" }}>
+          Request a Consultation
         </TrackedLink>
       </div>
     </section>

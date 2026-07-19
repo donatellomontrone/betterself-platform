@@ -9,3 +9,4 @@ export const SUPPORT_PHONE =
   process.env.NEXT_PUBLIC_SUPPORT_PHONE?.trim() || "+63 917 548 3579";
 export const SUPPORT_WHATSAPP =
   process.env.NEXT_PUBLIC_WHATSAPP_URL?.trim() || "https://wa.me/639175483579";
+export const SUPPORT_INSTAGRAM = process.env.NEXT_PUBLIC_INSTAGRAM_URL?.trim() || "";

@@ -646,6 +646,46 @@ export function getFeaturedTreatments() {
     .filter((treatment): treatment is Treatment => Boolean(treatment));
 }
 
+export type TreatmentAtAGlance = {
+  downtime: string;
+  results: string;
+  lasts: string;
+};
+
+export function getTreatmentAtAGlance(treatment: Treatment): TreatmentAtAGlance {
+  switch (treatment.category) {
+    case "Toxin-Based":
+      return {
+        downtime: "Minimal",
+        results: "Typically 3–14 days",
+        lasts: "Typically 3–6 months",
+      };
+    case "Skin Boosters":
+      return {
+        downtime: "Usually 1–3 days",
+        results: "Usually 2–4 weeks",
+        lasts: "Varies by product and plan",
+      };
+    case "Acne Scars":
+      return {
+        downtime: "Usually 3–7 days",
+        results: "Gradual over weeks",
+        lasts: "Depends on treatment plan",
+      };
+    default:
+      return {
+        downtime: "Varies by treatment",
+        results: "Discussed during review",
+        lasts: "Depends on treatment plan",
+      };
+  }
+}
+
+export function getTreatmentBadge(treatment: Treatment) {
+  if (featuredTreatmentIds.includes(treatment.id)) return "Most Popular";
+  return undefined;
+}
+
 export function formatPeso(amount: number) {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
