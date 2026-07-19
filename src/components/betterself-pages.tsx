@@ -2485,19 +2485,17 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section className="about-prepared px-5 py-20 lg:px-8 lg:py-32" data-reveal>
-        <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-          <div className="about-prepared-image relative min-h-[360px] overflow-hidden rounded-[1.125rem] lg:min-h-[500px]">
-            <Image
-              src="/betterself-safety-kit.jpg"
-              alt="Sterile BetterSelf medical supplies and procedure checklist prepared for a home visit"
-              fill
-              loading="eager"
-              sizes="(min-width: 1024px) 52vw, 100vw"
-              className="object-cover"
-            />
-          </div>
-          <div className="max-w-xl lg:py-8">
+      <section className="about-prepared premium-reveal" data-reveal>
+        <Image
+          src="/betterself-safety-kit.jpg"
+          alt="Sterile BetterSelf medical supplies and procedure checklist prepared for a home visit"
+          fill
+          loading="eager"
+          sizes="100vw"
+          className="about-prepared-background object-cover"
+        />
+        <div className="about-prepared-content mx-auto max-w-[1440px] px-5 lg:px-10">
+          <div className="about-prepared-copy max-w-xl">
             <p className="eyebrow">The BetterSelf visit</p>
             <h2 className="mt-4 font-serif text-5xl leading-[0.98] text-[#1F1F1F] md:text-6xl">
               Considered before the doctor arrives.
