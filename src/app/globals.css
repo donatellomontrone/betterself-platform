@@ -3057,6 +3057,34 @@ select:focus {
   }
 }
 
+/* Keep the logo lockup true to its visible dimensions instead of a stretched grid column. */
+.brand-lockup {
+  grid-template-columns: auto max-content;
+  min-width: 0;
+}
+
+.brand-wordmark {
+  width: max-content;
+  justify-items: center;
+}
+
+.brand-name,
+.brand-tagline {
+  width: max-content;
+}
+
+.brand-tagline {
+  justify-self: center;
+}
+
+@media (min-width: 1100px) {
+  .premium-header-inner > .premium-nav {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
 .treatment-related-link {
   display: flex;
   min-height: 7.5rem;
