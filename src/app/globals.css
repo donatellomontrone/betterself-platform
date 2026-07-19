@@ -3051,6 +3051,29 @@ select:focus {
   justify-self: center;
 }
 
+/* The navigation is a quiet, translucent layer instead of a solid white block. */
+.premium-header {
+  border-bottom-color: rgb(255 255 255 / 0.48);
+  background:
+    linear-gradient(112deg, rgb(255 255 255 / 0.66), rgb(255 250 248 / 0.44) 48%, rgb(237 244 240 / 0.42));
+  box-shadow:
+    0 10px 30px rgb(41 48 43 / 0.07),
+    0 1px 0 rgb(255 255 255 / 0.76) inset;
+  backdrop-filter: blur(28px) saturate(1.32) contrast(1.03);
+  -webkit-backdrop-filter: blur(28px) saturate(1.32) contrast(1.03);
+}
+
+.premium-header.is-scrolled {
+  border-bottom-color: rgb(255 255 255 / 0.38);
+  background:
+    linear-gradient(112deg, rgb(255 255 255 / 0.5), rgb(255 250 248 / 0.3) 48%, rgb(237 244 240 / 0.3));
+  box-shadow:
+    0 14px 36px rgb(41 48 43 / 0.1),
+    0 1px 0 rgb(255 255 255 / 0.64) inset;
+  backdrop-filter: blur(32px) saturate(1.38) contrast(1.04);
+  -webkit-backdrop-filter: blur(32px) saturate(1.38) contrast(1.04);
+}
+
 @media (min-width: 1100px) {
   .premium-header-inner > .premium-nav {
     position: absolute;
