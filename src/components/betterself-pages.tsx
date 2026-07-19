@@ -2596,9 +2596,17 @@ export function LoginPage({ status }: { status?: string }) {
 export function HowItWorksPage() {
   return (
     <PageShell>
-      <section className="how-it-works-hero px-5 py-10 lg:px-8 lg:py-14">
-        <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
-          <div className="max-w-2xl">
+      <section className="how-it-works-hero" data-reveal>
+        <Image
+          src="/betterself-home-visit-kit.jpg"
+          alt="BetterSelf home visit kit prepared beside a private appointment schedule"
+          fill
+          sizes="100vw"
+          className="how-it-works-hero-background object-cover"
+          loading="eager"
+        />
+        <div className="how-it-works-hero-content mx-auto max-w-[1440px] px-5 lg:px-10">
+          <div className="how-it-works-hero-copy max-w-2xl">
             <p className="eyebrow">How it works</p>
             <h1 className="mt-4 font-serif text-5xl leading-[0.96] text-[#1F1F1F] md:text-7xl">
               A calm path from question to appointment.
@@ -2606,16 +2614,6 @@ export function HowItWorksPage() {
             <p className="mt-5 text-base leading-7 text-[#595550] md:text-lg md:leading-8">
               BetterSelf keeps the important things visible: private intake, doctor review, clear payment, and considered aftercare.
             </p>
-          </div>
-          <div className="how-it-works-hero-image">
-            <Image
-              src="/betterself-home-visit-kit.jpg"
-              alt="BetterSelf home visit kit prepared beside a private appointment schedule"
-              fill
-              sizes="(min-width: 1024px) 52vw, 100vw"
-              className="object-cover"
-              loading="eager"
-            />
           </div>
         </div>
       </section>
