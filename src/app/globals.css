@@ -3588,3 +3588,79 @@ select:focus {
     font-size: clamp(2.9rem, 11.5vw, 4.1rem);
   }
 }
+
+/* Patient sign-in is intentionally quiet: account access does not need a decorative portrait. */
+.auth-page-layout {
+  width: min(100%, 44rem);
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.auth-form-panel {
+  padding: clamp(2rem, 5vw, 4.25rem);
+}
+
+/* Keep the mobile mark and wordmark together, next to the menu control. */
+@media (max-width: 899px) {
+  .premium-header-inner {
+    justify-content: flex-start;
+  }
+
+  .brand-lockup {
+    display: grid;
+    width: fit-content;
+    flex: 0 1 auto;
+    grid-template-columns: max-content max-content;
+    justify-content: start;
+    gap: 0.32rem;
+  }
+
+  .brand-wordmark {
+    justify-self: start;
+    transform: none;
+  }
+
+  .premium-header-inner > details {
+    margin-left: auto;
+  }
+
+  .home-process-line {
+    display: grid;
+    gap: 0;
+    grid-template-columns: 1fr;
+    border-top: 1px solid rgb(24 26 23 / 0.12);
+  }
+
+  .home-process-line::before,
+  .home-process-step:not(:last-child)::after {
+    display: none;
+  }
+
+  .home-process-step {
+    display: grid;
+    grid-template-columns: 4.9rem minmax(0, 1fr);
+    column-gap: 0.9rem;
+    border-bottom: 1px solid rgb(24 26 23 / 0.12);
+    padding: 1.35rem 0;
+  }
+
+  .home-process-step span {
+    grid-row: span 2;
+    align-self: start;
+    font-size: 3.3rem;
+    line-height: 0.82;
+  }
+
+  .home-process-step h3 {
+    margin-top: 0.18rem;
+    font-size: clamp(1.85rem, 8.7vw, 2.35rem);
+    line-height: 0.92;
+  }
+
+  .home-process-step p {
+    max-width: 31rem;
+    margin-top: 0.65rem;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+}

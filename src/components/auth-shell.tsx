@@ -32,22 +32,6 @@ export function AuthShell({ eyebrow, title, description, children }: AuthShellPr
       </div>
 
       <div className="auth-page-layout">
-        <aside className="auth-visual-panel" aria-hidden="true">
-          <Image
-            src="/betterself-face-photo-v2.jpg"
-            alt=""
-            fill
-            priority
-            sizes="(min-width: 960px) 48vw, 0px"
-            className="object-cover object-[50%_36%]"
-          />
-          <div className="auth-visual-wash" />
-          <div className="auth-visual-copy">
-            <p>Private, doctor-led care</p>
-            <span>For the moments you choose for yourself.</span>
-          </div>
-        </aside>
-
         <section className="auth-form-panel">
           <div className="auth-form-intro">
             <p className="eyebrow">{eyebrow}</p>
